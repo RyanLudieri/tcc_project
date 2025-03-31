@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/delivery-process")
+@RequestMapping("/api/delivery-process")
 @CrossOrigin("*") // Permite acesso pelo front-end
 public class DeliveryProcessController {
     private final DeliveryProcessService service;

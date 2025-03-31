@@ -6,38 +6,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class DeliveryProcess extends ProcessElement {
+public class Iteration extends ProcessElement {
 
     @ManyToMany
     @JoinTable(
-            name = "delivery_process_predecessors",
-            joinColumns = @JoinColumn(name = "delivery_process_id"),
+            name = "iteration_predecessors",
+            joinColumns = @JoinColumn(name = "iteration_id"),
             inverseJoinColumns = @JoinColumn(name = "predecessor_id")
     )
-    private List<DeliveryProcess> predecessors = new ArrayList<>();
-
+    private List<Iteration> predecessors = new ArrayList<>();
     @Enumerated(EnumType.STRING) // Salva como texto no banco de dados
     @Column(name = "type", nullable = false)
     private ProcessType type;
 
-    public DeliveryProcess() {}
+    public Iteration() {}
 
-    public DeliveryProcess(int index, ModelInfo modelInfo) {
+    public Iteration(int index, ModelInfo modelInfo) {
         super(index, modelInfo);
-        this.type = ProcessType.DELIVERY_PROCESS; // Defina um valor padrão
+        this.type = ProcessType.ITERATION; // Defina um valor padrão
     }
-
 
     @Override
     public boolean optional() {
         return false;
     }
 
-    public List<DeliveryProcess> getPredecessors() {
+    public List<Iteration> getPredecessors() {
         return predecessors;
     }
 
-    public void setPredecessors(List<DeliveryProcess> predecessors) {
+    public void setPredecessors(List<Iteration> predecessors) {
         this.predecessors = predecessors;
     }
 
@@ -49,3 +47,4 @@ public class DeliveryProcess extends ProcessElement {
         this.type = type;
     }
 }
+

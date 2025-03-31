@@ -9,6 +9,7 @@ public class ProjetoTccApplication {
 
 
 	public static void main(String[] args) {
+
 		SpringApplication.run(ProjetoTccApplication.class, args);
 	}
 

@@ -23,7 +23,6 @@ public abstract class ProcessElement {
         this.modelInfo = modelInfo;
     }
 
-    public abstract String method(ProcessType type);
     public abstract boolean optional();
 
     // Getters e Setters

@@ -6,38 +6,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class DeliveryProcess extends ProcessElement {
+public class TaskDescriptor extends ProcessElement {
 
     @ManyToMany
     @JoinTable(
-            name = "delivery_process_predecessors",
-            joinColumns = @JoinColumn(name = "delivery_process_id"),
+            name = "task_descriptor_predecessors",
+            joinColumns = @JoinColumn(name = "task_descriptor_id"),
             inverseJoinColumns = @JoinColumn(name = "predecessor_id")
     )
-    private List<DeliveryProcess> predecessors = new ArrayList<>();
-
+    private List<TaskDescriptor> predecessors = new ArrayList<>();
     @Enumerated(EnumType.STRING) // Salva como texto no banco de dados
     @Column(name = "type", nullable = false)
     private ProcessType type;
 
-    public DeliveryProcess() {}
+    public TaskDescriptor() {}
 
-    public DeliveryProcess(int index, ModelInfo modelInfo) {
+    public TaskDescriptor(int index, ModelInfo modelInfo) {
         super(index, modelInfo);
-        this.type = ProcessType.DELIVERY_PROCESS; // Defina um valor padrão
+        this.type = ProcessType.TASK_DESCRIPTOR; // Defina um valor padrão
     }
-
 
     @Override
     public boolean optional() {
         return false;
     }
 
-    public List<DeliveryProcess> getPredecessors() {
+    public List<TaskDescriptor> getPredecessors() {
         return predecessors;
     }
 
-    public void setPredecessors(List<DeliveryProcess> predecessors) {
+    public void setPredecessors(List<TaskDescriptor> predecessors) {
         this.predecessors = predecessors;
     }
 
@@ -49,3 +47,4 @@ public class DeliveryProcess extends ProcessElement {
         this.type = type;
     }
 }
+
