@@ -9,11 +9,16 @@ import java.util.List;
 public class PerformerService {
     private final PerformerRepository repository;
 
-    public PerformerService(PerformerRepository repository) {
+    private final ProcessElementIndexService indexService;
+
+    public PerformerService(PerformerRepository repository, ProcessElementIndexService indexService) {
         this.repository = repository;
+        this.indexService = indexService;
     }
 
     public Performer createPerformer(Performer performer) {
+        int index = indexService.getNextIndex();
+        performer.setIndex(index);
         return repository.save(performer);
     }
 

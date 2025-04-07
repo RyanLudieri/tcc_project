@@ -3,6 +3,7 @@ package com.example.projeto_tcc.service;
 import com.example.projeto_tcc.model.DeliveryProcess;
 import com.example.projeto_tcc.repository.DeliveryProcessRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,8 +12,12 @@ import java.util.List;
 public class DeliveryProcessService {
     private final DeliveryProcessRepository repository;
 
-    public DeliveryProcessService(DeliveryProcessRepository repository) {
+    private final ProcessElementIndexService indexService;
+
+    public DeliveryProcessService(DeliveryProcessRepository repository,
+                                  ProcessElementIndexService indexService) {
         this.repository = repository;
+        this.indexService = indexService;
     }
 
     public List<DeliveryProcess> getAll() {
@@ -20,6 +25,8 @@ public class DeliveryProcessService {
     }
 
     public DeliveryProcess create(DeliveryProcess deliveryProcess) {
+        int index = indexService.getNextIndex();
+        deliveryProcess.setIndex(index);
         return repository.save(deliveryProcess);
     }
 
@@ -32,7 +39,6 @@ public class DeliveryProcessService {
                 .orElseThrow(() -> new RuntimeException("DeliveryProcess não encontrado"));
 
         // Atualiza os campos necessários
-        existingProcess.setIndex(updatedProcess.getIndex());
         existingProcess.setModelInfo(updatedProcess.getModelInfo());
         existingProcess.setType(updatedProcess.getType());
 

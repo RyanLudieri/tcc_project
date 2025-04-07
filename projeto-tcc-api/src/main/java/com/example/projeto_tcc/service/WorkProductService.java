@@ -9,11 +9,16 @@ import java.util.List;
 public class WorkProductService {
     private final WorkProductRepository repository;
 
-    public WorkProductService(WorkProductRepository repository) {
+    private final ProcessElementIndexService indexService;
+
+    public WorkProductService(WorkProductRepository repository,ProcessElementIndexService indexService) {
         this.repository = repository;
+        this.indexService = indexService;
     }
 
     public WorkProduct createWorkProduct(WorkProduct workProduct) {
+        int index = indexService.getNextIndex();
+        workProduct.setIndex(index);
         return repository.save(workProduct);
     }
 

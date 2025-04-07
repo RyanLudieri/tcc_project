@@ -9,11 +9,16 @@ import java.util.List;
 public class MilestoneService {
     private final MilestoneRepository repository;
 
-    public MilestoneService(MilestoneRepository repository) {
+    private final ProcessElementIndexService indexService;
+
+    public MilestoneService(MilestoneRepository repository, ProcessElementIndexService indexService) {
         this.repository = repository;
+        this.indexService = indexService;
     }
 
     public Milestone createMilestone(Milestone milestone) {
+        int index = indexService.getNextIndex();
+        milestone.setIndex(index);
         return repository.save(milestone);
     }
 

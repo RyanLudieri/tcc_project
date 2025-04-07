@@ -9,11 +9,16 @@ import java.util.List;
 public class IterationService {
     private final IterationRepository repository;
 
-    public IterationService(IterationRepository repository) {
+    private final ProcessElementIndexService indexService;
+
+    public IterationService(IterationRepository repository, ProcessElementIndexService indexService) {
         this.repository = repository;
+        this.indexService = indexService;
     }
 
     public Iteration createIteration(Iteration iteration) {
+        int index = indexService.getNextIndex();
+        iteration.setIndex(index);
         return repository.save(iteration);
     }
 

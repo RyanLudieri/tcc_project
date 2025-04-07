@@ -9,11 +9,16 @@ import java.util.List;
 public class TaskDescriptorService {
     private final TaskDescriptorRepository repository;
 
-    public TaskDescriptorService(TaskDescriptorRepository repository) {
+    private final ProcessElementIndexService indexService;
+
+    public TaskDescriptorService(TaskDescriptorRepository repository,ProcessElementIndexService indexService) {
         this.repository = repository;
+        this.indexService = indexService;
     }
 
     public TaskDescriptor createTaskDescriptor(TaskDescriptor taskDescriptor) {
+        int index = indexService.getNextIndex();
+        taskDescriptor.setIndex(index);
         return repository.save(taskDescriptor);
     }
 

@@ -9,11 +9,16 @@ import java.util.List;
 public class ActivityService {
     private final ActivityRepository repository;
 
-    public ActivityService(ActivityRepository repository) {
+    private final ProcessElementIndexService indexService;
+
+    public ActivityService(ActivityRepository repository, ProcessElementIndexService indexService) {
         this.repository = repository;
+        this.indexService = indexService;
     }
 
     public Activity createActivity(Activity activity) {
+        int index = indexService.getNextIndex();
+        activity.setIndex(index);
         return repository.save(activity);
     }
 

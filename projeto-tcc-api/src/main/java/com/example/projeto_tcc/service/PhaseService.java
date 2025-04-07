@@ -9,8 +9,11 @@ import java.util.List;
 public class PhaseService {
     private final PhaseRepository repository;
 
-    public PhaseService(PhaseRepository repository) {
+    private final ProcessElementIndexService indexService;
+
+    public PhaseService(PhaseRepository repository, ProcessElementIndexService indexService) {
         this.repository = repository;
+        this.indexService = indexService;
     }
 
     public Phase createPhase(Phase phase) {
