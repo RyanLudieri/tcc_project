@@ -23,7 +23,6 @@ public class Iteration extends ProcessElement {
 
     public Iteration(int index, ModelInfo modelInfo) {
         super(index, modelInfo);
-        this.type = ProcessType.ITERATION; // Defina um valor padrão
     }
 
     @Override

@@ -25,7 +25,6 @@ public class Phase extends ProcessElement {
 
     public Phase(int index, ModelInfo modelInfo) {
         super(index, modelInfo);
-        this.type = ProcessType.PHASE; // Defina um valor padrão
     }
 
     @Override

@@ -23,7 +23,6 @@ public class Activity extends ProcessElement {
 
     public Activity(int index, ModelInfo modelInfo) {
         super(index, modelInfo);
-        this.type = ProcessType.ACTIVITY; // Defina um valor padrão
     }
 
     @Override

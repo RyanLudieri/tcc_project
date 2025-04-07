@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.model.DeliveryProcess;
+import com.example.projeto_tcc.model.ProcessType;
 import com.example.projeto_tcc.repository.DeliveryProcessRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ public class DeliveryProcessService {
     public DeliveryProcess create(DeliveryProcess deliveryProcess) {
         int index = indexService.getNextIndex();
         deliveryProcess.setIndex(index);
+        deliveryProcess.setType(ProcessType.DELIVERY_PROCESS);
         return repository.save(deliveryProcess);
     }
 

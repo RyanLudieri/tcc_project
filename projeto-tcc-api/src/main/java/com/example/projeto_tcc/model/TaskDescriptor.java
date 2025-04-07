@@ -23,7 +23,6 @@ public class TaskDescriptor extends ProcessElement {
 
     public TaskDescriptor(int index, ModelInfo modelInfo) {
         super(index, modelInfo);
-        this.type = ProcessType.TASK_DESCRIPTOR; // Defina um valor padrão
     }
 
     @Override

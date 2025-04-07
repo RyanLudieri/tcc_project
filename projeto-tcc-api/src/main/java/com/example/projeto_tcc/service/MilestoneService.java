@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.model.Milestone;
+import com.example.projeto_tcc.model.ProcessType;
 import com.example.projeto_tcc.repository.MilestoneRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -19,6 +20,7 @@ public class MilestoneService {
     public Milestone createMilestone(Milestone milestone) {
         int index = indexService.getNextIndex();
         milestone.setIndex(index);
+        milestone.setType(ProcessType.MILESTONE);
         return repository.save(milestone);
     }
 

@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.model.Phase;
+import com.example.projeto_tcc.model.ProcessType;
 import com.example.projeto_tcc.repository.PhaseRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -17,6 +18,9 @@ public class PhaseService {
     }
 
     public Phase createPhase(Phase phase) {
+        int index = indexService.getNextIndex();
+        phase.setIndex(index);
+        phase.setType(ProcessType.PHASE);
         return repository.save(phase);
     }
 

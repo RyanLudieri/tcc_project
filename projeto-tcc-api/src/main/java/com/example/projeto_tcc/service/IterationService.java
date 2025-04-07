@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.model.Iteration;
+import com.example.projeto_tcc.model.ProcessType;
 import com.example.projeto_tcc.repository.IterationRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -19,6 +20,7 @@ public class IterationService {
     public Iteration createIteration(Iteration iteration) {
         int index = indexService.getNextIndex();
         iteration.setIndex(index);
+        iteration.setType(ProcessType.ITERATION);
         return repository.save(iteration);
     }
 

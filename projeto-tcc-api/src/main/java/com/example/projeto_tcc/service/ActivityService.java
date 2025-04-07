@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.model.Activity;
+import com.example.projeto_tcc.model.ProcessType;
 import com.example.projeto_tcc.repository.ActivityRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -19,6 +20,7 @@ public class ActivityService {
     public Activity createActivity(Activity activity) {
         int index = indexService.getNextIndex();
         activity.setIndex(index);
+        activity.setType(ProcessType.ACTIVITY);
         return repository.save(activity);
     }
 

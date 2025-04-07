@@ -23,7 +23,6 @@ public class Milestone extends ProcessElement {
 
     public Milestone(int index, ModelInfo modelInfo) {
         super(index, modelInfo);
-        this.type = ProcessType.MILESTONE; // Defina um valor padrão
     }
 
 

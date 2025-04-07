@@ -24,7 +24,6 @@ public class DeliveryProcess extends ProcessElement {
 
     public DeliveryProcess(int index, ModelInfo modelInfo) {
         super(index, modelInfo);
-        this.type = ProcessType.DELIVERY_PROCESS; // Defina um valor padrão
     }
 
 
