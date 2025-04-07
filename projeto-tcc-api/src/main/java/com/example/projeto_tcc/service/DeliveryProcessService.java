@@ -41,6 +41,7 @@ public class DeliveryProcessService {
                 .orElseThrow(() -> new RuntimeException("DeliveryProcess não encontrado"));
 
         // Atualiza os campos necessários
+        existingProcess.setName(updatedProcess.getName());
         existingProcess.setModelInfo(updatedProcess.getModelInfo());
         existingProcess.setType(updatedProcess.getType());
 

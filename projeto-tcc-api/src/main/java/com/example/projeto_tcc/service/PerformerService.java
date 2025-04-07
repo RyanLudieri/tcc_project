@@ -17,8 +17,6 @@ public class PerformerService {
     }
 
     public Performer createPerformer(Performer performer) {
-        int index = indexService.getNextIndex();
-        performer.setIndex(index);
         return repository.save(performer);
     }
 

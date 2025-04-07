@@ -8,6 +8,9 @@ import java.util.List;
 @Entity
 public class DeliveryProcess extends ProcessElement {
 
+    @Column(name = "name", nullable = false)
+    private String name;
+
     @ManyToMany
     @JoinTable(
             name = "delivery_process_predecessors",
@@ -46,5 +49,13 @@ public class DeliveryProcess extends ProcessElement {
 
     public void setType(ProcessType type) {
         this.type = type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

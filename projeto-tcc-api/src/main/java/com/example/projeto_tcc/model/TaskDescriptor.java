@@ -8,6 +8,9 @@ import java.util.List;
 @Entity
 public class TaskDescriptor extends ProcessElement {
 
+    @Column(name = "name", nullable = false)
+    private String name;
+
     @ManyToMany
     @JoinTable(
             name = "task_descriptor_predecessors",
@@ -44,6 +47,14 @@ public class TaskDescriptor extends ProcessElement {
 
     public void setType(ProcessType type) {
         this.type = type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
 

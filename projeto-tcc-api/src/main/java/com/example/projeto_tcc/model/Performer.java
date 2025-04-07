@@ -1,11 +1,15 @@
 package com.example.projeto_tcc.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Performer extends ProcessElement {
+
+    @Column(name = "name", nullable = false)
+    private String name;
 
     @ManyToOne
     @JoinColumn(name = "task_descriptor_id", nullable = false)
@@ -33,6 +37,14 @@ public class Performer extends ProcessElement {
 
     public void setTaskDescriptor(TaskDescriptor taskDescriptor) {
         this.taskDescriptor = taskDescriptor;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
 

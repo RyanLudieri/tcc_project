@@ -17,8 +17,6 @@ public class WorkProductService {
     }
 
     public WorkProduct createWorkProduct(WorkProduct workProduct) {
-        int index = indexService.getNextIndex();
-        workProduct.setIndex(index);
         return repository.save(workProduct);
     }
 
