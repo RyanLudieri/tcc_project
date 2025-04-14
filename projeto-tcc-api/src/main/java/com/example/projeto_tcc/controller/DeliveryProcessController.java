@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.controller;
 
+import com.example.projeto_tcc.dto.DeliveryProcessRequestDTO;
 import com.example.projeto_tcc.model.DeliveryProcess;
 import com.example.projeto_tcc.service.DeliveryProcessService;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +23,9 @@ public class DeliveryProcessController {
     }
 
     @PostMapping
-    public DeliveryProcess create(@RequestBody DeliveryProcess deliveryProcess) {
-        return service.create(deliveryProcess);
+    public ResponseEntity<DeliveryProcess> create(@RequestBody DeliveryProcessRequestDTO dto) {
+        DeliveryProcess saved = service.create(dto);
+        return ResponseEntity.ok(saved);
     }
 
     @GetMapping("/{id}")

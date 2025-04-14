@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@DiscriminatorValue("DELIVERY")
 public class DeliveryProcess extends ProcessElement {
 
     @Column(name = "name", nullable = false)
@@ -23,6 +24,7 @@ public class DeliveryProcess extends ProcessElement {
     @Column(name = "type", nullable = false)
     private ProcessType type;
 
+
     public DeliveryProcess() {}
 
     public DeliveryProcess(int index, ModelInfo modelInfo) {
@@ -32,7 +34,7 @@ public class DeliveryProcess extends ProcessElement {
 
     @Override
     public boolean optional() {
-        return false;
+        return true;
     }
 
     public List<DeliveryProcess> getPredecessors() {
