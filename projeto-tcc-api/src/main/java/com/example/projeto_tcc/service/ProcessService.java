@@ -2,6 +2,7 @@ package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.dto.ProcessDTO;
 import com.example.projeto_tcc.dto.ProcessElementDTO;
+import com.example.projeto_tcc.entity.DeliveryProcess;
 import com.example.projeto_tcc.entity.Process;
 import com.example.projeto_tcc.entity.ProcessElement;
 import com.example.projeto_tcc.entity.WorkBreakdownStructure;
@@ -21,9 +22,11 @@ public class ProcessService {
     }
 
     public Process saveProcess(ProcessDTO dto) {
-        Process process = new Process();
-        process.setName(dto.getName());
-        process.setBriefDescription(dto.getBriefDescription());
+        DeliveryProcess deliveryProcess = new DeliveryProcess();
+        deliveryProcess.setName(dto.getName());
+        deliveryProcess.setBriefDescription(dto.getBriefDescription());
+        deliveryProcess.setModelInfo(dto.getModelInfo());
+        deliveryProcess.setIndex(dto.getIndex());
 
         WorkBreakdownStructure wbs = new WorkBreakdownStructure();
         List<ProcessElement> elements = new ArrayList<>();
@@ -33,9 +36,9 @@ public class ProcessService {
             elements.add(element);
         }
         wbs.setProcessElements(elements);
-        process.setWbs(wbs);
+        deliveryProcess.setWbs(wbs);
 
-        return repository.save(process);
+        return repository.save(deliveryProcess);
     }
 
     private ProcessElement toEntity(ProcessElementDTO dto) {
@@ -43,6 +46,9 @@ public class ProcessService {
         entity.setName(dto.getName());
         entity.setBriefDescription(dto.getBriefDescription());
         entity.setCompleteness(dto.getCompleteness());
+        entity.setModelInfo(dto.getModelInfo());
+        entity.setIndex(dto.getIndex());
+        entity.setType(dto.getType());
 
         if (dto.getChildren() != null) {
             List<ProcessElement> children = new ArrayList<>();

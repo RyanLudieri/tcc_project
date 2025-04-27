@@ -1,12 +1,14 @@
 package com.example.projeto_tcc.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.util.List;
 
 @Entity
 @Data
-public class ProcessElement {
+public class ProcessElement extends AbstractElement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,9 +19,11 @@ public class ProcessElement {
     private double completeness;
 
     @ManyToOne
+    @JsonBackReference
     private ProcessElement superActivity; // Pai
 
     @OneToMany(mappedBy = "superActivity", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<ProcessElement> children; // Filhos
 
     @ManyToMany
@@ -36,6 +40,11 @@ public class ProcessElement {
         this.superActivity = superActivity;
         this.children = children;
         this.predecessors = predecessors;
+    }
+
+    @Override
+    public boolean optional() {
+        return false;
     }
 
     public Long getId() {
