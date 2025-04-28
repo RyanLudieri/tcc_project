@@ -6,5 +6,9 @@ public enum ProcessType {
     ITERATION,
     ACTIVITY,
     TASK_DESCRIPTOR,
-    MILESTONE;
+    MILESTONE,
+    WORKPRODUCT,
+
+    PERFORMER;
+
 }

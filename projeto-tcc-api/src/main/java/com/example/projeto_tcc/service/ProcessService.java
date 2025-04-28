@@ -23,9 +23,9 @@ public class ProcessService {
         DeliveryProcess deliveryProcess = new DeliveryProcess();
         deliveryProcess.setName(dto.getName());
         deliveryProcess.setPredecessors(dto.getPredecessors());
-        deliveryProcess.setModelInfo(dto.getModelInfo());
         deliveryProcess.setType(ProcessType.DELIVERY_PROCESS);
         deliveryProcess.setIndex(dto.getIndex());
+        deliveryProcess.optional();
 
         WorkBreakdownStructure wbs = new WorkBreakdownStructure();
         List<ProcessElement> elements = new ArrayList<>();
@@ -41,11 +41,10 @@ public class ProcessService {
     }
 
     private ProcessElement toEntity(ProcessElementDTO dto) {
-        ProcessElement entity = createProcessElementByType(dto.getType());
+        ProcessElement entity = createProcessElementByType(dto.getType(), dto);
         entity.setName(dto.getName());
         entity.setPredecessors(dto.getPredecessors());
-        entity.setModelInfo(dto.getModelInfo());
-        entity.setIndex(dto.getIndex());
+        entity.optional();
 
         if (dto.getChildren() != null) {
             List<ProcessElement> children = new ArrayList<>();
@@ -60,28 +59,41 @@ public class ProcessService {
         return entity;
     }
 
-    private ProcessElement createProcessElementByType(ProcessType type) {
+    private ProcessElement createProcessElementByType(ProcessType type, ProcessElementDTO dto) {
         switch (type) {
             case ACTIVITY:
                 Activity activity = new Activity();
+                activity.setIndex(dto.getIndex());
                 activity.setType(ProcessType.ACTIVITY);
                 return activity;
             case TASK_DESCRIPTOR:
                 TaskDescriptor task = new TaskDescriptor();
+                task.setIndex(dto.getIndex());
                 task.setType(ProcessType.TASK_DESCRIPTOR);
                 return task;
             case MILESTONE:
                 Milestone milestone = new Milestone();
+                milestone.setIndex(dto.getIndex());
                 milestone.setType(ProcessType.MILESTONE);
                 return milestone;
             case PHASE:
                 Phase phase = new Phase();
+                phase.setIndex(dto.getIndex());
                 phase.setType(ProcessType.PHASE);
                 return phase;
             case ITERATION:
                 Iteration iteration = new Iteration();
+                iteration.setIndex(dto.getIndex());
                 iteration.setType(ProcessType.ITERATION);
                 return iteration;
+            case WORKPRODUCT:
+                WorkProduct workProduct = new WorkProduct();
+                workProduct.setModelInfo(dto.getModelInfo());
+                return workProduct;
+            case PERFORMER:
+                Performer performer = new Performer();
+                performer.setModelInfo(dto.getModelInfo());
+                return performer;
             default:
                 throw new IllegalArgumentException("Tipo de elemento de processo não suportado: " + type);
         }
