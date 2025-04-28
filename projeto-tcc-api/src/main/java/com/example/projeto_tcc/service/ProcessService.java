@@ -15,17 +15,22 @@ public class ProcessService {
 
     private final ProcessRepository repository;
 
+    private int currentIndex = 0; // CONTADOR de índice
+
     public ProcessService(ProcessRepository repository) {
         this.repository = repository;
     }
 
     public Process saveProcess(ProcessDTO dto) {
+        currentIndex = 0; // zera o contador no começo do POST
+
         DeliveryProcess deliveryProcess = new DeliveryProcess();
         deliveryProcess.setName(dto.getName());
         deliveryProcess.setPredecessors(dto.getPredecessors());
         deliveryProcess.setType(ProcessType.DELIVERY_PROCESS);
-        deliveryProcess.setIndex(dto.getIndex());
+        deliveryProcess.setIndex(currentIndex);
         deliveryProcess.optional();
+        currentIndex++; // <-- Incrementa aqui depois de setar o DeliveryProcess
 
         WorkBreakdownStructure wbs = new WorkBreakdownStructure();
         List<ProcessElement> elements = new ArrayList<>();
@@ -37,6 +42,7 @@ public class ProcessService {
         wbs.setProcessElements(elements);
         deliveryProcess.setWbs(wbs);
 
+        currentIndex = 0; // opcional: reseta depois de salvar também
         return repository.save(deliveryProcess);
     }
 
@@ -63,27 +69,27 @@ public class ProcessService {
         switch (type) {
             case ACTIVITY:
                 Activity activity = new Activity();
-                activity.setIndex(dto.getIndex());
+                activity.setIndex(currentIndex++);
                 activity.setType(ProcessType.ACTIVITY);
                 return activity;
             case TASK_DESCRIPTOR:
                 TaskDescriptor task = new TaskDescriptor();
-                task.setIndex(dto.getIndex());
+                task.setIndex(currentIndex++);
                 task.setType(ProcessType.TASK_DESCRIPTOR);
                 return task;
             case MILESTONE:
                 Milestone milestone = new Milestone();
-                milestone.setIndex(dto.getIndex());
+                milestone.setIndex(currentIndex++);
                 milestone.setType(ProcessType.MILESTONE);
                 return milestone;
             case PHASE:
                 Phase phase = new Phase();
-                phase.setIndex(dto.getIndex());
+                phase.setIndex(currentIndex++);
                 phase.setType(ProcessType.PHASE);
                 return phase;
             case ITERATION:
                 Iteration iteration = new Iteration();
-                iteration.setIndex(dto.getIndex());
+                iteration.setIndex(currentIndex++);
                 iteration.setType(ProcessType.ITERATION);
                 return iteration;
             case WORKPRODUCT:

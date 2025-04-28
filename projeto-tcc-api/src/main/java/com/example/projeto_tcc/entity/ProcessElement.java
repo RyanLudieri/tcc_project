@@ -30,7 +30,7 @@ public class ProcessElement extends AbstractElement {
     public ProcessElement() {
     }
 
-    public ProcessElement(Long id, int index, List<ProcessElement> predecessors, ModelInfo modelInfo, ProcessType type, Long id1, String name, ProcessElement superActivity, List<ProcessElement> children, List<ProcessElement> predecessors1) {
+    public ProcessElement(Long id, Integer index, List<ProcessElement> predecessors, ModelInfo modelInfo, ProcessType type, Long id1, String name, ProcessElement superActivity, List<ProcessElement> children, List<ProcessElement> predecessors1) {
         super(id, index, predecessors, modelInfo, type);
         this.id = id1;
         this.name = name;

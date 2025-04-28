@@ -22,7 +22,7 @@ public class Process extends AbstractElement{
     public Process() {
     }
 
-    public Process(Long id, int index, List<ProcessElement> predecessors, ModelInfo modelInfo, ProcessType type, Long id1, String name, WorkBreakdownStructure wbs) {
+    public Process(Long id, Integer index, List<ProcessElement> predecessors, ModelInfo modelInfo, ProcessType type, Long id1, String name, WorkBreakdownStructure wbs) {
         super(id, index, predecessors, modelInfo, type);
         this.id = id1;
         this.name = name;

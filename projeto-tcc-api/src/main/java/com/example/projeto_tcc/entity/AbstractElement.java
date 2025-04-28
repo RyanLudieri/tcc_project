@@ -13,7 +13,7 @@ public abstract class AbstractElement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    protected int index;
+    protected Integer index;
 
     @ManyToMany
     protected List<ProcessElement> predecessors = new ArrayList<>();
@@ -29,7 +29,7 @@ public abstract class AbstractElement {
     public AbstractElement() {
     }
 
-    public AbstractElement(Long id, int index, List<ProcessElement> predecessors, ModelInfo modelInfo, ProcessType type) {
+    public AbstractElement(Long id, Integer index, List<ProcessElement> predecessors, ModelInfo modelInfo, ProcessType type) {
         this.id = id;
         this.index = index;
         this.predecessors = predecessors;
@@ -45,11 +45,11 @@ public abstract class AbstractElement {
         this.id = id;
     }
 
-    public int getIndex() {
+    public Integer getIndex() {
         return index;
     }
 
-    public void setIndex(int index) {
+    public void setIndex(Integer index) {
         this.index = index;
     }
 
