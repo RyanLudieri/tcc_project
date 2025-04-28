@@ -14,7 +14,7 @@ public class Process extends AbstractElement{
     private Long id;
 
     private String name;
-    private String briefDescription;
+
 
     @OneToOne(cascade = CascadeType.ALL)
     private WorkBreakdownStructure wbs;
@@ -22,11 +22,10 @@ public class Process extends AbstractElement{
     public Process() {
     }
 
-    public Process(Long id, int index, List<ProcessElement> predecessors, ModelInfo modelInfo, ProcessType type, Long id1, String name, String briefDescription, WorkBreakdownStructure wbs) {
+    public Process(Long id, int index, List<ProcessElement> predecessors, ModelInfo modelInfo, ProcessType type, Long id1, String name, WorkBreakdownStructure wbs) {
         super(id, index, predecessors, modelInfo, type);
         this.id = id1;
         this.name = name;
-        this.briefDescription = briefDescription;
         this.wbs = wbs;
     }
 
@@ -49,14 +48,6 @@ public class Process extends AbstractElement{
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getBriefDescription() {
-        return briefDescription;
-    }
-
-    public void setBriefDescription(String briefDescription) {
-        this.briefDescription = briefDescription;
     }
 
     public WorkBreakdownStructure getWbs() {

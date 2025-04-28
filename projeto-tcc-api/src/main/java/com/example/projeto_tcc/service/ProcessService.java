@@ -2,10 +2,8 @@ package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.dto.ProcessDTO;
 import com.example.projeto_tcc.dto.ProcessElementDTO;
-import com.example.projeto_tcc.entity.DeliveryProcess;
+import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Process;
-import com.example.projeto_tcc.entity.ProcessElement;
-import com.example.projeto_tcc.entity.WorkBreakdownStructure;
 import com.example.projeto_tcc.repository.ProcessRepository;
 import org.springframework.stereotype.Service;
 
@@ -24,8 +22,9 @@ public class ProcessService {
     public Process saveProcess(ProcessDTO dto) {
         DeliveryProcess deliveryProcess = new DeliveryProcess();
         deliveryProcess.setName(dto.getName());
-        deliveryProcess.setBriefDescription(dto.getBriefDescription());
+        deliveryProcess.setPredecessors(dto.getPredecessors());
         deliveryProcess.setModelInfo(dto.getModelInfo());
+        deliveryProcess.setType(ProcessType.DELIVERY_PROCESS);
         deliveryProcess.setIndex(dto.getIndex());
 
         WorkBreakdownStructure wbs = new WorkBreakdownStructure();
@@ -42,13 +41,11 @@ public class ProcessService {
     }
 
     private ProcessElement toEntity(ProcessElementDTO dto) {
-        ProcessElement entity = new ProcessElement();
+        ProcessElement entity = createProcessElementByType(dto.getType());
         entity.setName(dto.getName());
-        entity.setBriefDescription(dto.getBriefDescription());
-        entity.setCompleteness(dto.getCompleteness());
+        entity.setPredecessors(dto.getPredecessors());
         entity.setModelInfo(dto.getModelInfo());
         entity.setIndex(dto.getIndex());
-        entity.setType(dto.getType());
 
         if (dto.getChildren() != null) {
             List<ProcessElement> children = new ArrayList<>();
@@ -62,6 +59,34 @@ public class ProcessService {
         // Obs: aqui você poderia também associar os predecessores pelo ID depois, se precisar
         return entity;
     }
+
+    private ProcessElement createProcessElementByType(ProcessType type) {
+        switch (type) {
+            case ACTIVITY:
+                Activity activity = new Activity();
+                activity.setType(ProcessType.ACTIVITY);
+                return activity;
+            case TASK_DESCRIPTOR:
+                TaskDescriptor task = new TaskDescriptor();
+                task.setType(ProcessType.TASK_DESCRIPTOR);
+                return task;
+            case MILESTONE:
+                Milestone milestone = new Milestone();
+                milestone.setType(ProcessType.MILESTONE);
+                return milestone;
+            case PHASE:
+                Phase phase = new Phase();
+                phase.setType(ProcessType.PHASE);
+                return phase;
+            case ITERATION:
+                Iteration iteration = new Iteration();
+                iteration.setType(ProcessType.ITERATION);
+                return iteration;
+            default:
+                throw new IllegalArgumentException("Tipo de elemento de processo não suportado: " + type);
+        }
+    }
+
 
     public List<Process> getAllProcesses() {
         return repository.findAll();

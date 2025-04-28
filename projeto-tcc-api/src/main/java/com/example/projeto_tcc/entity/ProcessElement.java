@@ -15,8 +15,6 @@ public class ProcessElement extends AbstractElement {
     private Long id;
 
     private String name;
-    private String briefDescription;
-    private double completeness;
 
     @ManyToOne
     @JsonBackReference
@@ -32,14 +30,13 @@ public class ProcessElement extends AbstractElement {
     public ProcessElement() {
     }
 
-    public ProcessElement(Long id, String name, String briefDescription, double completeness, ProcessElement superActivity, List<ProcessElement> children, List<ProcessElement> predecessors) {
-        this.id = id;
+    public ProcessElement(Long id, int index, List<ProcessElement> predecessors, ModelInfo modelInfo, ProcessType type, Long id1, String name, ProcessElement superActivity, List<ProcessElement> children, List<ProcessElement> predecessors1) {
+        super(id, index, predecessors, modelInfo, type);
+        this.id = id1;
         this.name = name;
-        this.briefDescription = briefDescription;
-        this.completeness = completeness;
         this.superActivity = superActivity;
         this.children = children;
-        this.predecessors = predecessors;
+        this.predecessors = predecessors1;
     }
 
     @Override
@@ -61,22 +58,6 @@ public class ProcessElement extends AbstractElement {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getBriefDescription() {
-        return briefDescription;
-    }
-
-    public void setBriefDescription(String briefDescription) {
-        this.briefDescription = briefDescription;
-    }
-
-    public double getCompleteness() {
-        return completeness;
-    }
-
-    public void setCompleteness(double completeness) {
-        this.completeness = completeness;
     }
 
     public ProcessElement getSuperActivity() {

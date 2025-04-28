@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.dto;
 
 import com.example.projeto_tcc.entity.ModelInfo;
+import com.example.projeto_tcc.entity.ProcessElement;
 import com.example.projeto_tcc.entity.ProcessType;
 import lombok.Data;
 
@@ -15,5 +16,6 @@ public class ProcessElementDTO {
     private ModelInfo modelInfo;
     private ProcessType type;
     private List<ProcessElementDTO> children;
+    private List<ProcessElement> predecessors;
 }
 
