@@ -15,9 +15,6 @@ public abstract class AbstractElement {
 
     protected Integer index;
 
-    @ManyToMany
-    protected List<ProcessElement> predecessors = new ArrayList<>();
-
     @Enumerated(EnumType.STRING)
     protected ModelInfo modelInfo;
 
@@ -29,10 +26,9 @@ public abstract class AbstractElement {
     public AbstractElement() {
     }
 
-    public AbstractElement(Long id, Integer index, List<ProcessElement> predecessors, ModelInfo modelInfo, ProcessType type) {
+    public AbstractElement(Long id, Integer index, ModelInfo modelInfo, ProcessType type) {
         this.id = id;
         this.index = index;
-        this.predecessors = predecessors;
         this.modelInfo = modelInfo;
         this.type = type;
     }
@@ -51,14 +47,6 @@ public abstract class AbstractElement {
 
     public void setIndex(Integer index) {
         this.index = index;
-    }
-
-    public List<ProcessElement> getPredecessors() {
-        return predecessors;
-    }
-
-    public void setPredecessors(List<ProcessElement> predecessors) {
-        this.predecessors = predecessors;
     }
 
     public ModelInfo getModelInfo() {

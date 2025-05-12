@@ -1,9 +1,75 @@
 package com.example.projeto_tcc.entity;
 
-public class Activity extends ProcessElement{
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.Data;
+import java.util.List;
+
+@Entity
+@Data
+@Inheritance(strategy = InheritanceType.JOINED)
+public class Activity extends AbstractElement {
+
+    private String name;
+
+    @ManyToOne
+    @JsonBackReference
+    private Activity superActivity;
+
+    @OneToMany(mappedBy = "superActivity", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<Activity> children;
+
+    @ManyToMany
+    private List<Activity> predecessors;
 
     @Override
     public boolean optional() {
-        return true;
+        return false;
+    }
+
+    public Activity() {
+    }
+
+    public Activity(Long id, Integer index, ModelInfo modelInfo, ProcessType type, String name, Activity superActivity, List<Activity> children, List<Activity> predecessors) {
+        super(id, index, modelInfo, type);
+        this.name = name;
+        this.superActivity = superActivity;
+        this.children = children;
+        this.predecessors = predecessors;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Activity getSuperActivity() {
+        return superActivity;
+    }
+
+    public void setSuperActivity(Activity superActivity) {
+        this.superActivity = superActivity;
+    }
+
+    public List<Activity> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<Activity> children) {
+        this.children = children;
+    }
+
+    public List<Activity> getPredecessors() {
+        return predecessors;
+    }
+
+    public void setPredecessors(List<Activity> predecessors) {
+        this.predecessors = predecessors;
     }
 }
+

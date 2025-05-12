@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.service;
 
+import com.example.projeto_tcc.dto.MethodElementDTO;
 import com.example.projeto_tcc.dto.ProcessDTO;
 import com.example.projeto_tcc.dto.ProcessElementDTO;
 import com.example.projeto_tcc.entity.*;
@@ -8,106 +9,138 @@ import com.example.projeto_tcc.repository.ProcessRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProcessService {
 
     private final ProcessRepository repository;
 
-    private int currentIndex = 0; // CONTADOR de índice
+    private int currentIndex = 0;
+
+    // Mapa auxiliar para localizar atividades por índice
+    private Map<Integer, Activity> indexToActivity = new HashMap<>();
 
     public ProcessService(ProcessRepository repository) {
         this.repository = repository;
     }
 
     public Process saveProcess(ProcessDTO dto) {
-        currentIndex = 0; // zera o contador no começo do POST
+        currentIndex = 0;
+        indexToActivity.clear();
 
         DeliveryProcess deliveryProcess = new DeliveryProcess();
         deliveryProcess.setName(dto.getName());
         deliveryProcess.setPredecessors(dto.getPredecessors());
         deliveryProcess.setType(ProcessType.DELIVERY_PROCESS);
-        deliveryProcess.setIndex(currentIndex);
+        deliveryProcess.setIndex(currentIndex++);
         deliveryProcess.optional();
-        currentIndex++; // <-- Incrementa aqui depois de setar o DeliveryProcess
 
         WorkBreakdownStructure wbs = new WorkBreakdownStructure();
-        List<ProcessElement> elements = new ArrayList<>();
 
+        // ProcessElements
+        List<Activity> elements = new ArrayList<>();
         for (ProcessElementDTO elemDto : dto.getProcessElements()) {
-            ProcessElement element = toEntity(elemDto);
+            Activity element = toEntity(elemDto);
             elements.add(element);
         }
         wbs.setProcessElements(elements);
-        deliveryProcess.setWbs(wbs);
 
-        currentIndex = 0; // opcional: reseta depois de salvar também
+        // MethodElements
+        List<MethodElement> methodElements = new ArrayList<>();
+        if (dto.getMethodElements() != null) {
+            for (MethodElementDTO methodDto : dto.getMethodElements()) {
+                MethodElement method = toMethodEntity(methodDto);
+                methodElements.add(method);
+            }
+        }
+        wbs.setMethodElements(methodElements);
+
+        deliveryProcess.setWbs(wbs);
         return repository.save(deliveryProcess);
     }
 
-    private ProcessElement toEntity(ProcessElementDTO dto) {
-        ProcessElement entity = createProcessElementByType(dto.getType(), dto);
+    private Activity toEntity(ProcessElementDTO dto) {
+        Activity entity = createProcessElementByType(dto.getType());
         entity.setName(dto.getName());
         entity.setPredecessors(dto.getPredecessors());
         entity.optional();
 
+        // Salva no mapa para referência por index
+        indexToActivity.put(entity.getIndex(), entity);
+
         if (dto.getChildren() != null) {
-            List<ProcessElement> children = new ArrayList<>();
+            List<Activity> children = new ArrayList<>();
             for (ProcessElementDTO childDto : dto.getChildren()) {
-                ProcessElement child = toEntity(childDto);
+                Activity child = toEntity(childDto);
                 child.setSuperActivity(entity);
                 children.add(child);
             }
             entity.setChildren(children);
         }
-        // Obs: aqui você poderia também associar os predecessores pelo ID depois, se precisar
         return entity;
     }
 
-    private ProcessElement createProcessElementByType(ProcessType type, ProcessElementDTO dto) {
+    private Activity createProcessElementByType(ProcessType type) {
+        Activity element;
         switch (type) {
             case ACTIVITY:
-                Activity activity = new Activity();
-                activity.setIndex(currentIndex++);
-                activity.setType(ProcessType.ACTIVITY);
-                return activity;
+                element = new Activity();
+                break;
             case TASK_DESCRIPTOR:
-                TaskDescriptor task = new TaskDescriptor();
-                task.setIndex(currentIndex++);
-                task.setType(ProcessType.TASK_DESCRIPTOR);
-                return task;
+                element = new TaskDescriptor();
+                break;
             case MILESTONE:
-                Milestone milestone = new Milestone();
-                milestone.setIndex(currentIndex++);
-                milestone.setType(ProcessType.MILESTONE);
-                return milestone;
+                element = new Milestone();
+                break;
             case PHASE:
-                Phase phase = new Phase();
-                phase.setIndex(currentIndex++);
-                phase.setType(ProcessType.PHASE);
-                return phase;
+                element = new Phase();
+                break;
             case ITERATION:
-                Iteration iteration = new Iteration();
-                iteration.setIndex(currentIndex++);
-                iteration.setType(ProcessType.ITERATION);
-                return iteration;
-            case WORKPRODUCT:
-                WorkProduct workProduct = new WorkProduct();
-                workProduct.setModelInfo(dto.getModelInfo());
-                return workProduct;
-            case PERFORMER:
-                Performer performer = new Performer();
-                performer.setModelInfo(dto.getModelInfo());
-                return performer;
+                element = new Iteration();
+                break;
             default:
-                throw new IllegalArgumentException("Tipo de elemento de processo não suportado: " + type);
+                throw new IllegalArgumentException("Tipo de elemento não suportado: " + type);
         }
+        element.setIndex(currentIndex++);
+        element.setType(type);
+        return element;
     }
 
+    private MethodElement toMethodEntity(MethodElementDTO dto) {
+        MethodElement element;
 
-    public List<Process> getAllProcesses() {
+        switch (dto.getType()) {
+            case WORKPRODUCT:
+                element = new WorkProduct();
+                break;
+            case PERFORMER:
+                element = new Performer();
+                break;
+            default:
+                throw new IllegalArgumentException("Tipo de método não suportado: " + dto.getType());
+        }
+
+        element.setName(dto.getName());
+        element.setModelInfo(dto.getModelInfo());
+        element.optional();
+
+        // Associa à atividade pai, se fornecido
+        if (dto.getParentIndex() != null) {
+            Activity parent = indexToActivity.get(dto.getParentIndex());
+            if (parent != null) {
+                element.setParentActivity(parent);
+            }
+        }
+
+        return element;
+    }
+
+    public List<Activity> getAllProcesses() {
         return repository.findAll();
     }
 }
+
 

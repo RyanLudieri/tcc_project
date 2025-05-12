@@ -13,6 +13,9 @@ public class WorkBreakdownStructure {
     private Long id;
 
     @OneToMany(cascade = CascadeType.ALL)
-    private List<ProcessElement> processElements;
+    private List<Activity> processElements;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<MethodElement> methodElements;
 }
 
