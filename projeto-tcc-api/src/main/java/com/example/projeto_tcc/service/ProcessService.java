@@ -5,7 +5,9 @@ import com.example.projeto_tcc.dto.ProcessDTO;
 import com.example.projeto_tcc.dto.ProcessElementDTO;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Process;
+import com.example.projeto_tcc.repository.MethodElementRepository;
 import com.example.projeto_tcc.repository.ProcessRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,15 +19,18 @@ import java.util.Map;
 public class ProcessService {
 
     private final ProcessRepository repository;
+    private final MethodElementRepository methodElementRepository;
+
+    public ProcessService(ProcessRepository repository, MethodElementRepository methodElementRepository) {
+        this.repository = repository;
+        this.methodElementRepository = methodElementRepository;
+    }
 
     private int currentIndex = 0;
 
     // Mapa auxiliar para localizar atividades por índice
     private Map<Integer, Activity> indexToActivity = new HashMap<>();
 
-    public ProcessService(ProcessRepository repository) {
-        this.repository = repository;
-    }
 
     public Process saveProcess(ProcessDTO dto) {
         currentIndex = 0;
@@ -116,8 +121,8 @@ public class ProcessService {
             case WORKPRODUCT:
                 element = new WorkProduct();
                 break;
-            case PERFORMER:
-                element = new Performer();
+            case ROLE:
+                element = new Role();
                 break;
             default:
                 throw new IllegalArgumentException("Tipo de método não suportado: " + dto.getType());
@@ -137,6 +142,42 @@ public class ProcessService {
 
         return element;
     }
+
+    @Transactional
+    public Activity updateGenericActivity(Long id, ProcessElementDTO dto) {
+        Activity activity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Elemento não encontrado com id: " + id));
+
+        // Atualiza somente os campos permitidos
+        if (dto.getName() != null) activity.setName(dto.getName());
+        if (dto.getPredecessors() != null) activity.setPredecessors(dto.getPredecessors());
+        activity.optional();
+
+        return repository.save(activity);
+    }
+
+    @Transactional
+    public MethodElement updateGenericMethod(Long id, MethodElementDTO dto) {
+        MethodElement element = methodElementRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Elemento não encontrado com id: " + id));
+
+        if (dto.getName() != null) element.setName(dto.getName());
+        if (dto.getModelInfo() != null) element.setModelInfo(dto.getModelInfo());
+        element.optional();
+
+        return methodElementRepository.save(element);
+    }
+
+    public void deleteElementById(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+        } else if (methodElementRepository.existsById(id)) {
+            methodElementRepository.deleteById(id);
+        } else {
+            throw new RuntimeException("Elemento com ID " + id + " não encontrado.");
+        }
+    }
+
 
     public List<Activity> getAllProcesses() {
         return repository.findAll();

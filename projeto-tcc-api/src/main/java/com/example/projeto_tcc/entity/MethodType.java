@@ -4,5 +4,5 @@ public enum MethodType {
 
     WORKPRODUCT,
 
-    PERFORMER;
+    ROLE;
 }
