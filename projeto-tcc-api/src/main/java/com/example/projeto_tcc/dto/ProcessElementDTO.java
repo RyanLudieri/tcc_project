@@ -14,5 +14,5 @@ public class ProcessElementDTO {
     private ModelInfo modelInfo;
     private ProcessType type;
     private List<ProcessElementDTO> children;
-    private List<Activity> predecessors; // Corrigido para refletir nova superclasse
+    private List<Integer> predecessors; // Agora usa índices
 }

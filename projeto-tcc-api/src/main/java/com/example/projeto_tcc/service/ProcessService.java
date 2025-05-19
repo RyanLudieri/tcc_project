@@ -45,12 +45,20 @@ public class ProcessService {
 
         WorkBreakdownStructure wbs = new WorkBreakdownStructure();
 
-        // ProcessElements
         List<Activity> elements = new ArrayList<>();
-        for (ProcessElementDTO elemDto : dto.getProcessElements()) {
-            Activity element = toEntity(elemDto);
+        List<ProcessElementDTO> elementDTOs = dto.getProcessElements();
+
+    // Etapa 1: cria as atividades sem predecessores
+        for (ProcessElementDTO elemDto : elementDTOs) {
+            Activity element = toEntityWithoutPredecessors(elemDto);
             elements.add(element);
         }
+
+    // Etapa 2: resolve os predecessores
+        for (int i = 0; i < elementDTOs.size(); i++) {
+            resolvePredecessors(elementDTOs.get(i), elements.get(i));
+        }
+
         wbs.setProcessElements(elements);
 
         // MethodElements
@@ -70,7 +78,6 @@ public class ProcessService {
     private Activity toEntity(ProcessElementDTO dto) {
         Activity entity = createProcessElementByType(dto.getType());
         entity.setName(dto.getName());
-        entity.setPredecessors(dto.getPredecessors());
         entity.optional();
 
         // Salva no mapa para referência por index
@@ -87,6 +94,48 @@ public class ProcessService {
         }
         return entity;
     }
+
+    // Cria a árvore de atividades SEM setar predecessores
+    private Activity toEntityWithoutPredecessors(ProcessElementDTO dto) {
+        Activity entity = createProcessElementByType(dto.getType());
+        entity.setName(dto.getName());
+        entity.optional();
+
+        indexToActivity.put(entity.getIndex(), entity);
+
+        if (dto.getChildren() != null) {
+            List<Activity> children = new ArrayList<>();
+            for (ProcessElementDTO childDto : dto.getChildren()) {
+                Activity child = toEntityWithoutPredecessors(childDto);
+                child.setSuperActivity(entity);
+                children.add(child);
+            }
+            entity.setChildren(children);
+        }
+        return entity;
+    }
+
+    private void resolvePredecessors(ProcessElementDTO dto, Activity entity) {
+        if (dto.getPredecessors() != null) {
+            List<Activity> resolvedPredecessors = new ArrayList<>();
+            for (Integer predIndex : dto.getPredecessors()) {
+                Activity pred = indexToActivity.get(predIndex);
+                if (pred != null) {
+                    resolvedPredecessors.add(pred);
+                } else {
+                    System.err.println("WARNING: Predecessor with index " + predIndex + " not found.");
+                }
+            }
+            entity.setPredecessors(resolvedPredecessors);
+        }
+
+        if (dto.getChildren() != null && entity.getChildren() != null) {
+            for (int i = 0; i < dto.getChildren().size(); i++) {
+                resolvePredecessors(dto.getChildren().get(i), entity.getChildren().get(i));
+            }
+        }
+    }
+
 
     private Activity createProcessElementByType(ProcessType type) {
         Activity element;
@@ -150,7 +199,6 @@ public class ProcessService {
 
         // Atualiza somente os campos permitidos
         if (dto.getName() != null) activity.setName(dto.getName());
-        if (dto.getPredecessors() != null) activity.setPredecessors(dto.getPredecessors());
         activity.optional();
 
         return repository.save(activity);
