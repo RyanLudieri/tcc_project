@@ -15,8 +15,8 @@ public abstract class AbstractElement {
 
     protected Integer index;
 
-    @Enumerated(EnumType.STRING)
-    protected ModelInfo modelInfo;
+
+    protected String modelInfo;
 
     @Enumerated(EnumType.STRING)
     protected ProcessType type;
@@ -26,7 +26,7 @@ public abstract class AbstractElement {
     public AbstractElement() {
     }
 
-    public AbstractElement(Long id, Integer index, ModelInfo modelInfo, ProcessType type) {
+    public AbstractElement(Long id, Integer index, String modelInfo, ProcessType type) {
         this.id = id;
         this.index = index;
         this.modelInfo = modelInfo;
@@ -49,11 +49,11 @@ public abstract class AbstractElement {
         this.index = index;
     }
 
-    public ModelInfo getModelInfo() {
+    public String getModelInfo() {
         return modelInfo;
     }
 
-    public void setModelInfo(ModelInfo modelInfo) {
+    public void setModelInfo(String modelInfo) {
         this.modelInfo = modelInfo;
     }
 

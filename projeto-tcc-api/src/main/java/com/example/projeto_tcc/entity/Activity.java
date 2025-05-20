@@ -40,7 +40,7 @@ public class Activity extends AbstractElement {
     public Activity() {
     }
 
-    public Activity(Long id, Integer index, ModelInfo modelInfo, ProcessType type, String name, Activity superActivity, List<Activity> children, List<Activity> predecessors) {
+    public Activity(Long id, Integer index, String modelInfo, ProcessType type, String name, Activity superActivity, List<Activity> children, List<Activity> predecessors) {
         super(id, index, modelInfo, type);
         this.name = name;
         this.superActivity = superActivity;

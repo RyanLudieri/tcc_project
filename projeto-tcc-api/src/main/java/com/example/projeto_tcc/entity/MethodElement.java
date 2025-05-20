@@ -25,7 +25,7 @@ public class MethodElement extends AbstractElement{
         this.name = name;
     }
 
-    public MethodElement(Long id, Integer index, ModelInfo modelInfo, ProcessType type, Long id1, String name) {
+    public MethodElement(Long id, Integer index, String modelInfo, ProcessType type, Long id1, String name) {
         super(id, index, modelInfo, type);
         this.name = name;
     }

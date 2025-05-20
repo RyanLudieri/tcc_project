@@ -1,13 +1,12 @@
 package com.example.projeto_tcc.dto;
 
 import com.example.projeto_tcc.entity.MethodType;
-import com.example.projeto_tcc.entity.ModelInfo;
 
 public class MethodElementDTO {
     private String name;
     private MethodType type;
 
-    private ModelInfo modelInfo;
+    private String modelInfo;
     private Integer parentIndex; // índice da Activity pai, se houver
 
     public String getName() {
@@ -34,11 +33,11 @@ public class MethodElementDTO {
         this.parentIndex = parentIndex;
     }
 
-    public ModelInfo getModelInfo() {
+    public String getModelInfo() {
         return modelInfo;
     }
 
-    public void setModelInfo(ModelInfo modelInfo) {
+    public void setModelInfo(String modelInfo) {
         this.modelInfo = modelInfo;
     }
 }
