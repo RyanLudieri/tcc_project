@@ -3,10 +3,11 @@ package com.example.projeto_tcc.service;
 import com.example.projeto_tcc.dto.MethodElementDTO;
 import com.example.projeto_tcc.dto.ProcessDTO;
 import com.example.projeto_tcc.dto.ProcessElementDTO;
+import com.example.projeto_tcc.dto.ProcessGetDTO;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Process;
 import com.example.projeto_tcc.repository.MethodElementRepository;
-import com.example.projeto_tcc.repository.ProcessRepository;
+import com.example.projeto_tcc.repository.ActivityRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +19,10 @@ import java.util.Map;
 @Service
 public class ProcessService {
 
-    private final ProcessRepository repository;
+    private final ActivityRepository repository;
     private final MethodElementRepository methodElementRepository;
 
-    public ProcessService(ProcessRepository repository, MethodElementRepository methodElementRepository) {
+    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository) {
         this.repository = repository;
         this.methodElementRepository = methodElementRepository;
     }
@@ -226,10 +227,46 @@ public class ProcessService {
         }
     }
 
+    public ProcessGetDTO convertToGetDTO(Activity entity) {
+        ProcessGetDTO dto = new ProcessGetDTO();
+        dto.setName(entity.getName());
+        dto.setIndex(entity.getIndex());
+        dto.setModelInfo(entity.getModelInfo());
+        dto.setType(entity.getType());
+        dto.setPredecessors(entity.getPredecessors());
 
-    public List<Activity> getAllProcesses() {
-        return repository.findAll();
+        // Se DeliveryProcess tiver WBS e ProcessElements:
+        if (entity instanceof DeliveryProcess) {
+            DeliveryProcess dp = (DeliveryProcess) entity;
+            if (dp.getWbs() != null) {
+                List<Activity> elements = dp.getWbs().getProcessElements();
+                List<ProcessElementDTO> elementDTOs = elements.stream()
+                        .map(this::convertToProcessElementDTO)
+                        .toList();
+                dto.setProcessElements(elementDTOs);
+            }
+        }
+
+        return dto;
     }
+
+    private ProcessElementDTO convertToProcessElementDTO(Activity entity) {
+        ProcessElementDTO dto = new ProcessElementDTO();
+        dto.setName(entity.getName());
+        dto.setIndex(entity.getIndex());
+        dto.setModelInfo(entity.getModelInfo());
+        dto.setType(entity.getType());
+        dto.setPredecessors(entity.getPredecessors() == null ? null :
+                entity.getPredecessors().stream().map(Activity::getIndex).toList());
+        if (entity.getChildren() != null) {
+            List<ProcessElementDTO> childrenDto = entity.getChildren().stream()
+                    .map(this::convertToProcessElementDTO)
+                    .toList();
+            dto.setChildren(childrenDto);
+        }
+        return dto;
+    }
+
 }
 
 

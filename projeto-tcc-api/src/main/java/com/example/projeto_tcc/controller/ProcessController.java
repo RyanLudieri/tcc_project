@@ -3,10 +3,9 @@ package com.example.projeto_tcc.controller;
 import com.example.projeto_tcc.dto.MethodElementDTO;
 import com.example.projeto_tcc.dto.ProcessDTO;
 import com.example.projeto_tcc.dto.ProcessElementDTO;
+import com.example.projeto_tcc.dto.ProcessGetDTO;
 import com.example.projeto_tcc.entity.Activity;
-import com.example.projeto_tcc.entity.DeliveryProcess;
-import com.example.projeto_tcc.entity.Process;
-import com.example.projeto_tcc.repository.ProcessRepository;
+import com.example.projeto_tcc.repository.ActivityRepository;
 import com.example.projeto_tcc.service.ProcessService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +20,9 @@ public class ProcessController {
 
     private final ProcessService service;
 
-    private final ProcessRepository repository;
+    private final ActivityRepository repository;
 
-    public ProcessController(ProcessService service, ProcessRepository repository) {
+    public ProcessController(ProcessService service, ActivityRepository repository) {
         this.repository = repository;
         this.service = service;
     }
@@ -34,16 +33,18 @@ public class ProcessController {
     }
 
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Activity> getById(@PathVariable Long id) {
-        Optional<Activity> process = repository.findById(id);
-        return process.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+//    @GetMapping("/{id}")
+//    public ResponseEntity<Activity> getById(@PathVariable Long id) {
+//        Optional<Activity> process = repository.findById(id);
+//        return process.map(ResponseEntity::ok)
+//                .orElseGet(() -> ResponseEntity.notFound().build());
+//    }
 
-    @GetMapping
-    public List<Activity> getAllProcesses() {
-        return service.getAllProcesses();
+    @GetMapping("/{id}")
+    public ResponseEntity<ProcessGetDTO> getById(@PathVariable Long id) {
+        Optional<Activity> process = repository.findById(id);
+        return process.map(p -> ResponseEntity.ok(service.convertToGetDTO(p)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/activity/{id}")
