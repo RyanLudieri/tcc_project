@@ -1,9 +1,8 @@
 package com.example.projeto_tcc.entity;
 
+import com.example.projeto_tcc.enums.ProcessType;
 import jakarta.persistence.*;
 import lombok.Data;
-import java.util.ArrayList;
-import java.util.List;
 
 @MappedSuperclass
 @Data

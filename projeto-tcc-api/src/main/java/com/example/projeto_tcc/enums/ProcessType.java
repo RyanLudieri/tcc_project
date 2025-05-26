@@ -1,4 +1,4 @@
-package com.example.projeto_tcc.entity;
+package com.example.projeto_tcc.enums;
 
 public enum ProcessType {
     DELIVERY_PROCESS,

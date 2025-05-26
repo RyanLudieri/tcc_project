@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.entity;
 
+import com.example.projeto_tcc.enums.*;
 import com.example.projeto_tcc.serializer.CustomElementSerializer;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -31,6 +32,33 @@ public class Activity extends AbstractElement {
     )
     @JsonSerialize(using = CustomElementSerializer.class)
     private List<Activity> predecessors;
+
+
+    // --------------------------
+    // CAMPOS DE SIMULAÇÃO AQUI
+    // --------------------------
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private Sample sample;
+
+    @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL)
+    private List<Observer> observers;
+
+    @Enumerated(EnumType.STRING)
+    private DependencyType dependencyType;
+
+    @Enumerated(EnumType.STRING)
+    private ConditionToProcess conditionToProcess;
+
+    @Enumerated(EnumType.STRING)
+    private ProcessingQuantity processingQuantity;
+
+    @Enumerated(EnumType.STRING)
+    private IterationBehavior iterationBehavior;
+
+    private int requiredResources;
+
+    // --------------------------
 
     @Override
     public boolean optional() {

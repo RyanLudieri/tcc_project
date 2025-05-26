@@ -6,6 +6,7 @@ import com.example.projeto_tcc.dto.ProcessElementDTO;
 import com.example.projeto_tcc.dto.ProcessGetDTO;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Process;
+import com.example.projeto_tcc.enums.ProcessType;
 import com.example.projeto_tcc.repository.MethodElementRepository;
 import com.example.projeto_tcc.repository.ActivityRepository;
 import jakarta.transaction.Transactional;

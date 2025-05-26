@@ -1,6 +1,6 @@
 package com.example.projeto_tcc.dto;
 
-import com.example.projeto_tcc.entity.MethodType;
+import com.example.projeto_tcc.enums.MethodType;
 
 public class MethodElementDTO {
     private String name;

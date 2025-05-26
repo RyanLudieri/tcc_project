@@ -1,7 +1,6 @@
 package com.example.projeto_tcc.dto;
 
-import com.example.projeto_tcc.entity.ProcessType;
-import com.fasterxml.jackson.annotation.JsonView;
+import com.example.projeto_tcc.enums.ProcessType;
 import lombok.Data;
 
 import java.util.List;
