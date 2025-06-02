@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.service;
 
+import com.example.projeto_tcc.dto.ActivityResponseDTO;
 import com.example.projeto_tcc.dto.SimulationParamsDTO;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.repository.ActivityRepository;
@@ -13,6 +14,7 @@ import org.apache.commons.math3.distribution.RealDistribution;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SimulationService {
@@ -33,7 +35,7 @@ public class SimulationService {
         this.durationMeasurementRepository = durationMeasurementRepository;
     }
 
-    public void setSimulationParameters(SimulationParamsDTO dto) {
+    public Activity setSimulationParameters(SimulationParamsDTO dto) {
         Activity activity = activityRepository.findById(dto.getActivityId())
                 .orElseThrow(() -> new RuntimeException("Activity not found"));
 
@@ -42,7 +44,6 @@ public class SimulationService {
                     .orElseThrow(() -> new RuntimeException("Sample not found"));
             activity.setSample(sample);
 
-            // Gerar distribuições e medições a partir da amostra
             Object distribution = DistributionFactory.createDistribution(
                     sample.getDistribution(), sample.getParameter());
 
@@ -61,7 +62,7 @@ public class SimulationService {
             }
 
             durationMeasurementRepository.saveAll(measurements);
-            sample.setMeasurements(measurements); // opcional
+            sample.setMeasurements(measurements);
         }
 
         if (dto.getObserverIds() != null) {
@@ -77,8 +78,39 @@ public class SimulationService {
         activity.setProcessingQuantity(dto.getProcessingQuantity());
         activity.setIterationBehavior(dto.getIterationBehavior());
         activity.setRequiredResources(dto.getRequiredResources());
+        if (dto.getTimeScale() == null) {
+            throw new RuntimeException("TimeScale está null no DTO");
+        }
+        activity.setTimeScale(dto.getTimeScale());
 
         activityRepository.save(activity);
+
+        return activity;
+    }
+
+    public ActivityResponseDTO toActivityResponseDTO(Activity activity) {
+        List<Long> observerIds = activity.getObservers() == null
+                ? List.of()
+                : activity.getObservers().stream()
+                .map(Observer::getId)  // supondo que getId() retorna Long
+                .collect(Collectors.toList());
+
+
+        Integer sampleId = activity.getSample() != null ? activity.getSample().getId() : null;
+
+        return new ActivityResponseDTO(
+                activity.getId(),
+                activity.getName(),
+                activity.getType(),
+                activity.getRequiredResources(),
+                activity.getTimeScale(),
+                activity.getDependencyType(),
+                activity.getConditionToProcess(),
+                activity.getProcessingQuantity(),
+                activity.getIterationBehavior(),
+                observerIds,
+                sampleId
+        );
     }
 
 }

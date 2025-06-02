@@ -1,21 +1,20 @@
 package com.example.projeto_tcc.dto;
 
-import com.example.projeto_tcc.enums.ConditionToProcess;
-import com.example.projeto_tcc.enums.DependencyType;
-import com.example.projeto_tcc.enums.IterationBehavior;
-import com.example.projeto_tcc.enums.ProcessingQuantity;
+import com.example.projeto_tcc.enums.*;
 
 import java.util.List;
 
 public class SimulationParamsDTO {
     private Long activityId;
     private Integer sampleId;
-    private List<Integer> observerIds;
+    private List<Long> observerIds;
     private DependencyType dependencyType;
     private ConditionToProcess conditionToProcess;
     private ProcessingQuantity processingQuantity;
     private IterationBehavior iterationBehavior;
     private int requiredResources;
+
+    private TimeScale timeScale;
 
     public Long getActivityId() {
         return activityId;
@@ -33,11 +32,11 @@ public class SimulationParamsDTO {
         this.sampleId = sampleId;
     }
 
-    public List<Integer> getObserverIds() {
+    public List<Long> getObserverIds() {
         return observerIds;
     }
 
-    public void setObserverIds(List<Integer> observerIds) {
+    public void setObserverIds(List<Long> observerIds) {
         this.observerIds = observerIds;
     }
 
@@ -79,5 +78,13 @@ public class SimulationParamsDTO {
 
     public void setRequiredResources(int requiredResources) {
         this.requiredResources = requiredResources;
+    }
+
+    public TimeScale getTimeScale() {
+        return timeScale;
+    }
+
+    public void setTimeScale(TimeScale timeScale) {
+        this.timeScale = timeScale;
     }
 }

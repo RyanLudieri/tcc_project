@@ -1,24 +1,23 @@
 package com.example.projeto_tcc.controller;
 
+import com.example.projeto_tcc.dto.SampleDTO;
 import com.example.projeto_tcc.entity.Sample;
-import com.example.projeto_tcc.repository.SampleRepository;
+import com.example.projeto_tcc.service.SampleService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/samples")
 public class SampleController {
-    private final SampleRepository sampleRepository;
+    private final SampleService sampleService;
 
-    public SampleController(SampleRepository sampleRepository) {
-        this.sampleRepository = sampleRepository;
+    public SampleController(SampleService sampleService) {
+        this.sampleService = sampleService;
     }
 
     @PostMapping
-    public ResponseEntity<Sample> createSample(@RequestBody Sample sample) {
-        return ResponseEntity.ok(sampleRepository.save(sample));
+    public ResponseEntity<SampleDTO> createSample(@RequestBody SampleDTO dto) {
+        SampleDTO created = sampleService.createSample(dto);
+        return ResponseEntity.ok(created);
     }
 }

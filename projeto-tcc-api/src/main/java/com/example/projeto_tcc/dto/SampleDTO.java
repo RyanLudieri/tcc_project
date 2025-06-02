@@ -1,34 +1,22 @@
-package com.example.projeto_tcc.entity;
+package com.example.projeto_tcc.dto;
 
+import com.example.projeto_tcc.entity.DistributionParameter;
 import com.example.projeto_tcc.enums.BestFitDistribution;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-public class Sample {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class SampleDTO {
     private Integer id;
     private String name;
     private int size;
-
-    @Enumerated(EnumType.STRING)
     private BestFitDistribution distribution;
-
-    @ManyToOne(cascade = CascadeType.PERSIST) // ou CascadeType.ALL se quiser todas operações cascata
     private DistributionParameter parameter;
+    private List<DurationMeasurementDTO> measurements;
 
-    @OneToMany(mappedBy = "sample", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private List<DurationMeasurement> measurements = new ArrayList<>();
+    public SampleDTO() {}
 
-    public Sample() {
-    }
-
-    public Sample(Integer id, String name, int size, BestFitDistribution distribution, DistributionParameter parameter, List<DurationMeasurement> measurements) {
+    public SampleDTO(Integer id, String name, int size, BestFitDistribution distribution,
+                     DistributionParameter parameter, List<DurationMeasurementDTO> measurements) {
         this.id = id;
         this.name = name;
         this.size = size;
@@ -36,6 +24,10 @@ public class Sample {
         this.parameter = parameter;
         this.measurements = measurements;
     }
+
+    // Getters e Setters
+    // ...
+
 
     public Integer getId() {
         return id;
@@ -77,11 +69,12 @@ public class Sample {
         this.parameter = parameter;
     }
 
-    public List<DurationMeasurement> getMeasurements() {
+    public List<DurationMeasurementDTO> getMeasurements() {
         return measurements;
     }
 
-    public void setMeasurements(List<DurationMeasurement> measurements) {
+    public void setMeasurements(List<DurationMeasurementDTO> measurements) {
         this.measurements = measurements;
     }
 }
+

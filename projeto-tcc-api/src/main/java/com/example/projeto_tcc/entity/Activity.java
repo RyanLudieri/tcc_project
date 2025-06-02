@@ -58,6 +58,9 @@ public class Activity extends AbstractElement {
 
     private int requiredResources;
 
+    @Enumerated(EnumType.STRING)
+    private TimeScale timeScale;
+
     // --------------------------
 
     @Override
@@ -106,6 +109,14 @@ public class Activity extends AbstractElement {
 
     public void setPredecessors(List<Activity> predecessors) {
         this.predecessors = predecessors;
+    }
+
+    public TimeScale getTimeScale() {
+        return timeScale;
+    }
+
+    public void setTimeScale(TimeScale timeScale) {
+        this.timeScale = timeScale;
     }
 }
 

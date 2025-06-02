@@ -1,6 +1,8 @@
 package com.example.projeto_tcc.controller;
 
+import com.example.projeto_tcc.dto.ActivityResponseDTO;
 import com.example.projeto_tcc.dto.SimulationParamsDTO;
+import com.example.projeto_tcc.entity.Activity;
 import com.example.projeto_tcc.service.SimulationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,9 +20,11 @@ public class SimulationController {
         this.simulationService = simulationService;
     }
 
-    @PostMapping("/parameters")
-    public ResponseEntity<String> setSimulationParameters(@RequestBody SimulationParamsDTO dto) {
-        simulationService.setSimulationParameters(dto);
-        return ResponseEntity.ok("Simulation parameters set successfully");
+    @PostMapping("/params")
+    public ResponseEntity<ActivityResponseDTO> setSimulationParams(@RequestBody SimulationParamsDTO dto) {
+        Activity activity = simulationService.setSimulationParameters(dto);
+        ActivityResponseDTO responseDTO = simulationService.toActivityResponseDTO(activity);
+        return ResponseEntity.ok(responseDTO);
     }
 }
+

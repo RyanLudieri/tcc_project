@@ -1,34 +1,43 @@
 package com.example.projeto_tcc.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 @Entity
 public class DurationMeasurement {
     @Id
-    private String id;
+    @GeneratedValue
+    private int id;
     private String name;
-    private double duration;
+    private double value;
 
     @ManyToOne
+    @JsonBackReference
     private Sample sample;
+
+    @ManyToOne
+    private Activity activity;
+
 
     public DurationMeasurement() {
     }
 
-    public DurationMeasurement(String id, String name, double duration, Sample sample) {
+    public DurationMeasurement(int id, String name, double value, Sample sample) {
         this.id = id;
         this.name = name;
-        this.duration = duration;
+        this.value = value;
         this.sample = sample;
     }
 
-    public String getId() {
+
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -40,12 +49,12 @@ public class DurationMeasurement {
         this.name = name;
     }
 
-    public double getDuration() {
-        return duration;
+    public double getValue() {
+        return value;
     }
 
-    public void setDuration(double duration) {
-        this.duration = duration;
+    public void setValue(double value) {
+        this.value = value;
     }
 
     public Sample getSample() {
@@ -54,5 +63,13 @@ public class DurationMeasurement {
 
     public void setSample(Sample sample) {
         this.sample = sample;
+    }
+
+    public Activity getActivity() {
+        return activity;
+    }
+
+    public void setActivity(Activity activity) {
+        this.activity = activity;
     }
 }
