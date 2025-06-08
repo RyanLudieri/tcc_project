@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+
 import java.util.List;
 
 @Entity
@@ -58,7 +60,7 @@ public class Activity extends AbstractElement {
 
     private int requiredResources;
 
-    @Enumerated(EnumType.STRING)
+    @Getter
     private TimeScale timeScale;
 
     // --------------------------
@@ -109,10 +111,6 @@ public class Activity extends AbstractElement {
 
     public void setPredecessors(List<Activity> predecessors) {
         this.predecessors = predecessors;
-    }
-
-    public TimeScale getTimeScale() {
-        return timeScale;
     }
 
     public void setTimeScale(TimeScale timeScale) {

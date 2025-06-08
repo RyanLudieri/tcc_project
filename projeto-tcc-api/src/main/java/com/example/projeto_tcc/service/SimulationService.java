@@ -9,6 +9,7 @@ import com.example.projeto_tcc.repository.ObserverRepository;
 import com.example.projeto_tcc.repository.SampleRepository;
 import com.example.projeto_tcc.util.DistributionFactory;
 import com.example.projeto_tcc.util.MeasurementFactory;
+import jakarta.transaction.Transactional;
 import org.apache.commons.math3.distribution.IntegerDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.springframework.stereotype.Service;
@@ -35,10 +36,12 @@ public class SimulationService {
         this.durationMeasurementRepository = durationMeasurementRepository;
     }
 
+    @Transactional
     public Activity setSimulationParameters(SimulationParamsDTO dto) {
         Activity activity = activityRepository.findById(dto.getActivityId())
                 .orElseThrow(() -> new RuntimeException("Activity not found"));
 
+        // Associa Sample e gera medições (se aplicável)
         if (dto.getSampleId() != null) {
             Sample sample = sampleRepository.findById(dto.getSampleId())
                     .orElseThrow(() -> new RuntimeException("Sample not found"));
@@ -65,6 +68,7 @@ public class SimulationService {
             sample.setMeasurements(measurements);
         }
 
+        // Associa Observers (se aplicável)
         if (dto.getObserverIds() != null) {
             List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
             for (Observer observer : observers) {
@@ -73,20 +77,67 @@ public class SimulationService {
             activity.setObservers(observers);
         }
 
-        activity.setDependencyType(dto.getDependencyType());
-        activity.setConditionToProcess(dto.getConditionToProcess());
-        activity.setProcessingQuantity(dto.getProcessingQuantity());
-        activity.setIterationBehavior(dto.getIterationBehavior());
-        activity.setRequiredResources(dto.getRequiredResources());
-        if (dto.getTimeScale() == null) {
-            throw new RuntimeException("TimeScale está null no DTO");
+        // Configurações específicas por tipo
+        switch (activity.getType()) {
+            case ITERATION -> {
+                Iteration iteration = (Iteration) activity;
+                iteration.setTimeScale(dto.getTimeScale());
+                iteration.setConditionToProcess(dto.getConditionToProcess());
+                iteration.setProcessingQuantity(dto.getProcessingQuantity());
+                iteration.setIterationBehavior(dto.getIterationBehavior());
+                // Sample e Observer aplicáveis
+            }
+
+            case TASK_DESCRIPTOR -> {
+                TaskDescriptor task = (TaskDescriptor) activity;
+                task.setConditionToProcess(dto.getConditionToProcess());
+                task.setProcessingQuantity(dto.getProcessingQuantity());
+                task.setRequiredResources(dto.getRequiredResources());
+                // Sample e Observer aplicáveis
+            }
+
+            case ACTIVITY -> {
+                activity.setTimeScale(dto.getTimeScale());
+                activity.setConditionToProcess(dto.getConditionToProcess());
+                activity.setProcessingQuantity(dto.getProcessingQuantity());
+                // Sample e Observer aplicáveis
+            }
+
+            case MILESTONE -> {
+                Milestone milestone = (Milestone) activity;
+                milestone.setDependencyType(dto.getDependencyType());
+                milestone.setConditionToProcess(dto.getConditionToProcess());
+                milestone.setProcessingQuantity(dto.getProcessingQuantity());
+                // NÃO usa sample nem observer
+                milestone.setSample(null);
+                milestone.setObservers(null);
+            }
+
+            case PHASE -> {
+                Phase phase = (Phase) activity;
+                phase.setTimeScale(dto.getTimeScale());
+                phase.setConditionToProcess(dto.getConditionToProcess());
+                phase.setProcessingQuantity(dto.getProcessingQuantity());
+                // NÃO usa sample nem observer
+                phase.setSample(null);
+                phase.setObservers(null);
+            }
+
+            case DELIVERY_PROCESS -> {
+                DeliveryProcess delivery = (DeliveryProcess) activity;
+                delivery.setDependencyType(dto.getDependencyType());
+                delivery.setRequiredResources(dto.getRequiredResources());
+                // NÃO usa sample nem observer
+                delivery.setSample(null);
+                delivery.setObservers(null);
+            }
+
+            default -> throw new IllegalArgumentException("Tipo de activity não reconhecido: " + activity.getType());
         }
-        activity.setTimeScale(dto.getTimeScale());
 
-        activityRepository.save(activity);
-
-        return activity;
+        return activityRepository.save(activity);
     }
+
 
     public ActivityResponseDTO toActivityResponseDTO(Activity activity) {
         List<Long> observerIds = activity.getObservers() == null
