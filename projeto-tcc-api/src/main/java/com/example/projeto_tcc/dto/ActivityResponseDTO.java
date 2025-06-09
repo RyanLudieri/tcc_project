@@ -9,6 +9,8 @@ public class ActivityResponseDTO {
     private String name;
     private ProcessType type;
     private Integer requiredResources;
+
+    private int timeBox;
     private TimeScale timeScale;
     private DependencyType dependencyType;
     private ConditionToProcess conditionToProcess;
@@ -19,14 +21,12 @@ public class ActivityResponseDTO {
 
     public ActivityResponseDTO() {}
 
-    public ActivityResponseDTO(Long id, String name, ProcessType type, Integer requiredResources, TimeScale timeScale,
-                               DependencyType dependencyType, ConditionToProcess conditionToProcess,
-                               ProcessingQuantity processingQuantity, IterationBehavior iterationBehavior,
-                               List<Long> observerIds, Integer sampleId) {
+    public ActivityResponseDTO(Long id, String name, ProcessType type, Integer requiredResources, int timeBox, TimeScale timeScale, DependencyType dependencyType, ConditionToProcess conditionToProcess, ProcessingQuantity processingQuantity, IterationBehavior iterationBehavior, List<Long> observerIds, Integer sampleId) {
         this.id = id;
         this.name = name;
         this.type = type;
         this.requiredResources = requiredResources;
+        this.timeBox = timeBox;
         this.timeScale = timeScale;
         this.dependencyType = dependencyType;
         this.conditionToProcess = conditionToProcess;
@@ -122,5 +122,13 @@ public class ActivityResponseDTO {
 
     public void setSampleId(Integer sampleId) {
         this.sampleId = sampleId;
+    }
+
+    public int getTimeBox() {
+        return timeBox;
+    }
+
+    public void setTimeBox(int timeBox) {
+        this.timeBox = timeBox;
     }
 }

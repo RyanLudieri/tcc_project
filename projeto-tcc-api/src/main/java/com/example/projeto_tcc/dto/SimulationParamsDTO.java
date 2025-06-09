@@ -14,6 +14,8 @@ public class SimulationParamsDTO {
     private IterationBehavior iterationBehavior;
     private int requiredResources;
 
+    private int timeBox;
+
     private TimeScale timeScale;
 
     public Long getActivityId() {
@@ -86,5 +88,13 @@ public class SimulationParamsDTO {
 
     public void setTimeScale(TimeScale timeScale) {
         this.timeScale = timeScale;
+    }
+
+    public int getTimeBox() {
+        return timeBox;
+    }
+
+    public void setTimeBox(int timeBox) {
+        this.timeBox = timeBox;
     }
 }

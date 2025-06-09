@@ -81,6 +81,7 @@ public class SimulationService {
         switch (activity.getType()) {
             case ITERATION -> {
                 Iteration iteration = (Iteration) activity;
+                iteration.setTimeBox(dto.getTimeBox());
                 iteration.setTimeScale(dto.getTimeScale());
                 iteration.setConditionToProcess(dto.getConditionToProcess());
                 iteration.setProcessingQuantity(dto.getProcessingQuantity());
@@ -97,6 +98,7 @@ public class SimulationService {
             }
 
             case ACTIVITY -> {
+                activity.setTimeBox(dto.getTimeBox());
                 activity.setTimeScale(dto.getTimeScale());
                 activity.setConditionToProcess(dto.getConditionToProcess());
                 activity.setProcessingQuantity(dto.getProcessingQuantity());
@@ -115,21 +117,13 @@ public class SimulationService {
 
             case PHASE -> {
                 Phase phase = (Phase) activity;
+                phase.setTimeBox(dto.getTimeBox());
                 phase.setTimeScale(dto.getTimeScale());
                 phase.setConditionToProcess(dto.getConditionToProcess());
                 phase.setProcessingQuantity(dto.getProcessingQuantity());
                 // NÃO usa sample nem observer
                 phase.setSample(null);
                 phase.setObservers(null);
-            }
-
-            case DELIVERY_PROCESS -> {
-                DeliveryProcess delivery = (DeliveryProcess) activity;
-                delivery.setDependencyType(dto.getDependencyType());
-                delivery.setRequiredResources(dto.getRequiredResources());
-                // NÃO usa sample nem observer
-                delivery.setSample(null);
-                delivery.setObservers(null);
             }
 
             default -> throw new IllegalArgumentException("Tipo de activity não reconhecido: " + activity.getType());
@@ -154,6 +148,7 @@ public class SimulationService {
                 activity.getName(),
                 activity.getType(),
                 activity.getRequiredResources(),
+                activity.getTimeBox(),
                 activity.getTimeScale(),
                 activity.getDependencyType(),
                 activity.getConditionToProcess(),

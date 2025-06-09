@@ -60,6 +60,8 @@ public class Activity extends AbstractElement {
 
     private int requiredResources;
 
+    private int timeBox;
+
     @Getter
     private TimeScale timeScale;
 
