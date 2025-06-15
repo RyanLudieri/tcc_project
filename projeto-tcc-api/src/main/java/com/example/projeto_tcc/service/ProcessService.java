@@ -77,25 +77,7 @@ public class ProcessService {
         return repository.save(deliveryProcess);
     }
 
-//    private Activity toEntity(ProcessElementDTO dto) {
-//        Activity entity = createProcessElementByType(dto.getType());
-//        entity.setName(dto.getName());
-//        entity.optional();
-//
-//        // Salva no mapa para referência por index
-//        indexToActivity.put(entity.getIndex(), entity);
-//
-//        if (dto.getChildren() != null) {
-//            List<Activity> children = new ArrayList<>();
-//            for (ProcessElementDTO childDto : dto.getChildren()) {
-//                Activity child = toEntity(childDto);
-//                child.setSuperActivity(entity);
-//                children.add(child);
-//            }
-//            entity.setChildren(children);
-//        }
-//        return entity;
-//    }
+
 
     // Cria a árvore de atividades SEM setar predecessores
     private Activity toEntityWithoutPredecessors(ProcessElementDTO dto) {
