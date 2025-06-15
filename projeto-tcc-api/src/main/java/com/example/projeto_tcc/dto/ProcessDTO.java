@@ -28,4 +28,6 @@ public class ProcessDTO {
 
 
     private List<Activity> predecessors; // Corrigido para aceitar qualquer elemento de processo (Activity)
+
+
 }

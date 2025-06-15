@@ -77,25 +77,25 @@ public class ProcessService {
         return repository.save(deliveryProcess);
     }
 
-    private Activity toEntity(ProcessElementDTO dto) {
-        Activity entity = createProcessElementByType(dto.getType());
-        entity.setName(dto.getName());
-        entity.optional();
-
-        // Salva no mapa para referência por index
-        indexToActivity.put(entity.getIndex(), entity);
-
-        if (dto.getChildren() != null) {
-            List<Activity> children = new ArrayList<>();
-            for (ProcessElementDTO childDto : dto.getChildren()) {
-                Activity child = toEntity(childDto);
-                child.setSuperActivity(entity);
-                children.add(child);
-            }
-            entity.setChildren(children);
-        }
-        return entity;
-    }
+//    private Activity toEntity(ProcessElementDTO dto) {
+//        Activity entity = createProcessElementByType(dto.getType());
+//        entity.setName(dto.getName());
+//        entity.optional();
+//
+//        // Salva no mapa para referência por index
+//        indexToActivity.put(entity.getIndex(), entity);
+//
+//        if (dto.getChildren() != null) {
+//            List<Activity> children = new ArrayList<>();
+//            for (ProcessElementDTO childDto : dto.getChildren()) {
+//                Activity child = toEntity(childDto);
+//                child.setSuperActivity(entity);
+//                children.add(child);
+//            }
+//            entity.setChildren(children);
+//        }
+//        return entity;
+//    }
 
     // Cria a árvore de atividades SEM setar predecessores
     private Activity toEntityWithoutPredecessors(ProcessElementDTO dto) {
@@ -140,44 +140,15 @@ public class ProcessService {
 
 
     private Activity createProcessElementByType(ProcessType type) {
-        Activity element;
-        switch (type) {
-            case ACTIVITY:
-                element = new Activity();
-                break;
-            case TASK_DESCRIPTOR:
-                element = new TaskDescriptor();
-                break;
-            case MILESTONE:
-                element = new Milestone();
-                break;
-            case PHASE:
-                element = new Phase();
-                break;
-            case ITERATION:
-                element = new Iteration();
-                break;
-            default:
-                throw new IllegalArgumentException("Tipo de elemento não suportado: " + type);
-        }
+        Activity element = type.createInstance();
         element.setIndex(currentIndex++);
         element.setType(type);
         return element;
     }
 
-    private MethodElement toMethodEntity(MethodElementDTO dto) {
-        MethodElement element;
 
-        switch (dto.getType()) {
-            case WORKPRODUCT:
-                element = new WorkProduct();
-                break;
-            case ROLE:
-                element = new Role();
-                break;
-            default:
-                throw new IllegalArgumentException("Tipo de método não suportado: " + dto.getType());
-        }
+    private MethodElement toMethodEntity(MethodElementDTO dto) {
+        MethodElement element = dto.getType().createInstance();
 
         element.setName(dto.getName());
         element.setModelInfo(dto.getModelInfo());
