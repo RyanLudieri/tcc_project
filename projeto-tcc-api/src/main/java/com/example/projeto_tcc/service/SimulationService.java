@@ -77,57 +77,7 @@ public class SimulationService {
             activity.setObservers(observers);
         }
 
-        // Configurações específicas por tipo
-        switch (activity.getType()) {
-            case ITERATION -> {
-                Iteration iteration = (Iteration) activity;
-                iteration.setTimeBox(dto.getTimeBox());
-                iteration.setTimeScale(dto.getTimeScale());
-                iteration.setConditionToProcess(dto.getConditionToProcess());
-                iteration.setProcessingQuantity(dto.getProcessingQuantity());
-                iteration.setIterationBehavior(dto.getIterationBehavior());
-                // Sample e Observer aplicáveis
-            }
-
-            case TASK_DESCRIPTOR -> {
-                TaskDescriptor task = (TaskDescriptor) activity;
-                task.setConditionToProcess(dto.getConditionToProcess());
-                task.setProcessingQuantity(dto.getProcessingQuantity());
-                task.setRequiredResources(dto.getRequiredResources());
-                // Sample e Observer aplicáveis
-            }
-
-            case ACTIVITY -> {
-                activity.setTimeBox(dto.getTimeBox());
-                activity.setTimeScale(dto.getTimeScale());
-                activity.setConditionToProcess(dto.getConditionToProcess());
-                activity.setProcessingQuantity(dto.getProcessingQuantity());
-                // Sample e Observer aplicáveis
-            }
-
-            case MILESTONE -> {
-                Milestone milestone = (Milestone) activity;
-                milestone.setDependencyType(dto.getDependencyType());
-                milestone.setConditionToProcess(dto.getConditionToProcess());
-                milestone.setProcessingQuantity(dto.getProcessingQuantity());
-                // NÃO usa sample nem observer
-                milestone.setSample(null);
-                milestone.setObservers(null);
-            }
-
-            case PHASE -> {
-                Phase phase = (Phase) activity;
-                phase.setTimeBox(dto.getTimeBox());
-                phase.setTimeScale(dto.getTimeScale());
-                phase.setConditionToProcess(dto.getConditionToProcess());
-                phase.setProcessingQuantity(dto.getProcessingQuantity());
-                // NÃO usa sample nem observer
-                phase.setSample(null);
-                phase.setObservers(null);
-            }
-
-            default -> throw new IllegalArgumentException("Tipo de activity não reconhecido: " + activity.getType());
-        }
+        activity.configureFromDTO(dto);
 
         return activityRepository.save(activity);
     }

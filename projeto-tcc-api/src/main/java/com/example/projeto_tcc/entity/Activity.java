@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.entity;
 
+import com.example.projeto_tcc.dto.SimulationParamsDTO;
 import com.example.projeto_tcc.enums.*;
 import com.example.projeto_tcc.serializer.CustomElementSerializer;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -70,6 +71,14 @@ public class Activity extends AbstractElement {
     @Override
     public boolean optional() {
         return false;
+    }
+
+    public void configureFromDTO(SimulationParamsDTO dto) {
+        this.setTimeBox(dto.getTimeBox());
+        this.setTimeScale(dto.getTimeScale());
+        this.setConditionToProcess(dto.getConditionToProcess());
+        this.setProcessingQuantity(dto.getProcessingQuantity());
+        // Sample e Observer setados fora
     }
 
     public Activity() {
