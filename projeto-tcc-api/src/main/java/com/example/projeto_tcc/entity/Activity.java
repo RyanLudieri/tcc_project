@@ -49,19 +49,11 @@ public class Activity extends AbstractElement {
     @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL)
     private List<Observer> observers;
 
-    //@Enumerated(EnumType.STRING)
-    //private DependencyType dependencyType;
-
     @Enumerated(EnumType.STRING)
     private ConditionToProcess conditionToProcess;
 
     @Enumerated(EnumType.STRING)
     private ProcessingQuantity processingQuantity;
-
-    //@Enumerated(EnumType.STRING)
-    //private IterationBehavior iterationBehavior;
-
-    //private int requiredResources;
 
     private int timeBox;
 

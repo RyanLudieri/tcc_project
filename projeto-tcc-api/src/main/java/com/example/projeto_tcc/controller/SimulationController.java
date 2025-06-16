@@ -1,14 +1,14 @@
 package com.example.projeto_tcc.controller;
 
 import com.example.projeto_tcc.dto.ActivityResponseDTO;
+import com.example.projeto_tcc.dto.RoleMappingDTO;
+import com.example.projeto_tcc.dto.RoleResponseDTO;
 import com.example.projeto_tcc.dto.SimulationParamsDTO;
 import com.example.projeto_tcc.entity.Activity;
+import com.example.projeto_tcc.entity.Role;
 import com.example.projeto_tcc.service.SimulationService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/simulation")
@@ -26,5 +26,14 @@ public class SimulationController {
         ActivityResponseDTO responseDTO = simulationService.toActivityResponseDTO(activity);
         return ResponseEntity.ok(responseDTO);
     }
+
+    @PatchMapping("/role/{roleId}")
+    public ResponseEntity<RoleResponseDTO> mapRole(@PathVariable Long roleId, @RequestBody RoleMappingDTO dto) {
+        dto.setRoleId(roleId);
+        RoleResponseDTO updated = simulationService.mapRoleFields(dto);
+        return ResponseEntity.ok(updated);
+    }
+
+
 }
 

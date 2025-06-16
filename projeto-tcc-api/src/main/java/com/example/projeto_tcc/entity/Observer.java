@@ -1,9 +1,6 @@
 package com.example.projeto_tcc.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 
 @Entity
 public class Observer {
@@ -12,6 +9,10 @@ public class Observer {
     private Long id;
     private String name;
     private String type;
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private Role role;
 
     @ManyToOne
     private Activity activity;
@@ -56,5 +57,13 @@ public class Observer {
 
     public void setActivity(Activity activity) {
         this.activity = activity;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

@@ -1,12 +1,11 @@
 package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.dto.ActivityResponseDTO;
+import com.example.projeto_tcc.dto.RoleMappingDTO;
+import com.example.projeto_tcc.dto.RoleResponseDTO;
 import com.example.projeto_tcc.dto.SimulationParamsDTO;
 import com.example.projeto_tcc.entity.*;
-import com.example.projeto_tcc.repository.ActivityRepository;
-import com.example.projeto_tcc.repository.DurationMeasurementRepository;
-import com.example.projeto_tcc.repository.ObserverRepository;
-import com.example.projeto_tcc.repository.SampleRepository;
+import com.example.projeto_tcc.repository.*;
 import com.example.projeto_tcc.util.DistributionFactory;
 import com.example.projeto_tcc.util.MeasurementFactory;
 import jakarta.transaction.Transactional;
@@ -26,14 +25,18 @@ public class SimulationService {
 
     private final DurationMeasurementRepository durationMeasurementRepository;
 
+    private final RoleRepository roleRepository;
+
     public SimulationService(ActivityRepository activityRepository,
                              SampleRepository sampleRepository,
                              ObserverRepository observerRepository,
-                             DurationMeasurementRepository durationMeasurementRepository) {
+                             DurationMeasurementRepository durationMeasurementRepository,
+                             RoleRepository roleRepository) {
         this.activityRepository = activityRepository;
         this.sampleRepository = sampleRepository;
         this.observerRepository = observerRepository;
         this.durationMeasurementRepository = durationMeasurementRepository;
+        this.roleRepository = roleRepository;
     }
 
     @Transactional
@@ -87,6 +90,39 @@ public class SimulationService {
         // Aqui o polimorfismo funciona: chama o método correto em Activity ou suas subclasses
         return activity.toSimulationDTO();
     }
+
+    @Transactional
+    public RoleResponseDTO mapRoleFields(RoleMappingDTO dto) {
+        Role role = roleRepository.findById(dto.getRoleId())
+                .orElseThrow(() -> new RuntimeException("Role not found with id: " + dto.getRoleId()));
+
+        if (dto.getQueueName() != null) role.setQueue_name(dto.getQueueName());
+        if (dto.getQueueType() != null) role.setQueue_type(dto.getQueueType());
+        if (dto.getInitialQuantity() != null) role.setInitial_quantity(dto.getInitialQuantity());
+
+        if (dto.getObserverIds() != null) {
+            List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
+            role.setObservers(observers);
+            for (Observer obs : observers) {
+                obs.setRole(role); // se bidirecional, mantenha consistência
+            }
+        }
+
+        Role updatedRole = roleRepository.save(role);
+        return toRoleResponseDTO(updatedRole);
+    }
+
+
+    public RoleResponseDTO toRoleResponseDTO(Role role) {
+        return new RoleResponseDTO(
+                role.getId(),
+                role.getQueue_name(),
+                role.getQueue_type(),
+                role.getInitial_quantity()
+        );
+    }
+
+
 
 }
 
