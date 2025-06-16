@@ -84,29 +84,8 @@ public class SimulationService {
 
 
     public ActivityResponseDTO toActivityResponseDTO(Activity activity) {
-        List<Long> observerIds = activity.getObservers() == null
-                ? List.of()
-                : activity.getObservers().stream()
-                .map(Observer::getId)  // supondo que getId() retorna Long
-                .collect(Collectors.toList());
-
-
-        Integer sampleId = activity.getSample() != null ? activity.getSample().getId() : null;
-
-        return new ActivityResponseDTO(
-                activity.getId(),
-                activity.getName(),
-                activity.getType(),
-                activity.getRequiredResources(),
-                activity.getTimeBox(),
-                activity.getTimeScale(),
-                activity.getDependencyType(),
-                activity.getConditionToProcess(),
-                activity.getProcessingQuantity(),
-                activity.getIterationBehavior(),
-                observerIds,
-                sampleId
-        );
+        // Aqui o polimorfismo funciona: chama o método correto em Activity ou suas subclasses
+        return activity.toSimulationDTO();
     }
 
 }

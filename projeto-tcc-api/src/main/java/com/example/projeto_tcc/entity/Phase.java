@@ -1,7 +1,10 @@
 package com.example.projeto_tcc.entity;
 
+import com.example.projeto_tcc.dto.ActivityResponseDTO;
 import com.example.projeto_tcc.dto.SimulationParamsDTO;
 import jakarta.persistence.Entity;
+
+import java.util.List;
 
 @Entity
 public class Phase extends Activity{
@@ -17,6 +20,25 @@ public class Phase extends Activity{
         this.setProcessingQuantity(dto.getProcessingQuantity());
         this.setObservers(null);
         this.setSample(null);
+    }
+
+    @Override
+    public ActivityResponseDTO toSimulationDTO() {
+        ActivityResponseDTO baseDTO = super.toSimulationDTO();
+        return new ActivityResponseDTO(
+                baseDTO.getId(),
+                baseDTO.getName(),
+                baseDTO.getType(),
+                null,
+                baseDTO.getTimeBox(),
+                baseDTO.getTimeScale(),
+                null,
+                baseDTO.getConditionToProcess(),
+                baseDTO.getProcessingQuantity(),
+                null,    // o campo exclusivo do Iteration
+                List.of(),
+                null
+        );
     }
 
 }

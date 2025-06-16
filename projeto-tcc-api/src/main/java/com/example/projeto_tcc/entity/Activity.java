@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.entity;
 
+import com.example.projeto_tcc.dto.ActivityResponseDTO;
 import com.example.projeto_tcc.dto.SimulationParamsDTO;
 import com.example.projeto_tcc.enums.*;
 import com.example.projeto_tcc.serializer.CustomElementSerializer;
@@ -11,6 +12,7 @@ import lombok.Data;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Data
@@ -47,8 +49,8 @@ public class Activity extends AbstractElement {
     @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL)
     private List<Observer> observers;
 
-    @Enumerated(EnumType.STRING)
-    private DependencyType dependencyType;
+    //@Enumerated(EnumType.STRING)
+    //private DependencyType dependencyType;
 
     @Enumerated(EnumType.STRING)
     private ConditionToProcess conditionToProcess;
@@ -56,10 +58,10 @@ public class Activity extends AbstractElement {
     @Enumerated(EnumType.STRING)
     private ProcessingQuantity processingQuantity;
 
-    @Enumerated(EnumType.STRING)
-    private IterationBehavior iterationBehavior;
+    //@Enumerated(EnumType.STRING)
+    //private IterationBehavior iterationBehavior;
 
-    private int requiredResources;
+    //private int requiredResources;
 
     private int timeBox;
 
@@ -79,6 +81,30 @@ public class Activity extends AbstractElement {
         this.setConditionToProcess(dto.getConditionToProcess());
         this.setProcessingQuantity(dto.getProcessingQuantity());
         // Sample e Observer setados fora
+    }
+
+    // Método polimórfico com valores padrão (Activity “raiz”)
+    public ActivityResponseDTO toSimulationDTO() {
+        List<Long> observerIds = observers == null ? List.of() : observers.stream()
+                .map(Observer::getId)
+                .collect(Collectors.toList());
+
+        Integer sampleId = sample != null ? sample.getId() : null;
+
+        return new ActivityResponseDTO(
+                this.getId(),
+                this.getName(),
+                this.getType(),
+                null, // requiredResources, se não aplicável aqui
+                this.getTimeBox(),
+                this.getTimeScale(),
+                null, // dependencyType se não aplicável aqui
+                this.getConditionToProcess(),
+                this.getProcessingQuantity(),
+                null, // iterationBehavior não aplicável aqui
+                observerIds,
+                sampleId
+        );
     }
 
     public Activity() {
