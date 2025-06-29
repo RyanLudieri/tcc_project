@@ -19,14 +19,14 @@ import java.util.stream.Collectors;
 @Service
 public class SimulationService {
 
+    // Repositórios necessários para operações de banco de dados
     private final ActivityRepository activityRepository;
     private final SampleRepository sampleRepository;
     private final ObserverRepository observerRepository;
-
     private final DurationMeasurementRepository durationMeasurementRepository;
-
     private final RoleRepository roleRepository;
 
+    // Construtor com injeção de dependências via Spring
     public SimulationService(ActivityRepository activityRepository,
                              SampleRepository sampleRepository,
                              ObserverRepository observerRepository,
@@ -39,20 +39,33 @@ public class SimulationService {
         this.roleRepository = roleRepository;
     }
 
+    /**
+     * Configura os parâmetros de simulação para uma atividade específica.
+     * - Associa uma amostra (Sample) à atividade.
+     * - Gera medições de duração com base na distribuição estatística.
+     * - Associa observadores à atividade.
+     * - Aplica configurações adicionais da simulação usando `configureFromDTO`.
+     *
+     * @param dto Dados de entrada com os parâmetros da simulação.
+     * @return Activity atualizada e salva no banco.
+     */
     @Transactional
     public Activity setSimulationParameters(SimulationParamsDTO dto) {
+        // Busca a atividade pelo ID
         Activity activity = activityRepository.findById(dto.getActivityId())
                 .orElseThrow(() -> new RuntimeException("Activity not found"));
 
-        // Associa Sample e gera medições (se aplicável)
+        // Se foi informada uma amostra, associa à atividade e gera medições
         if (dto.getSampleId() != null) {
             Sample sample = sampleRepository.findById(dto.getSampleId())
                     .orElseThrow(() -> new RuntimeException("Sample not found"));
             activity.setSample(sample);
 
+            // Cria a distribuição de duração a partir dos parâmetros da amostra
             Object distribution = DistributionFactory.createDistribution(
                     sample.getDistribution(), sample.getParameter());
 
+            // Gera medições com base no tipo de distribuição
             List<DurationMeasurement> measurements;
             if (distribution instanceof RealDistribution realDist) {
                 measurements = MeasurementFactory.createRealDistributionForDuration(realDist, sample.getSize(), activity.getTimeScale());
@@ -62,57 +75,81 @@ public class SimulationService {
                 throw new RuntimeException("Unsupported distribution type.");
             }
 
+            // Relaciona medições com a atividade e a amostra
             for (DurationMeasurement m : measurements) {
                 m.setSample(sample);
                 m.setActivity(activity);
             }
 
+            // Salva todas as medições no banco
             durationMeasurementRepository.saveAll(measurements);
-            sample.setMeasurements(measurements);
+            sample.setMeasurements(measurements); // Atualiza o sample com suas medições
         }
 
-        // Associa Observers (se aplicável)
+        // Se foram informados observadores, associa-os à atividade
         if (dto.getObserverIds() != null) {
             List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
             for (Observer observer : observers) {
-                observer.setActivity(activity);
+                observer.setActivity(activity); // associação bidirecional
             }
             activity.setObservers(observers);
         }
 
+        // Aplica configurações adicionais específicas da atividade
         activity.configureFromDTO(dto);
 
+        // Salva e retorna a atividade configurada
         return activityRepository.save(activity);
     }
 
-
+    /**
+     * Converte uma Activity para seu DTO de resposta.
+     * Usa polimorfismo: se for uma subclasse (ex: Task, Process), chama a versão correta.
+     *
+     * @param activity A entidade Activity.
+     * @return DTO com informações de simulação.
+     */
     public ActivityResponseDTO toActivityResponseDTO(Activity activity) {
-        // Aqui o polimorfismo funciona: chama o método correto em Activity ou suas subclasses
         return activity.toSimulationDTO();
     }
 
+    /**
+     * Atualiza os campos de uma Role com base nos dados do DTO.
+     * Pode alterar: nome e tipo da fila, quantidade inicial e observadores associados.
+     *
+     * @param dto DTO contendo os dados para atualização.
+     * @return DTO com os dados atualizados da Role.
+     */
     @Transactional
     public RoleResponseDTO mapRoleFields(RoleMappingDTO dto) {
         Role role = roleRepository.findById(dto.getRoleId())
                 .orElseThrow(() -> new RuntimeException("Role not found with id: " + dto.getRoleId()));
 
+        // Atualiza atributos básicos se presentes
         if (dto.getQueueName() != null) role.setQueue_name(dto.getQueueName());
         if (dto.getQueueType() != null) role.setQueue_type(dto.getQueueType());
         if (dto.getInitialQuantity() != null) role.setInitial_quantity(dto.getInitialQuantity());
 
+        // Atualiza observadores se presentes
         if (dto.getObserverIds() != null) {
             List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
             role.setObservers(observers);
             for (Observer obs : observers) {
-                obs.setRole(role); // se bidirecional, mantenha consistência
+                obs.setRole(role); // associação bidirecional
             }
         }
 
+        // Salva e retorna a Role atualizada
         Role updatedRole = roleRepository.save(role);
         return toRoleResponseDTO(updatedRole);
     }
 
-
+    /**
+     * Converte uma entidade Role para seu DTO de resposta.
+     *
+     * @param role A entidade Role.
+     * @return DTO com os dados essenciais da Role.
+     */
     public RoleResponseDTO toRoleResponseDTO(Role role) {
         return new RoleResponseDTO(
                 role.getId(),
@@ -121,8 +158,6 @@ public class SimulationService {
                 role.getInitial_quantity()
         );
     }
-
-
-
 }
+
 

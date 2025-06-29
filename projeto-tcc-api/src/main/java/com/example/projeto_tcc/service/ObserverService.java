@@ -17,6 +17,7 @@ public class ObserverService {
     private final ActivityRepository activityRepository;
     private final RoleRepository roleRepository;
 
+    // Construtor com injeção dos repositórios
     public ObserverService(ObserverRepository observerRepository,
                            ActivityRepository activityRepository,
                            RoleRepository roleRepository) {
@@ -25,8 +26,17 @@ public class ObserverService {
         this.roleRepository = roleRepository;
     }
 
+    /**
+     * Cria e persiste um novo Observer.
+     * - Se informado, associa o Observer à Activity existente.
+     * - Se informado, associa o Observer ao Role existente.
+     * - Retorna o DTO do Observer criado, incluindo resumo da Activity associada.
+     *
+     * @param observer Entidade Observer com dados para criação.
+     * @return DTO representando o Observer criado.
+     */
     public ObserverDTO createObserver(Observer observer) {
-        // Associa a Activity, se informada
+        // Associa a Activity, se ID estiver presente
         if (observer.getActivity() != null && observer.getActivity().getId() != null) {
             Long activityId = observer.getActivity().getId();
             Activity activity = activityRepository.findById(activityId)
@@ -34,7 +44,7 @@ public class ObserverService {
             observer.setActivity(activity);
         }
 
-        // Associa o Role, se informado
+        // Associa o Role, se ID estiver presente
         if (observer.getRole() != null && observer.getRole().getId() != null) {
             Long roleId = observer.getRole().getId();
             Role role = roleRepository.findById(roleId)
@@ -42,8 +52,10 @@ public class ObserverService {
             observer.setRole(role);
         }
 
+        // Persiste o Observer no banco
         Observer saved = observerRepository.save(observer);
 
+        // Cria DTO de resumo da Activity associada (se houver)
         ActivitySummaryDTO activityDTO = null;
         if (saved.getActivity() != null) {
             activityDTO = new ActivitySummaryDTO(
@@ -53,6 +65,7 @@ public class ObserverService {
             );
         }
 
+        // Retorna o DTO completo do Observer
         return new ObserverDTO(saved.getId(), saved.getName(), saved.getType(), activityDTO);
     }
 }

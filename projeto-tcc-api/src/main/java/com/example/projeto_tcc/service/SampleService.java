@@ -15,6 +15,7 @@ public class SampleService {
     private final DistributionParameterRepository parameterRepository;
     private final ActivityRepository activityRepository;
 
+    // Construtor com injeção dos repositórios necessários
     public SampleService(SampleRepository sampleRepository,
                          DistributionParameterRepository parameterRepository,
                          ActivityRepository activityRepository) {
@@ -23,8 +24,17 @@ public class SampleService {
         this.activityRepository = activityRepository;
     }
 
+    /**
+     * Cria uma nova amostra (Sample) a partir dos dados do DTO.
+     * - Persiste o parâmetro de distribuição, se necessário.
+     * - Cria medições de duração associadas, relacionando com atividades se informadas.
+     * - Salva a amostra completa no banco.
+     *
+     * @param dto Dados da amostra a ser criada.
+     * @return DTO com a amostra salva e seus dados.
+     */
     public SampleDTO createSample(SampleDTO dto) {
-        // Persistir ou associar parâmetros
+        // Persiste o parâmetro de distribuição caso não possua ID (novo)
         DistributionParameter param = dto.getParameter();
         if (param.getId() == null) {
             param = parameterRepository.save(param);
@@ -33,12 +43,14 @@ public class SampleService {
                     .orElseThrow(() -> new RuntimeException("Parameter não encontrado"));
         }
 
+        // Cria a entidade Sample com dados do DTO
         Sample sample = new Sample();
         sample.setName(dto.getName());
         sample.setSize(dto.getSize());
         sample.setDistribution(dto.getDistribution());
         sample.setParameter(param);
 
+        // Cria e associa as medições de duração, relacionando com atividades se informadas
         List<DurationMeasurement> measurements = new ArrayList<>();
         if (dto.getMeasurements() != null) {
             for (DurationMeasurementDTO mDto : dto.getMeasurements()) {
@@ -46,6 +58,7 @@ public class SampleService {
                 dm.setName(mDto.getName());
                 dm.setValue(mDto.getValue());
 
+                // Relaciona a atividade associada à medição (se houver)
                 if (mDto.getActivity() != null) {
                     Activity activity = activityRepository.findById(mDto.getActivity().getId())
                             .orElseThrow(() -> new RuntimeException("Activity não encontrada"));
@@ -57,12 +70,18 @@ public class SampleService {
             }
         }
 
+        // Associa medições à amostra
         sample.setMeasurements(measurements);
-        Sample saved = sampleRepository.save(sample);
 
+        // Salva a amostra no banco e retorna o DTO convertido
+        Sample saved = sampleRepository.save(sample);
         return convertToDTO(saved);
     }
 
+    /**
+     * Converte a entidade Sample para o DTO correspondente,
+     * incluindo a conversão dos DurationMeasurements em DTOs com resumo da atividade associada.
+     */
     private SampleDTO convertToDTO(Sample sample) {
         List<DurationMeasurementDTO> measurementDTOs = sample.getMeasurements().stream().map(dm -> {
             Activity act = dm.getActivity();
