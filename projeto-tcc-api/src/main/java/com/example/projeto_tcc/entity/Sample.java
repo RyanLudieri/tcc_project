@@ -3,11 +3,16 @@ package com.example.projeto_tcc.entity;
 import com.example.projeto_tcc.enums.BestFitDistribution;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 public class Sample {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,54 +39,6 @@ public class Sample {
         this.size = size;
         this.distribution = distribution;
         this.parameter = parameter;
-        this.measurements = measurements;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
-    }
-
-    public BestFitDistribution getDistribution() {
-        return distribution;
-    }
-
-    public void setDistribution(BestFitDistribution distribution) {
-        this.distribution = distribution;
-    }
-
-    public DistributionParameter getParameter() {
-        return parameter;
-    }
-
-    public void setParameter(DistributionParameter parameter) {
-        this.parameter = parameter;
-    }
-
-    public List<DurationMeasurement> getMeasurements() {
-        return measurements;
-    }
-
-    public void setMeasurements(List<DurationMeasurement> measurements) {
         this.measurements = measurements;
     }
 }

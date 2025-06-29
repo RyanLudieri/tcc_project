@@ -2,8 +2,12 @@ package com.example.projeto_tcc.entity;
 
 import com.example.projeto_tcc.enums.ProcessType;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 public class MethodElement extends AbstractElement{
 
     private String name;
@@ -28,20 +32,4 @@ public class MethodElement extends AbstractElement{
         this.name = name;
     }
 
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Activity getParentActivity() {
-        return parentActivity;
-    }
-
-    public void setParentActivity(Activity parentActivity) {
-        this.parentActivity = parentActivity;
-    }
 }

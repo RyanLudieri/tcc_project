@@ -1,5 +1,10 @@
 package com.example.projeto_tcc.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class RoleResponseDTO {
     private Long roleId;
     private String queueName;
@@ -16,20 +21,5 @@ public class RoleResponseDTO {
         this.initialQuantity = initialQuantity;
     }
 
-    public Long getRoleId() {
-        return roleId;
-    }
-
-    public String getQueueName() {
-        return queueName;
-    }
-
-    public String getQueueType() {
-        return queueType;
-    }
-
-    public Integer getInitialQuantity() {
-        return initialQuantity;
-    }
 }
 

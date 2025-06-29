@@ -1,9 +1,13 @@
 package com.example.projeto_tcc.dto;
 
 import com.example.projeto_tcc.enums.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
+@Getter
+@Setter
 public class ActivityResponseDTO {
     private Long id;
     private String name;
@@ -36,99 +40,4 @@ public class ActivityResponseDTO {
         this.sampleId = sampleId;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public ProcessType getType() {
-        return type;
-    }
-
-    public void setType(ProcessType type) {
-        this.type = type;
-    }
-
-    public Integer getRequiredResources() {
-        return requiredResources;
-    }
-
-    public void setRequiredResources(Integer requiredResources) {
-        this.requiredResources = requiredResources;
-    }
-
-    public TimeScale getTimeScale() {
-        return timeScale;
-    }
-
-    public void setTimeScale(TimeScale timeScale) {
-        this.timeScale = timeScale;
-    }
-
-    public DependencyType getDependencyType() {
-        return dependencyType;
-    }
-
-    public void setDependencyType(DependencyType dependencyType) {
-        this.dependencyType = dependencyType;
-    }
-
-    public ConditionToProcess getConditionToProcess() {
-        return conditionToProcess;
-    }
-
-    public void setConditionToProcess(ConditionToProcess conditionToProcess) {
-        this.conditionToProcess = conditionToProcess;
-    }
-
-    public ProcessingQuantity getProcessingQuantity() {
-        return processingQuantity;
-    }
-
-    public void setProcessingQuantity(ProcessingQuantity processingQuantity) {
-        this.processingQuantity = processingQuantity;
-    }
-
-    public IterationBehavior getIterationBehavior() {
-        return iterationBehavior;
-    }
-
-    public void setIterationBehavior(IterationBehavior iterationBehavior) {
-        this.iterationBehavior = iterationBehavior;
-    }
-
-    public List<Long> getObserverIds() {
-        return observerIds;
-    }
-
-    public void setObserverIds(List<Long> observerIds) {
-        this.observerIds = observerIds;
-    }
-
-    public Integer getSampleId() {
-        return sampleId;
-    }
-
-    public void setSampleId(Integer sampleId) {
-        this.sampleId = sampleId;
-    }
-
-    public int getTimeBox() {
-        return timeBox;
-    }
-
-    public void setTimeBox(int timeBox) {
-        this.timeBox = timeBox;
-    }
 }

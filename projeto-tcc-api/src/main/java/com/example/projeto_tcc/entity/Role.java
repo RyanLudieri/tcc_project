@@ -5,11 +5,16 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 @DiscriminatorValue("ROLE")
 @Entity
+@Getter
+@Setter
 public class Role extends MethodElement{
 
     private String queue_name;
@@ -37,36 +42,4 @@ public class Role extends MethodElement{
     }
 
 
-
-    public String getQueue_name() {
-        return queue_name;
-    }
-
-    public void setQueue_name(String queue_name) {
-        this.queue_name = queue_name;
-    }
-
-    public String getQueue_type() {
-        return queue_type;
-    }
-
-    public void setQueue_type(String queue_type) {
-        this.queue_type = queue_type;
-    }
-
-    public int getInitial_quantity() {
-        return initial_quantity;
-    }
-
-    public void setInitial_quantity(int initial_quantity) {
-        this.initial_quantity = initial_quantity;
-    }
-
-    public List<Observer> getObservers() {
-        return observers;
-    }
-
-    public void setObservers(List<Observer> observers) {
-        this.observers = observers;
-    }
 }

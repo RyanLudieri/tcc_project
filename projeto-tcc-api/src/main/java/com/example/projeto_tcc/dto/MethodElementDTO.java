@@ -1,7 +1,11 @@
 package com.example.projeto_tcc.dto;
 
 import com.example.projeto_tcc.enums.MethodType;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class MethodElementDTO {
     private String name;
     private MethodType type;
@@ -9,35 +13,4 @@ public class MethodElementDTO {
     private String modelInfo;
     private Integer parentIndex; // índice da Activity pai, se houver
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public MethodType getType() {
-        return type;
-    }
-
-    public void setType(MethodType type) {
-        this.type = type;
-    }
-
-    public Integer getParentIndex() {
-        return parentIndex;
-    }
-
-    public void setParentIndex(Integer parentIndex) {
-        this.parentIndex = parentIndex;
-    }
-
-    public String getModelInfo() {
-        return modelInfo;
-    }
-
-    public void setModelInfo(String modelInfo) {
-        this.modelInfo = modelInfo;
-    }
 }

@@ -1,7 +1,12 @@
 package com.example.projeto_tcc.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
+@Getter
+@Setter
 public class RoleMappingDTO {
     private Long roleId;
     private String queueName;
@@ -21,44 +26,5 @@ public class RoleMappingDTO {
         this.observerIds = observerIds;
     }
 
-    public Long getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
-    }
-
-    public String getQueueName() {
-        return queueName;
-    }
-
-    public void setQueueName(String queueName) {
-        this.queueName = queueName;
-    }
-
-    public String getQueueType() {
-        return queueType;
-    }
-
-    public void setQueueType(String queueType) {
-        this.queueType = queueType;
-    }
-
-    public Integer getInitialQuantity() {
-        return initialQuantity;
-    }
-
-    public void setInitialQuantity(Integer initialQuantity) {
-        this.initialQuantity = initialQuantity;
-    }
-
-    public List<Long> getObserverIds() {
-        return observerIds;
-    }
-
-    public void setObserverIds(List<Long> observerIds) {
-        this.observerIds = observerIds;
-    }
 }
 

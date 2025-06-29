@@ -6,10 +6,14 @@ import com.example.projeto_tcc.enums.DependencyType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 public class Milestone extends Activity{
 
     @Enumerated(EnumType.STRING)
@@ -46,11 +50,5 @@ public class Milestone extends Activity{
         );
     }
 
-    public DependencyType getDependencyType() {
-        return dependencyType;
-    }
 
-    public void setDependencyType(DependencyType dependencyType) {
-        this.dependencyType = dependencyType;
-    }
 }

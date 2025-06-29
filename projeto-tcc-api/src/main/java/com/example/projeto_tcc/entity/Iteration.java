@@ -6,8 +6,12 @@ import com.example.projeto_tcc.enums.IterationBehavior;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 public class Iteration extends Activity{
 
     @Enumerated(EnumType.STRING)
@@ -46,11 +50,4 @@ public class Iteration extends Activity{
         );
     }
 
-    public IterationBehavior getIterationBehavior() {
-        return iterationBehavior;
-    }
-
-    public void setIterationBehavior(IterationBehavior iterationBehavior) {
-        this.iterationBehavior = iterationBehavior;
-    }
 }

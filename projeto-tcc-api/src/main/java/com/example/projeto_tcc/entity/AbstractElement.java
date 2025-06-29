@@ -3,9 +3,12 @@ package com.example.projeto_tcc.entity;
 import com.example.projeto_tcc.enums.ProcessType;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @MappedSuperclass
-@Data
+@Getter
+@Setter
 public abstract class AbstractElement {
 
     @Id
@@ -32,35 +35,5 @@ public abstract class AbstractElement {
         this.type = type;
     }
 
-    public Long getId() {
-        return id;
-    }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Integer getIndex() {
-        return index;
-    }
-
-    public void setIndex(Integer index) {
-        this.index = index;
-    }
-
-    public String getModelInfo() {
-        return modelInfo;
-    }
-
-    public void setModelInfo(String modelInfo) {
-        this.modelInfo = modelInfo;
-    }
-
-    public ProcessType getType() {
-        return type;
-    }
-
-    public void setType(ProcessType type) {
-        this.type = type;
-    }
 }
