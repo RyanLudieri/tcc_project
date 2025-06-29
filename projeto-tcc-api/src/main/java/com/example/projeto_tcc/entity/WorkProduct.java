@@ -1,10 +1,13 @@
 package com.example.projeto_tcc.entity;
 
 import com.example.projeto_tcc.enums.ProcessType;
-import jakarta.persistence.Entity;
+import com.example.projeto_tcc.enums.Queue;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -21,11 +24,11 @@ public class WorkProduct extends MethodElement{
 
     private Integer initial_quantity;
 
-    private String policy;
+    @Enumerated(EnumType.STRING)
+    private Queue policy;
 
-    public boolean gererate_activity() {
-        return false;
-    }
+    @OneToMany(mappedBy = "workproduct", cascade = CascadeType.ALL)
+    private List<Observer> observers;
 
     @Override
     public boolean optional() {
@@ -35,7 +38,8 @@ public class WorkProduct extends MethodElement{
     public WorkProduct() {
     }
 
-    public WorkProduct(Long id, Integer index, String modelInfo, ProcessType type, Long id1, String name, String task_name, String queue_name, String queue_type, Integer queue_size, Integer initial_quantity, String policy) {
+
+    public WorkProduct(Long id, Integer index, String modelInfo, ProcessType type, Long id1, String name, String task_name, String queue_name, String queue_type, Integer queue_size, Integer initial_quantity, Queue policy, List<Observer> observers) {
         super(id, index, modelInfo, type, id1, name);
         this.task_name = task_name;
         this.queue_name = queue_name;
@@ -43,5 +47,6 @@ public class WorkProduct extends MethodElement{
         this.queue_size = queue_size;
         this.initial_quantity = initial_quantity;
         this.policy = policy;
+        this.observers = observers;
     }
 }

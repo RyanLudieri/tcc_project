@@ -19,6 +19,11 @@ public class Observer {
     private Role role;
 
     @ManyToOne
+    @JoinColumn(name = "workproduct_id")
+    private WorkProduct workproduct;
+
+
+    @ManyToOne
     private Activity activity;
 
     public Observer() {

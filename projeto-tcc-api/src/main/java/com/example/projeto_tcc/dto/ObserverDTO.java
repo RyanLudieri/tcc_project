@@ -10,15 +10,18 @@ public class ObserverDTO {
     private String name;
     private String type;
     private ActivitySummaryDTO activity;
+    private Long roleId;
+    private Long workProductId;
 
     public ObserverDTO() {}
 
-    public ObserverDTO(Long id, String name, String type, ActivitySummaryDTO activity) {
+    public ObserverDTO(Long id, String name, String type, ActivitySummaryDTO activity, Long roleId, Long workProductId) {
         this.id = id;
         this.name = name;
         this.type = type;
         this.activity = activity;
+        this.roleId = roleId;
+        this.workProductId = workProductId;
     }
-
 }
 

@@ -5,9 +5,11 @@ import com.example.projeto_tcc.dto.ObserverDTO;
 import com.example.projeto_tcc.entity.Activity;
 import com.example.projeto_tcc.entity.Observer;
 import com.example.projeto_tcc.entity.Role;
+import com.example.projeto_tcc.entity.WorkProduct;
 import com.example.projeto_tcc.repository.ActivityRepository;
 import com.example.projeto_tcc.repository.ObserverRepository;
 import com.example.projeto_tcc.repository.RoleRepository;
+import com.example.projeto_tcc.repository.WorkProductRepository;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,13 +19,17 @@ public class ObserverService {
     private final ActivityRepository activityRepository;
     private final RoleRepository roleRepository;
 
+    private final WorkProductRepository workProductRepository;
+
     // Construtor com injeção dos repositórios
     public ObserverService(ObserverRepository observerRepository,
                            ActivityRepository activityRepository,
-                           RoleRepository roleRepository) {
+                           RoleRepository roleRepository,
+                           WorkProductRepository workProductRepository) {
         this.observerRepository = observerRepository;
         this.activityRepository = activityRepository;
         this.roleRepository = roleRepository;
+        this.workProductRepository = workProductRepository;
     }
 
     /**
@@ -52,6 +58,14 @@ public class ObserverService {
             observer.setRole(role);
         }
 
+        // Associa o WorkProduct, se ID estiver presente
+        if (observer.getWorkproduct() != null && observer.getWorkproduct().getId() != null){
+            Long workProductId = observer.getWorkproduct().getId();
+            WorkProduct workProduct = workProductRepository.findById(workProductId)
+                    .orElseThrow(() -> new IllegalArgumentException("Work Product not found with id: " + workProductId));
+            observer.setWorkproduct(workProduct);
+        }
+
         // Persiste o Observer no banco
         Observer saved = observerRepository.save(observer);
 
@@ -66,7 +80,14 @@ public class ObserverService {
         }
 
         // Retorna o DTO completo do Observer
-        return new ObserverDTO(saved.getId(), saved.getName(), saved.getType(), activityDTO);
+        return new ObserverDTO(
+                saved.getId(),
+                saved.getName(),
+                saved.getType(),
+                activityDTO,
+                saved.getRole() != null ? saved.getRole().getId() : null,
+                saved.getWorkproduct() != null ? saved.getWorkproduct().getId() : null
+        );
     }
 }
 

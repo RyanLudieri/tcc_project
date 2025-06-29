@@ -1,9 +1,6 @@
 package com.example.projeto_tcc.controller;
 
-import com.example.projeto_tcc.dto.ActivityResponseDTO;
-import com.example.projeto_tcc.dto.RoleMappingDTO;
-import com.example.projeto_tcc.dto.RoleResponseDTO;
-import com.example.projeto_tcc.dto.SimulationParamsDTO;
+import com.example.projeto_tcc.dto.*;
 import com.example.projeto_tcc.entity.Activity;
 import com.example.projeto_tcc.entity.Role;
 import com.example.projeto_tcc.service.SimulationService;
@@ -33,6 +30,15 @@ public class SimulationController {
         RoleResponseDTO updated = simulationService.mapRoleFields(dto);
         return ResponseEntity.ok(updated);
     }
+
+    @PatchMapping("/workProduct/{workProductId}")
+    public ResponseEntity<WorkProductResponseDTO> mapWorkProduct(@PathVariable Long workProductId, @RequestBody WorkProductDTO dto) {
+        dto.setWorkProductId(workProductId);
+        WorkProductResponseDTO updated = simulationService.mapWorkProductFields(dto);
+        return ResponseEntity.ok(updated);
+    }
+
+
 
 
 }
