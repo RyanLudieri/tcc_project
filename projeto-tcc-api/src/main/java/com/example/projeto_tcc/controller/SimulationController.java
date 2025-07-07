@@ -3,9 +3,13 @@ package com.example.projeto_tcc.controller;
 import com.example.projeto_tcc.dto.*;
 import com.example.projeto_tcc.entity.Activity;
 import com.example.projeto_tcc.entity.Role;
+import com.example.projeto_tcc.entity.WorkProduct;
 import com.example.projeto_tcc.service.SimulationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/simulation")
@@ -31,12 +35,14 @@ public class SimulationController {
         return ResponseEntity.ok(updated);
     }
 
-    @PatchMapping("/workProduct/{workProductId}")
-    public ResponseEntity<WorkProductResponseDTO> mapWorkProduct(@PathVariable Long workProductId, @RequestBody WorkProductDTO dto) {
-        dto.setWorkProductId(workProductId);
-        WorkProductResponseDTO updated = simulationService.mapWorkProductFields(dto);
-        return ResponseEntity.ok(updated);
+    @PostMapping("/workProduct")
+    public ResponseEntity<WorkProductResponseDTO> createWorkProduct(@RequestBody WorkProductDTO dto) {
+        WorkProductResponseDTO created = simulationService.mapWorkProduct(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
+
+
+
 
 
 

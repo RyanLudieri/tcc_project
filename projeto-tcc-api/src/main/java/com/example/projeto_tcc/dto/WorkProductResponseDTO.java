@@ -10,8 +10,7 @@ import lombok.Setter;
 public class WorkProductResponseDTO {
     private Long id;
     private String name;
-    private String modelInfo;
-    private ProcessType type;
+    private String input_output;
     private String taskName;
     private String queueName;
     private String queueType;
@@ -19,13 +18,10 @@ public class WorkProductResponseDTO {
     private Integer initialQuantity;
     private Queue policy;
 
-    public WorkProductResponseDTO(Long id, String name, String modelInfo, ProcessType type,
-                                  String taskName, String queueName, String queueType,
-                                  Integer queueSize, Integer initialQuantity, Queue policy) {
+    public WorkProductResponseDTO(Long id, String name, String input_output, String taskName, String queueName, String queueType, Integer queueSize, Integer initialQuantity, Queue policy) {
         this.id = id;
         this.name = name;
-        this.modelInfo = modelInfo;
-        this.type = type;
+        this.input_output = input_output;
         this.taskName = taskName;
         this.queueName = queueName;
         this.queueType = queueType;

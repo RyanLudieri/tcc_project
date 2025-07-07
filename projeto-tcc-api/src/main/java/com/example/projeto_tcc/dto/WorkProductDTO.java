@@ -9,6 +9,8 @@ import java.util.List;
 @Getter
 @Setter
 public class WorkProductDTO {
+    private String name;
+    private String input_output;
     private Long workProductId;
     private String taskName;
     private String queueName;

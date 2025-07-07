@@ -11,6 +11,7 @@ import org.apache.commons.math3.distribution.RealDistribution;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -161,11 +162,37 @@ public class SimulationService {
         );
     }
 
-    @Transactional
-    public WorkProductResponseDTO mapWorkProductFields(WorkProductDTO dto) {
-        WorkProduct workProduct = workProductRepository.findById(dto.getWorkProductId())
-                .orElseThrow(() -> new RuntimeException("WorkProduct not found with id: " + dto.getWorkProductId()));
+//    @Transactional
+//    public WorkProductResponseDTO mapWorkProductFields(WorkProductDTO dto) {
+//        WorkProduct workProduct = workProductRepository.findById(dto.getWorkProductId())
+//                .orElseThrow(() -> new RuntimeException("WorkProduct not found with id: " + dto.getWorkProductId()));
+//
+//        if (dto.getTaskName() != null) workProduct.setTask_name(dto.getTaskName());
+//        if (dto.getQueueName() != null) workProduct.setQueue_name(dto.getQueueName());
+//        if (dto.getQueueType() != null) workProduct.setQueue_type(dto.getQueueType());
+//        if (dto.getQueueSize() != null) workProduct.setQueue_size(dto.getQueueSize());
+//        if (dto.getInitialQuantity() != null) workProduct.setInitial_quantity(dto.getInitialQuantity());
+//        if (dto.getPolicy() != null) workProduct.setPolicy(dto.getPolicy());
+//
+//        // Mapeia e associa os Observers
+//        if (dto.getObserverIds() != null) {
+//            List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
+//            workProduct.setObservers(observers);
+//            for (Observer observer : observers) {
+//                observer.setWorkproduct(workProduct); // ou setParent(workProduct), dependendo do seu modelo
+//            }
+//        }
+//
+//        WorkProduct updated = workProductRepository.save(workProduct);
+//        return toWorkProductResponseDTO(updated);
+//    }
 
+    @Transactional
+    public WorkProductResponseDTO mapWorkProduct(WorkProductDTO dto) {
+        WorkProduct workProduct = new WorkProduct();
+
+        if (dto.getName() != null) workProduct.setName(dto.getName());
+        if (dto.getInput_output() != null) workProduct.setInput_output(dto.getInput_output());
         if (dto.getTaskName() != null) workProduct.setTask_name(dto.getTaskName());
         if (dto.getQueueName() != null) workProduct.setQueue_name(dto.getQueueName());
         if (dto.getQueueType() != null) workProduct.setQueue_type(dto.getQueueType());
@@ -173,25 +200,25 @@ public class SimulationService {
         if (dto.getInitialQuantity() != null) workProduct.setInitial_quantity(dto.getInitialQuantity());
         if (dto.getPolicy() != null) workProduct.setPolicy(dto.getPolicy());
 
-        // Mapeia e associa os Observers
+        // Mapeia e associa os Observers, se existirem
         if (dto.getObserverIds() != null) {
             List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
             workProduct.setObservers(observers);
             for (Observer observer : observers) {
-                observer.setWorkproduct(workProduct); // ou setParent(workProduct), dependendo do seu modelo
+                observer.setWorkproduct(workProduct);
             }
         }
 
-        WorkProduct updated = workProductRepository.save(workProduct);
-        return toWorkProductResponseDTO(updated);
+        WorkProduct saved = workProductRepository.save(workProduct);
+        return toWorkProductResponseDTO(saved);
     }
+
 
     public WorkProductResponseDTO toWorkProductResponseDTO(WorkProduct wp) {
         return new WorkProductResponseDTO(
                 wp.getId(),
                 wp.getName(),
-                wp.getModelInfo(),
-                wp.getType(),
+                wp.getInput_output(),
                 wp.getTask_name(),
                 wp.getQueue_name(),
                 wp.getQueue_type(),
