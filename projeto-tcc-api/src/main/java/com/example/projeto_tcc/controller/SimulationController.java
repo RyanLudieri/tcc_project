@@ -41,6 +41,22 @@ public class SimulationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    @GetMapping("/workProduct")
+    public ResponseEntity<List<WorkProductResponseDTO>> getBeginEndWorkProducts() {
+        List<WorkProductResponseDTO> result = simulationService.getAllBeginEndWorkProducts();
+        return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping("/workProduct/{workProductId}")
+    public ResponseEntity<WorkProductResponseDTO> updateWorkProduct(
+            @PathVariable Long workProductId,
+            @RequestBody WorkProductDTO dto
+    ) {
+        dto.setWorkProductId(workProductId);
+        WorkProductResponseDTO updated = simulationService.mapWorkProductFields(dto);
+        return ResponseEntity.ok(updated);
+    }
+
 
 
 

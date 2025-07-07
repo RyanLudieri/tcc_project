@@ -24,4 +24,6 @@ public class ProcessElementDTO {
 
 
     private List<Integer> predecessors; // Agora usa índices
+
+    private boolean optional;
 }

@@ -2,6 +2,7 @@ package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.dto.*;
 import com.example.projeto_tcc.entity.*;
+import com.example.projeto_tcc.enums.WorkProductType;
 import com.example.projeto_tcc.repository.*;
 import com.example.projeto_tcc.util.DistributionFactory;
 import com.example.projeto_tcc.util.MeasurementFactory;
@@ -162,30 +163,31 @@ public class SimulationService {
         );
     }
 
-//    @Transactional
-//    public WorkProductResponseDTO mapWorkProductFields(WorkProductDTO dto) {
-//        WorkProduct workProduct = workProductRepository.findById(dto.getWorkProductId())
-//                .orElseThrow(() -> new RuntimeException("WorkProduct not found with id: " + dto.getWorkProductId()));
-//
-//        if (dto.getTaskName() != null) workProduct.setTask_name(dto.getTaskName());
-//        if (dto.getQueueName() != null) workProduct.setQueue_name(dto.getQueueName());
-//        if (dto.getQueueType() != null) workProduct.setQueue_type(dto.getQueueType());
-//        if (dto.getQueueSize() != null) workProduct.setQueue_size(dto.getQueueSize());
-//        if (dto.getInitialQuantity() != null) workProduct.setInitial_quantity(dto.getInitialQuantity());
-//        if (dto.getPolicy() != null) workProduct.setPolicy(dto.getPolicy());
-//
-//        // Mapeia e associa os Observers
-//        if (dto.getObserverIds() != null) {
-//            List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
-//            workProduct.setObservers(observers);
-//            for (Observer observer : observers) {
-//                observer.setWorkproduct(workProduct); // ou setParent(workProduct), dependendo do seu modelo
-//            }
-//        }
-//
-//        WorkProduct updated = workProductRepository.save(workProduct);
-//        return toWorkProductResponseDTO(updated);
-//    }
+    @Transactional
+    public WorkProductResponseDTO mapWorkProductFields(WorkProductDTO dto) {
+        WorkProduct workProduct = workProductRepository.findById(dto.getWorkProductId())
+                .orElseThrow(() -> new RuntimeException("WorkProduct not found with id: " + dto.getWorkProductId()));
+
+        if (dto.getName() != null) workProduct.setName(dto.getName());
+        if (dto.getTaskName() != null) workProduct.setTask_name(dto.getTaskName());
+        if (dto.getQueueName() != null) workProduct.setQueue_name(dto.getQueueName());
+        if (dto.getQueueType() != null) workProduct.setQueue_type(dto.getQueueType());
+        if (dto.getQueueSize() != null) workProduct.setQueue_size(dto.getQueueSize());
+        if (dto.getInitialQuantity() != null) workProduct.setInitial_quantity(dto.getInitialQuantity());
+        if (dto.getPolicy() != null) workProduct.setPolicy(dto.getPolicy());
+
+        // Mapeia e associa os Observers
+        if (dto.getObserverIds() != null) {
+            List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
+            workProduct.setObservers(observers);
+            for (Observer observer : observers) {
+                observer.setWorkproduct(workProduct); // ou setParent(workProduct), dependendo do seu modelo
+            }
+        }
+
+        WorkProduct updated = workProductRepository.save(workProduct);
+        return toWorkProductResponseDTO(updated);
+   }
 
     @Transactional
     public WorkProductResponseDTO mapWorkProduct(WorkProductDTO dto) {
@@ -199,6 +201,7 @@ public class SimulationService {
         if (dto.getQueueSize() != null) workProduct.setQueue_size(dto.getQueueSize());
         if (dto.getInitialQuantity() != null) workProduct.setInitial_quantity(dto.getInitialQuantity());
         if (dto.getPolicy() != null) workProduct.setPolicy(dto.getPolicy());
+        if (dto.getWorkProductType() != null) workProduct.setWorkProductType(dto.getWorkProductType());
 
         // Mapeia e associa os Observers, se existirem
         if (dto.getObserverIds() != null) {
@@ -214,6 +217,16 @@ public class SimulationService {
     }
 
 
+    public List<WorkProductResponseDTO> getAllBeginEndWorkProducts() {
+        List<WorkProduct> list = workProductRepository.findByWorkProductTypeIn(
+                List.of(WorkProductType.MAP)
+        );
+
+        return list.stream()
+                .map(this::toWorkProductResponseDTO)
+                .toList();
+    }
+
     public WorkProductResponseDTO toWorkProductResponseDTO(WorkProduct wp) {
         return new WorkProductResponseDTO(
                 wp.getId(),
@@ -224,7 +237,8 @@ public class SimulationService {
                 wp.getQueue_type(),
                 wp.getQueue_size(),
                 wp.getInitial_quantity(),
-                wp.getPolicy()
+                wp.getPolicy(),
+                wp.getWorkProductType()
         );
     }
 

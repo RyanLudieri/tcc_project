@@ -2,6 +2,7 @@ package com.example.projeto_tcc.entity;
 
 import com.example.projeto_tcc.enums.ProcessType;
 import com.example.projeto_tcc.enums.Queue;
+import com.example.projeto_tcc.enums.WorkProductType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,9 @@ public class WorkProduct extends MethodElement{
     @OneToMany(mappedBy = "workproduct", cascade = CascadeType.ALL)
     private List<Observer> observers;
 
+    @Enumerated(EnumType.STRING)
+    private WorkProductType workProductType;
+
     @Override
     public boolean optional() {
         return false;
@@ -40,7 +44,7 @@ public class WorkProduct extends MethodElement{
     }
 
 
-    public WorkProduct(Long id, Integer index, String modelInfo, ProcessType type, Long id1, String name, String task_name, String queue_name, String queue_type, Integer queue_size, Integer initial_quantity, Queue policy, List<Observer> observers) {
+    public WorkProduct(Long id, Integer index, String modelInfo, ProcessType type, Long id1, String name, String task_name, String queue_name, String queue_type, Integer queue_size, Integer initial_quantity, Queue policy, List<Observer> observers, WorkProductType workProductType) {
         super(id, index, modelInfo, type, id1, name);
         this.task_name = task_name;
         this.queue_name = queue_name;
@@ -49,5 +53,8 @@ public class WorkProduct extends MethodElement{
         this.initial_quantity = initial_quantity;
         this.policy = policy;
         this.observers = observers;
+        this.workProductType = workProductType;
     }
+
+
 }

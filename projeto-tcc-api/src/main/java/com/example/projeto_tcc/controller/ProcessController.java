@@ -32,14 +32,6 @@ public class ProcessController {
         return service.saveProcess(dto);
     }
 
-
-//    @GetMapping("/{id}")
-//    public ResponseEntity<Activity> getById(@PathVariable Long id) {
-//        Optional<Activity> process = repository.findById(id);
-//        return process.map(ResponseEntity::ok)
-//                .orElseGet(() -> ResponseEntity.notFound().build());
-//    }
-
     @GetMapping("/{id}")
     public ResponseEntity<ProcessGetDTO> getById(@PathVariable Long id) {
         Optional<Activity> process = repository.findById(id);
@@ -49,12 +41,14 @@ public class ProcessController {
 
     @PutMapping("/activity/{id}")
     public ResponseEntity<?> updateActivity(@PathVariable Long id, @RequestBody ProcessElementDTO dto) {
-        return ResponseEntity.ok(service.updateGenericActivity(id, dto));
+        service.updateGenericActivity(id, dto);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/method/{id}")
     public ResponseEntity<?> updateMethod(@PathVariable Long id, @RequestBody MethodElementDTO dto) {
-        return ResponseEntity.ok(service.updateGenericMethod(id, dto));
+        service.updateGenericMethod(id, dto);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/element/{id}")

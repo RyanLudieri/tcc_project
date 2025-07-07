@@ -224,6 +224,7 @@ public class ProcessService {
         dto.setModelInfo(entity.getModelInfo());
         dto.setType(entity.getType());
         dto.setPredecessors(entity.getPredecessors());
+        dto.setOptional(entity.optional());
 
         // Se for um DeliveryProcess com estrutura WBS, inclui os elementos
         if (entity instanceof DeliveryProcess dp && dp.getWbs() != null) {
@@ -256,6 +257,8 @@ public class ProcessService {
                     .toList();
             dto.setChildren(childrenDto);
         }
+
+        dto.setOptional(entity.optional());
 
         return dto;
     }

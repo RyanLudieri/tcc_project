@@ -3,6 +3,7 @@ package com.example.projeto_tcc.dto;
 import com.example.projeto_tcc.entity.Activity;
 import com.example.projeto_tcc.enums.ProcessType;
 import lombok.Data;
+import lombok.Getter;
 
 import java.util.List;
 
@@ -14,5 +15,6 @@ public class ProcessGetDTO {
     private ProcessType type;
     private List<ProcessElementDTO> processElements;
     private List<Activity> predecessors;
+    private boolean optional;
     // NÃO inclui methodElements
 }

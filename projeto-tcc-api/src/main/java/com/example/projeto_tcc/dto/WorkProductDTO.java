@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.dto;
 
 import com.example.projeto_tcc.enums.Queue;
+import com.example.projeto_tcc.enums.WorkProductType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,6 +20,7 @@ public class WorkProductDTO {
     private Integer initialQuantity;
     private Queue policy;
     private List<Long> observerIds;
+    private WorkProductType workProductType;
 
 }
 
