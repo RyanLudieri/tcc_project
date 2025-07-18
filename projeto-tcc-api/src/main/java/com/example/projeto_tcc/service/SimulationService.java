@@ -242,6 +242,46 @@ public class SimulationService {
         );
     }
 
+    public List<GroupedRoleDTO> getGroupedRolesByName() {
+        List<Role> roles = roleRepository.findAll();
+
+        return roles.stream()
+                .collect(Collectors.groupingBy(
+                        Role::getName,
+                        Collectors.mapping(Role::getId, Collectors.toList())
+                ))
+                .entrySet()
+                .stream()
+                .map(entry -> new GroupedRoleDTO(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<RoleResponseDTO> updateGroupRoles(RoleGroupUpdateDTO dto) {
+        List<Role> roles = roleRepository.findAllById(dto.getRoleIds());
+
+        for (Role role : roles) {
+            if (dto.getQueueName() != null) role.setQueue_name(dto.getQueueName());
+            if (dto.getQueueType() != null) role.setQueue_type(dto.getQueueType());
+            if (dto.getInitialQuantity() != null) role.setInitial_quantity(dto.getInitialQuantity());
+
+            if (dto.getObserverIds() != null) {
+                List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
+                role.setObservers(observers);
+                for (Observer obs : observers) {
+                    obs.setRole(role);
+                }
+            }
+            roleRepository.save(role);
+        }
+
+        return roles.stream()
+                .map(this::toRoleResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+
+
 
 }
 

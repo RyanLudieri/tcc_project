@@ -34,6 +34,18 @@ public class SimulationController {
         RoleResponseDTO updated = simulationService.mapRoleFields(dto);
         return ResponseEntity.ok(updated);
     }
+    @GetMapping("/grouped-roles")
+    public ResponseEntity<List<GroupedRoleDTO>> getGroupedRoles() {
+        List<GroupedRoleDTO> grouped = simulationService.getGroupedRolesByName();
+        return ResponseEntity.ok(grouped);
+    }
+
+    @PatchMapping("/roles/group")
+    public ResponseEntity<List<RoleResponseDTO>> updateGroupRoles(@RequestBody RoleGroupUpdateDTO dto) {
+        List<RoleResponseDTO> updatedRoles = simulationService.updateGroupRoles(dto);
+        return ResponseEntity.ok(updatedRoles);
+    }
+
 
     @PostMapping("/workProduct")
     public ResponseEntity<WorkProductResponseDTO> createWorkProduct(@RequestBody WorkProductDTO dto) {
