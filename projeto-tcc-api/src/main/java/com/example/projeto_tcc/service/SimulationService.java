@@ -11,8 +11,8 @@ import org.apache.commons.math3.distribution.IntegerDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,18 +27,23 @@ public class SimulationService {
 
     private final WorkProductRepository workProductRepository;
 
+    private final DeliveryProcessRepository deliveryProcessRepository;
+
     // Construtor com injeção de dependências via Spring
     public SimulationService(ActivityRepository activityRepository,
                              SampleRepository sampleRepository,
                              ObserverRepository observerRepository,
                              DurationMeasurementRepository durationMeasurementRepository,
-                             RoleRepository roleRepository, WorkProductRepository workProductRepository) {
+                             RoleRepository roleRepository,
+                             WorkProductRepository workProductRepository,
+                             DeliveryProcessRepository deliveryProcessRepository) {
         this.activityRepository = activityRepository;
         this.sampleRepository = sampleRepository;
         this.observerRepository = observerRepository;
         this.durationMeasurementRepository = durationMeasurementRepository;
         this.roleRepository = roleRepository;
         this.workProductRepository = workProductRepository;
+        this.deliveryProcessRepository = deliveryProcessRepository;
     }
 
     /**
@@ -157,11 +162,97 @@ public class SimulationService {
     public RoleResponseDTO toRoleResponseDTO(Role role) {
         return new RoleResponseDTO(
                 role.getId(),
+                role.getName(),
                 role.getQueue_name(),
                 role.getQueue_type(),
                 role.getInitial_quantity()
         );
     }
+
+    @Transactional
+    public void patchGroupedRoleFields(Long processId, GroupedRoleDTO dto) {
+        DeliveryProcess deliveryProcess = deliveryProcessRepository.findById(processId)
+                .orElseThrow(() -> new RuntimeException("DeliveryProcess not found"));
+
+        List<Activity> allActivities = new ArrayList<>();
+        if (deliveryProcess.getWbs() != null && deliveryProcess.getWbs().getProcessElements() != null) {
+            for (Activity root : deliveryProcess.getWbs().getProcessElements()) {
+                allActivities.addAll(collectAllActivities(root));
+            }
+        }
+
+        // Busca todas as roles com mesmo nome e que pertencem a esse processo
+        List<Role> matchingRoles = roleRepository.findAllByParentActivityIn(allActivities).stream()
+                .filter(role -> role.getName().equals(dto.getName()))
+                .collect(Collectors.toList());
+
+        if (matchingRoles.isEmpty()) {
+            throw new RuntimeException("No roles found with name: " + dto.getName());
+        }
+
+        for (Role role : matchingRoles) {
+            if (dto.getQueueName() != null) role.setQueue_name(dto.getQueueName());
+            if (dto.getQueueType() != null) role.setQueue_type(dto.getQueueType());
+            if (dto.getInitialQuantity() != null) role.setInitial_quantity(dto.getInitialQuantity());
+        }
+
+        roleRepository.saveAll(matchingRoles);
+    }
+
+
+
+    // Método recursivo para coletar todas as activities da árvore
+    private List<Activity> collectAllActivities(Activity root) {
+        List<Activity> all = new ArrayList<>();
+        collectRecursive(root, all);
+        return all;
+    }
+
+    private void collectRecursive(Activity current, List<Activity> collected) {
+        collected.add(current);
+        if (current.getChildren() != null) {
+            for (Activity child : current.getChildren()) {
+                collectRecursive(child, collected);
+            }
+        }
+    }
+
+    // Método principal para buscar roles agrupados por nome dentro do processo
+    public List<GroupedRoleDTO> getGroupedRolesByProcessId(Long processId) {
+        DeliveryProcess deliveryProcess = deliveryProcessRepository.findById(processId)
+                .orElseThrow(() -> new RuntimeException("DeliveryProcess not found"));
+
+        List<Activity> allActivities = new ArrayList<>();
+        if (deliveryProcess.getWbs() != null && deliveryProcess.getWbs().getProcessElements() != null) {
+            for (Activity rootActivity : deliveryProcess.getWbs().getProcessElements()) {
+                allActivities.addAll(collectAllActivities(rootActivity));
+            }
+        }
+
+        List<Role> roles = roleRepository.findAllByParentActivityIn(allActivities);
+
+        return roles.stream()
+                .collect(Collectors.groupingBy(Role::getName))
+                .entrySet()
+                .stream()
+                .map(entry -> {
+                    List<Role> groupRoles = entry.getValue();
+                    Role firstRole = groupRoles.get(0);
+
+                    List<Long> ids = groupRoles.stream()
+                            .map(Role::getId)
+                            .collect(Collectors.toList());
+
+                    String name = entry.getKey();
+                    String queueName = (firstRole.getQueue_name() != null) ? firstRole.getQueue_name() : name + " queue";
+                    String queueType = (firstRole.getQueue_type() != null) ? firstRole.getQueue_type() : "QUEUE";
+                    Integer initialQuantity = (firstRole.getInitial_quantity() != null) ? firstRole.getInitial_quantity() : 1;
+
+                    return new GroupedRoleDTO(name, queueName, queueType, initialQuantity, ids);
+                })
+                .collect(Collectors.toList());
+    }
+
 
     @Transactional
     public WorkProductResponseDTO mapWorkProductFields(WorkProductDTO dto) {
@@ -187,7 +278,7 @@ public class SimulationService {
 
         WorkProduct updated = workProductRepository.save(workProduct);
         return toWorkProductResponseDTO(updated);
-   }
+    }
 
     @Transactional
     public WorkProductResponseDTO mapWorkProduct(WorkProductDTO dto) {
@@ -242,43 +333,7 @@ public class SimulationService {
         );
     }
 
-    public List<GroupedRoleDTO> getGroupedRolesByName() {
-        List<Role> roles = roleRepository.findAll();
 
-        return roles.stream()
-                .collect(Collectors.groupingBy(
-                        Role::getName,
-                        Collectors.mapping(Role::getId, Collectors.toList())
-                ))
-                .entrySet()
-                .stream()
-                .map(entry -> new GroupedRoleDTO(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public List<RoleResponseDTO> updateGroupRoles(RoleGroupUpdateDTO dto) {
-        List<Role> roles = roleRepository.findAllById(dto.getRoleIds());
-
-        for (Role role : roles) {
-            if (dto.getQueueName() != null) role.setQueue_name(dto.getQueueName());
-            if (dto.getQueueType() != null) role.setQueue_type(dto.getQueueType());
-            if (dto.getInitialQuantity() != null) role.setInitial_quantity(dto.getInitialQuantity());
-
-            if (dto.getObserverIds() != null) {
-                List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
-                role.setObservers(observers);
-                for (Observer obs : observers) {
-                    obs.setRole(role);
-                }
-            }
-            roleRepository.save(role);
-        }
-
-        return roles.stream()
-                .map(this::toRoleResponseDTO)
-                .collect(Collectors.toList());
-    }
 
 
 

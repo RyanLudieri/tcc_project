@@ -2,8 +2,6 @@ package com.example.projeto_tcc.controller;
 
 import com.example.projeto_tcc.dto.*;
 import com.example.projeto_tcc.entity.Activity;
-import com.example.projeto_tcc.entity.Role;
-import com.example.projeto_tcc.entity.WorkProduct;
 import com.example.projeto_tcc.service.SimulationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,17 +32,20 @@ public class SimulationController {
         RoleResponseDTO updated = simulationService.mapRoleFields(dto);
         return ResponseEntity.ok(updated);
     }
-    @GetMapping("/grouped-roles")
-    public ResponseEntity<List<GroupedRoleDTO>> getGroupedRoles() {
-        List<GroupedRoleDTO> grouped = simulationService.getGroupedRolesByName();
-        return ResponseEntity.ok(grouped);
+
+    @PatchMapping("/roles/grouped/{processId}")
+    public ResponseEntity<?> patchGroupedRole(
+            @PathVariable Long processId,
+            @RequestBody GroupedRoleDTO dto) {
+        simulationService.patchGroupedRoleFields(processId, dto);
+        return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/roles/group")
-    public ResponseEntity<List<RoleResponseDTO>> updateGroupRoles(@RequestBody RoleGroupUpdateDTO dto) {
-        List<RoleResponseDTO> updatedRoles = simulationService.updateGroupRoles(dto);
-        return ResponseEntity.ok(updatedRoles);
+    @GetMapping("/{processId}/roles/grouped")
+    public List<GroupedRoleDTO> getGroupedRolesByProcess(@PathVariable Long processId) {
+        return simulationService.getGroupedRolesByProcessId(processId);
     }
+
 
 
     @PostMapping("/workProduct")
