@@ -26,13 +26,6 @@ public class SimulationController {
         return ResponseEntity.ok(responseDTO);
     }
 
-    @PatchMapping("/role/{roleId}")
-    public ResponseEntity<RoleResponseDTO> mapRole(@PathVariable Long roleId, @RequestBody RoleMappingDTO dto) {
-        dto.setRoleId(roleId);
-        RoleResponseDTO updated = simulationService.mapRoleFields(dto);
-        return ResponseEntity.ok(updated);
-    }
-
     @PatchMapping("/roles/grouped/{processId}")
     public ResponseEntity<?> patchGroupedRole(
             @PathVariable Long processId,

@@ -120,38 +120,8 @@ public class SimulationService {
         return activity.toSimulationDTO();
     }
 
-    /**
-     * Atualiza os campos de uma Role com base nos dados do DTO.
-     * Pode alterar: nome e tipo da fila, quantidade inicial e observadores associados.
-     *
-     * @param dto DTO contendo os dados para atualização.
-     * @return DTO com os dados atualizados da Role.
-     */
-    @Transactional
-    public RoleResponseDTO mapRoleFields(RoleMappingDTO dto) {
-        Role role = roleRepository.findById(dto.getRoleId())
-                .orElseThrow(() -> new RuntimeException("Role not found with id: " + dto.getRoleId()));
 
-        // Atualiza atributos básicos se presentes
-        if (dto.getQueueName() != null) role.setQueue_name(dto.getQueueName());
-        if (dto.getQueueType() != null) role.setQueue_type(dto.getQueueType());
-        if (dto.getInitialQuantity() != null) role.setInitial_quantity(dto.getInitialQuantity());
-
-        // Atualiza observadores se presentes
-        if (dto.getObserverIds() != null) {
-            List<Observer> observers = observerRepository.findAllById(dto.getObserverIds());
-            role.setObservers(observers);
-            for (Observer obs : observers) {
-                obs.setRole(role); // associação bidirecional
-            }
-        }
-
-        // Salva e retorna a Role atualizada
-        Role updatedRole = roleRepository.save(role);
-        return toRoleResponseDTO(updatedRole);
-    }
-
-
+    // Mapeamento de Role
 
     /**
      * Converte uma entidade Role para seu DTO de resposta.
