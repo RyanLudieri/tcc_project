@@ -16,5 +16,6 @@ public class ProcessGetDTO {
     private List<ProcessElementDTO> processElements;
     private List<Activity> predecessors;
     private boolean optional;
+    private List<GetMethodElementDTO> methodElements;
     // NÃO inclui methodElements
 }

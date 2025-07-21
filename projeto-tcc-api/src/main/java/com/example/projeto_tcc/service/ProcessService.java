@@ -1,9 +1,6 @@
 package com.example.projeto_tcc.service;
 
-import com.example.projeto_tcc.dto.MethodElementDTO;
-import com.example.projeto_tcc.dto.ProcessDTO;
-import com.example.projeto_tcc.dto.ProcessElementDTO;
-import com.example.projeto_tcc.dto.ProcessGetDTO;
+import com.example.projeto_tcc.dto.*;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Process;
 import com.example.projeto_tcc.enums.ProcessType;
@@ -226,17 +223,43 @@ public class ProcessService {
         dto.setPredecessors(entity.getPredecessors());
         dto.setOptional(entity.optional());
 
-        // Se for um DeliveryProcess com estrutura WBS, inclui os elementos
-        if (entity instanceof DeliveryProcess dp && dp.getWbs() != null) {
-            List<Activity> elements = dp.getWbs().getProcessElements();
-            List<ProcessElementDTO> elementDTOs = elements.stream()
-                    .map(this::convertToProcessElementDTO)
-                    .toList();
-            dto.setProcessElements(elementDTOs);
+        if (entity instanceof DeliveryProcess dp) {
+            WorkBreakdownStructure wbs = dp.getWbs();
+            if (wbs != null) {
+                // Process Elements (Activities)
+                if (wbs.getProcessElements() != null) {
+                    List<ProcessElementDTO> elementDTOs = wbs.getProcessElements().stream()
+                            .map(this::convertToProcessElementDTO)
+                            .toList();
+                    dto.setProcessElements(elementDTOs);
+                }
+
+                // Method Elements (como Role, WorkProduct etc.)
+                if (wbs.getMethodElements() != null) {
+                    List<GetMethodElementDTO> methodDTOs = wbs.getMethodElements().stream()
+                            .map(this::convertToGetMethodDTO)
+                            .toList();
+                    dto.setMethodElements(methodDTOs);
+                }
+            }
         }
 
         return dto;
     }
+
+
+    public GetMethodElementDTO convertToGetMethodDTO(MethodElement method) {
+        GetMethodElementDTO dto = new GetMethodElementDTO();
+        dto.setName(method.getName());
+        dto.setModelInfo(method.getModelInfo());
+        dto.setParentIndex(method.getParentActivity() != null ? method.getParentActivity().getIndex() : null);
+        dto.setOptional(method.optional());
+        // outros campos, se houver
+        return dto;
+    }
+
+
+
 
     /**
      * Converte recursivamente uma Activity para o DTO correspondente, incluindo filhos.

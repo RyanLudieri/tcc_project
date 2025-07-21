@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.entity;
 
+import com.example.projeto_tcc.enums.MethodType;
 import com.example.projeto_tcc.enums.ProcessType;
 import jakarta.persistence.*;
 import lombok.Data;
