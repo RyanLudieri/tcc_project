@@ -12,10 +12,6 @@ import java.util.List;
 @Getter
 @Setter
 public class Phase extends Activity{
-    @Override
-    public boolean optional() {
-        return true;
-    }
 
     public void configureFromDTO(SimulationParamsDTO dto) {
         this.setTimeBox(dto.getTimeBox());

@@ -18,10 +18,6 @@ public class Milestone extends Activity{
 
     @Enumerated(EnumType.STRING)
     private DependencyType dependencyType;
-    @Override
-    public boolean optional() {
-        return true;
-    }
 
     public void configureFromDTO(SimulationParamsDTO dto) {
         this.setDependencyType(dto.getDependencyType());

@@ -15,10 +15,6 @@ import java.util.List;
 public class TaskDescriptor extends Activity{
 
     private int requiredResources;
-    @Override
-    public boolean optional() {
-        return false;
-    }
 
     public void configureFromDTO(SimulationParamsDTO dto) {
         this.setConditionToProcess(dto.getConditionToProcess());

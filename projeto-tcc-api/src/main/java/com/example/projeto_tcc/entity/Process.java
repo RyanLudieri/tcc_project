@@ -13,8 +13,5 @@ public class Process extends Activity {
     @OneToOne(cascade = CascadeType.ALL)
     private WorkBreakdownStructure wbs;
 
-    @Override
-    public boolean optional() {
-        return false;
-    }
+
 }

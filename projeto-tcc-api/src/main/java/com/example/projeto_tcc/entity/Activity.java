@@ -64,10 +64,6 @@ public class Activity extends AbstractElement {
 
     // --------------------------
 
-    @Override
-    public boolean optional() {
-        return false;
-    }
 
     public void configureFromDTO(SimulationParamsDTO dto) {
         this.setTimeBox(dto.getTimeBox());
@@ -104,13 +100,17 @@ public class Activity extends AbstractElement {
     public Activity() {
     }
 
-    public Activity(Long id, Integer index, String modelInfo, ProcessType type, String name, Activity superActivity, List<Activity> children, List<Activity> predecessors) {
-        super(id, index, modelInfo, type);
+    public Activity(Long id, Integer index, String modelInfo, ProcessType type, String name, Activity superActivity, List<Activity> children, List<Activity> predecessors, boolean optional) {
+        super(id, index, modelInfo, type, optional);
         this.name = name;
         this.superActivity = superActivity;
         this.children = children;
         this.predecessors = predecessors;
     }
+
+
+
+
 
 }
 

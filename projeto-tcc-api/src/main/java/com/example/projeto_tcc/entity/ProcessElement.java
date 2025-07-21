@@ -10,8 +10,5 @@ import lombok.Setter;
 @Setter
 public class ProcessElement extends Activity {
 
-    @Override
-    public boolean optional() {
-        return false;
-    }
+
 }

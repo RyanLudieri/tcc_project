@@ -24,7 +24,8 @@ public abstract class AbstractElement {
     @Enumerated(EnumType.STRING)
     protected ProcessType type;
 
-    public abstract boolean optional();
+    protected boolean optional;
+
 
     public AbstractElement() {
     }
@@ -36,5 +37,11 @@ public abstract class AbstractElement {
         this.type = type;
     }
 
-
+    public AbstractElement(Long id, Integer index, String modelInfo, ProcessType type, boolean optional) {
+        this.id = id;
+        this.index = index;
+        this.modelInfo = modelInfo;
+        this.type = type;
+        this.optional = optional;
+    }
 }

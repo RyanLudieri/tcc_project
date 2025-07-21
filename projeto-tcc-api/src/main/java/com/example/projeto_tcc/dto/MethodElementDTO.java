@@ -16,6 +16,7 @@ public class MethodElementDTO {
     private MethodType type;
 
     private String modelInfo;
-    private Integer parentIndex; // índice da Activity pai, se houver
+    private Integer parentIndex;// índice da Activity pai, se houver
+    private boolean optional;
 
 }

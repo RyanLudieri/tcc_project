@@ -52,7 +52,7 @@ public class ProcessService {
         deliveryProcess.setPredecessors(dto.getPredecessors());
         deliveryProcess.setType(ProcessType.DELIVERY_PROCESS);
         deliveryProcess.setIndex(currentIndex++);
-        deliveryProcess.optional();
+        deliveryProcess.setOptional(dto.isOptional());
 
         // Criação da estrutura de decomposição (WBS)
         WorkBreakdownStructure wbs = new WorkBreakdownStructure();
@@ -94,7 +94,7 @@ public class ProcessService {
     private Activity toEntityWithoutPredecessors(ProcessElementDTO dto) {
         Activity entity = createProcessElementByType(dto.getType());
         entity.setName(dto.getName());
-        entity.optional();
+        entity.setOptional(dto.isOptional());
 
         indexToActivity.put(entity.getIndex(), entity);
 
@@ -155,7 +155,7 @@ public class ProcessService {
         MethodElement element = dto.getType().createInstance();
         element.setName(dto.getName());
         element.setModelInfo(dto.getModelInfo());
-        element.optional();
+        element.setOptional(dto.isOptional());
 
         if (dto.getParentIndex() != null) {
             Activity parent = indexToActivity.get(dto.getParentIndex());
@@ -176,7 +176,7 @@ public class ProcessService {
                 .orElseThrow(() -> new RuntimeException("Elemento não encontrado com id: " + id));
 
         if (dto.getName() != null) activity.setName(dto.getName());
-        activity.optional();
+        activity.setOptional(dto.isOptional());
 
         return repository.save(activity);
     }
@@ -191,7 +191,7 @@ public class ProcessService {
 
         if (dto.getName() != null) element.setName(dto.getName());
         if (dto.getModelInfo() != null) element.setModelInfo(dto.getModelInfo());
-        element.optional();
+        element.setOptional(dto.isOptional());
 
         return methodElementRepository.save(element);
     }
@@ -221,7 +221,7 @@ public class ProcessService {
         dto.setModelInfo(entity.getModelInfo());
         dto.setType(entity.getType());
         dto.setPredecessors(entity.getPredecessors());
-        dto.setOptional(entity.optional());
+        dto.setOptional(entity.isOptional());
 
         if (entity instanceof DeliveryProcess dp) {
             WorkBreakdownStructure wbs = dp.getWbs();
@@ -253,7 +253,7 @@ public class ProcessService {
         dto.setName(method.getName());
         dto.setModelInfo(method.getModelInfo());
         dto.setParentIndex(method.getParentActivity() != null ? method.getParentActivity().getIndex() : null);
-        dto.setOptional(method.optional());
+        dto.setOptional(method.isOptional());
         // outros campos, se houver
         return dto;
     }
@@ -281,7 +281,7 @@ public class ProcessService {
             dto.setChildren(childrenDto);
         }
 
-        dto.setOptional(entity.optional());
+        dto.setOptional(entity.isOptional());
 
         return dto;
     }

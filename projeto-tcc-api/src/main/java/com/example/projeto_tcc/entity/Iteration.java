@@ -17,10 +17,7 @@ public class Iteration extends Activity{
     @Enumerated(EnumType.STRING)
     private IterationBehavior iterationBehavior;
 
-    @Override
-    public boolean optional() {
-        return false;
-    }
+
 
     public void configureFromDTO(SimulationParamsDTO dto) {
         this.setTimeBox(dto.getTimeBox());

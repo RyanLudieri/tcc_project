@@ -11,10 +11,7 @@ import java.util.List;
 @Entity
 @Data
 public class DeliveryProcess extends Process {
-    @Override
-    public boolean optional() {
-        return false;
-    }
+
 }
 
 
