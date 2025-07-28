@@ -21,10 +21,13 @@ public class ProcessService {
     private final ActivityRepository repository;
     private final MethodElementRepository methodElementRepository;
 
+    private final WorkProductConfigService workProductConfigService;
+
     // Construtor com injeção de dependência dos repositórios
-    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository) {
+    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository, WorkProductConfigService workProductConfigService) {
         this.repository = repository;
         this.methodElementRepository = methodElementRepository;
+        this.workProductConfigService = workProductConfigService;
     }
 
     // Índice utilizado para manter ordem e referenciar elementos
@@ -70,6 +73,9 @@ public class ProcessService {
             resolvePredecessors(elementDTOs.get(i), elements.get(i));
         }
 
+        // ⚠️ Salva as atividades no banco antes de usá-las em outra entidade
+        elements = repository.saveAll(elements);
+
         wbs.setProcessElements(elements);
 
         // Associa os elementos do método à estrutura
@@ -80,12 +86,19 @@ public class ProcessService {
                 methodElements.add(method);
             }
         }
+
         wbs.setMethodElements(methodElements);
+
+        // Passa a lista raiz (elements) em vez da lista achatada para gerar configurações
+        workProductConfigService.generateConfigurations(methodElements, elements);
 
         // Associa a WBS ao processo
         deliveryProcess.setWbs(wbs);
+
         return repository.save(deliveryProcess);
     }
+
+
 
     /**
      * Constrói recursivamente os elementos do processo (Activity) a partir dos DTOs,
