@@ -6,6 +6,7 @@ import com.example.projeto_tcc.entity.Process;
 import com.example.projeto_tcc.enums.ProcessType;
 import com.example.projeto_tcc.repository.MethodElementRepository;
 import com.example.projeto_tcc.repository.ActivityRepository;
+import com.example.projeto_tcc.repository.RoleConfigRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +24,14 @@ public class ProcessService {
 
     private final WorkProductConfigService workProductConfigService;
 
+    private final RoleConfigService roleConfigService;
+
     // Construtor com injeção de dependência dos repositórios
-    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository, WorkProductConfigService workProductConfigService) {
+    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository, WorkProductConfigService workProductConfigService, RoleConfigService roleConfigService) {
         this.repository = repository;
         this.methodElementRepository = methodElementRepository;
         this.workProductConfigService = workProductConfigService;
+        this.roleConfigService =roleConfigService;
     }
 
     // Índice utilizado para manter ordem e referenciar elementos
@@ -91,9 +95,11 @@ public class ProcessService {
 
         // Passa a lista raiz (elements) em vez da lista achatada para gerar configurações
         workProductConfigService.generateConfigurations(methodElements, elements);
+        roleConfigService.generateConfigurations(methodElements);
 
         // Associa a WBS ao processo
         deliveryProcess.setWbs(wbs);
+
 
         return repository.save(deliveryProcess);
     }
@@ -169,6 +175,7 @@ public class ProcessService {
         element.setName(dto.getName());
         element.setModelInfo(dto.getModelInfo());
         element.setOptional(dto.isOptional());
+        element.setMethodType(dto.getType());
 
         if (dto.getParentIndex() != null) {
             Activity parent = indexToActivity.get(dto.getParentIndex());

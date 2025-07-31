@@ -36,21 +36,5 @@ public class WorkProduct extends MethodElement{
     private WorkProductType workProductType;
 
 
-    public WorkProduct() {
-    }
-
-
-    public WorkProduct(Long id, Integer index, String modelInfo, ProcessType type, Long id1, String name, String task_name, String queue_name, String queue_type, Integer queue_size, Integer initial_quantity, Queue policy, List<Observer> observers, WorkProductType workProductType, boolean optional) {
-        super(id, index, modelInfo, type, id1, name, optional);
-        this.task_name = task_name;
-        this.queue_name = queue_name;
-        this.queue_type = queue_type;
-        this.queue_size = queue_size;
-        this.initial_quantity = initial_quantity;
-        this.policy = policy;
-        this.observers = observers;
-        this.workProductType = workProductType;
-    }
-
 
 }

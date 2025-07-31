@@ -99,23 +99,5 @@ public class WorkProductConfigService {
 
 
 
-
-    public List<Activity> collectAllActivities(List<Activity> roots) {
-        List<Activity> all = new ArrayList<>();
-        for (Activity activity : roots) {
-            collectRecursive(activity, all);
-        }
-        return all;
-    }
-
-    private void collectRecursive(Activity current, List<Activity> collector) {
-        collector.add(current);
-        if (current.getChildren() != null) {
-            for (Activity child : current.getChildren()) {
-                collectRecursive(child, collector);
-            }
-        }
-    }
-
 }
 

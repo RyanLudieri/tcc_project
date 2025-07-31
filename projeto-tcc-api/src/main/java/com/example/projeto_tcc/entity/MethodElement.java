@@ -3,12 +3,12 @@ package com.example.projeto_tcc.entity;
 import com.example.projeto_tcc.enums.MethodType;
 import com.example.projeto_tcc.enums.ProcessType;
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Getter
-@Setter
+@Data
 @Inheritance(strategy = InheritanceType.JOINED)
 public class MethodElement extends AbstractElement{
 
@@ -17,16 +17,8 @@ public class MethodElement extends AbstractElement{
     @ManyToOne
     private Activity parentActivity;
 
-    public MethodElement() {
-    }
+    @Enumerated(EnumType.STRING)
+    private MethodType methodType;
 
-    public MethodElement(String name) {
-        this.name = name;
-    }
-
-    public MethodElement(Long id, Integer index, String modelInfo, ProcessType type, Long id1, String name, boolean optional) {
-        super(id, index, modelInfo, type, optional);
-        this.name = name;
-    }
 
 }

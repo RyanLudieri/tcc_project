@@ -8,8 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @MappedSuperclass
-@Getter
-@Setter
+@Data
 public abstract class AbstractElement {
 
     @Id
@@ -21,27 +20,7 @@ public abstract class AbstractElement {
 
     protected String modelInfo;
 
-    @Enumerated(EnumType.STRING)
-    protected ProcessType type;
-
     protected boolean optional;
 
 
-    public AbstractElement() {
-    }
-
-    public AbstractElement(Long id, Integer index, String modelInfo, ProcessType type) {
-        this.id = id;
-        this.index = index;
-        this.modelInfo = modelInfo;
-        this.type = type;
-    }
-
-    public AbstractElement(Long id, Integer index, String modelInfo, ProcessType type, boolean optional) {
-        this.id = id;
-        this.index = index;
-        this.modelInfo = modelInfo;
-        this.type = type;
-        this.optional = optional;
-    }
 }
