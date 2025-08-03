@@ -3,6 +3,7 @@ package com.example.projeto_tcc.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -23,4 +24,7 @@ public class RoleConfig {
 
     @ElementCollection
     private List<Long> roleIds; // IDs dos Roles que compartilham esse nome
+
+    @OneToMany(mappedBy = "roleConfig", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MethodElementObserver> observers = new ArrayList<>();
 }

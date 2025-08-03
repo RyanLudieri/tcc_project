@@ -1,18 +1,20 @@
 package com.example.projeto_tcc.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Getter
-@Setter
+@Data
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Observer {
     @Id
     @GeneratedValue
     private Long id;
+    private String queue_name;
     private String name;
-    private String type;
+    private Integer position; // posição sequencial
 
     @ManyToOne
     @JoinColumn(name = "role_id")
@@ -26,15 +28,9 @@ public class Observer {
     @ManyToOne
     private Activity activity;
 
-    public Observer() {
-    }
 
-    public Observer(Long id, String name, String type, Activity activity) {
-        this.id = id;
-        this.name = name;
-        this.type = type;
-        this.activity = activity;
-    }
+
+
 
 
 }
