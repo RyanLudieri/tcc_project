@@ -26,12 +26,15 @@ public class ProcessService {
 
     private final RoleConfigService roleConfigService;
 
+    private final ActivityConfigService activityConfigService;
+
     // Construtor com injeção de dependência dos repositórios
-    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository, WorkProductConfigService workProductConfigService, RoleConfigService roleConfigService) {
+    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository, WorkProductConfigService workProductConfigService, RoleConfigService roleConfigService, ActivityConfigService activityConfigService) {
         this.repository = repository;
         this.methodElementRepository = methodElementRepository;
         this.workProductConfigService = workProductConfigService;
         this.roleConfigService =roleConfigService;
+        this.activityConfigService = activityConfigService;
     }
 
     // Índice utilizado para manter ordem e referenciar elementos
@@ -79,6 +82,13 @@ public class ProcessService {
 
         // ⚠️ Salva as atividades no banco antes de usá-las em outra entidade
         elements = repository.saveAll(elements);
+
+
+        // ⬇️ Cria configurações padrão (Sample, Observer, DurationMeasurement) para cada Activity
+        for (Activity activity : elements) {
+            activityConfigService.createDefaultConfigsRecursively(activity);
+        }
+
 
         wbs.setProcessElements(elements);
 

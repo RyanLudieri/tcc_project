@@ -1,43 +1,42 @@
 package com.example.projeto_tcc.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Getter
-@Setter
+@Data
 public class DistributionParameter {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
+    // CONSTANT
+    private Double constant;
+
+    // NORMAL, EXPONENTIAL, POISSON
     private Double mean;
-    private Double standardDeviation;
-    private Double lambda;
+    private Double standardDeviation; // para NORMAL
+
+    // UNIFORM
     private Double min;
     private Double max;
-    private Double shape;
-    private Double scale;
-    private Double alpha;
-    private Double beta;
+
+    // LOGNORMAL
+    private Double scale;  // também usado por GAMMA e WEIBULL
+    private Double shape;  // também usado por GAMMA
+
+    // GEOMETRIC
     private Double probability;
 
-    public DistributionParameter() {
-    }
+    // POISSON (em alguns casos chamado de lambda)
+    private Double lambda;
 
-    public DistributionParameter(Integer id, Double mean, Double standardDeviation, Double lambda, Double min, Double max, Double shape, Double scale, Double alpha, Double beta, Double probability) {
-        this.id = id;
-        this.mean = mean;
-        this.standardDeviation = standardDeviation;
-        this.lambda = lambda;
-        this.min = min;
-        this.max = max;
-        this.shape = shape;
-        this.scale = scale;
-        this.alpha = alpha;
-        this.beta = beta;
-        this.probability = probability;
-    }
+    // WEIBULL
+    private Double alpha;  // shape
+    private Double beta;   // scale
 
 }
+

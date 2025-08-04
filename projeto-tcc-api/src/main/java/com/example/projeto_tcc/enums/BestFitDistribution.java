@@ -1,5 +1,14 @@
 package com.example.projeto_tcc.enums;
 
 public enum BestFitDistribution {
-    NORMAL, LOGNORMAL, POISSON, GEOMETRIC, EXPONENTIAL, UNIFORM, WEIBULL, GAMMA
+    CONSTANT,
+    NORMAL,
+    LOGNORMAL,
+    POISSON,
+    EXPONENTIAL,
+    UNIFORM,
+    WEIBULL,
+    GAMMA,
+    GEOMETRIC
 }
+

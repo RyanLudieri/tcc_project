@@ -37,7 +37,22 @@ public class MeasurementFactory {
         return durationMeasurements;
     }
 
-    // Novo método utilitário interno:
+    // Novo método para distribuição CONSTANT
+    public static List<DurationMeasurement> createConstantDurationMeasurements(double constantValue, int sampleSize, TimeScale timeScale) {
+        List<DurationMeasurement> durationMeasurements = new ArrayList<>();
+        double scaledValue = scaleValue(constantValue, timeScale);
+        double value = Math.round(scaledValue * 100.0) / 100.0;
+
+        for (int i = 0; i < sampleSize; i++) {
+            DurationMeasurement measurement = new DurationMeasurement();
+            measurement.setValue(value);
+            durationMeasurements.add(measurement);
+        }
+
+        return durationMeasurements;
+    }
+
+    // Método utilitário interno:
     private static double scaleValue(double value, TimeScale timeScale) {
         TimeScale ts = (timeScale == null) ? TimeScale.SECONDS : timeScale;
         return switch (ts) {
@@ -48,6 +63,4 @@ public class MeasurementFactory {
         };
     }
 
-
 }
-

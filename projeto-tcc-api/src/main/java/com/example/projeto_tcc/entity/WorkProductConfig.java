@@ -4,6 +4,9 @@ import com.example.projeto_tcc.enums.Queue;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @Entity
 public class WorkProductConfig {
@@ -33,4 +36,8 @@ public class WorkProductConfig {
 
     @ManyToOne
     private Activity activity;
+
+    @OneToMany(mappedBy = "workProductConfig", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MethodElementObserver> observers = new ArrayList<>();
+
 }

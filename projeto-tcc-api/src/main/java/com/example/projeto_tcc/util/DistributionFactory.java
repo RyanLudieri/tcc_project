@@ -8,15 +8,17 @@ public class DistributionFactory {
 
     public static Object createDistribution(BestFitDistribution type, DistributionParameter param) {
         return switch (type) {
+            case CONSTANT -> param.getConstant(); // valor direto, sem distribuição
             case NORMAL -> new NormalDistribution(param.getMean(), param.getStandardDeviation());
             case LOGNORMAL -> new LogNormalDistribution(param.getScale(), param.getShape());
             case POISSON -> new PoissonDistribution(param.getLambda());
-            case GEOMETRIC -> new GeometricDistribution(param.getProbability());
             case EXPONENTIAL -> new ExponentialDistribution(param.getMean());
             case UNIFORM -> new UniformRealDistribution(param.getMin(), param.getMax());
             case WEIBULL -> new WeibullDistribution(param.getAlpha(), param.getBeta());
             case GAMMA -> new GammaDistribution(param.getShape(), param.getScale());
+            case GEOMETRIC -> new GeometricDistribution(param.getProbability());
         };
     }
 }
+
 

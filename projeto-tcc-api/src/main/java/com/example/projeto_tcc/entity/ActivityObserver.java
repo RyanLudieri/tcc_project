@@ -8,9 +8,10 @@ import lombok.Data;
 @Data
 @Table(name = "activity_observer")
 public class ActivityObserver extends Observer{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     private ObserverActivityType type;
+
+    @ManyToOne
+    @JoinColumn(name = "activity_config_id")
+    private ActivityConfig activityConfig;
 }

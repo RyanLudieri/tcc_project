@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Data
 public class Sample {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,15 +29,5 @@ public class Sample {
     @JsonManagedReference
     private List<DurationMeasurement> measurements = new ArrayList<>();
 
-    public Sample() {
-    }
 
-    public Sample(Integer id, String name, int size, BestFitDistribution distribution, DistributionParameter parameter, List<DurationMeasurement> measurements) {
-        this.id = id;
-        this.name = name;
-        this.size = size;
-        this.distribution = distribution;
-        this.parameter = parameter;
-        this.measurements = measurements;
-    }
 }
