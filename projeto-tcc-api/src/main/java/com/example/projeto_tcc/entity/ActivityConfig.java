@@ -1,6 +1,6 @@
 package com.example.projeto_tcc.entity;
 
-import com.example.projeto_tcc.enums.BestFitDistribution;
+import com.example.projeto_tcc.enums.*;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -29,6 +29,23 @@ public class ActivityConfig {
 
     @OneToOne(cascade = CascadeType.ALL)
     private DistributionParameter distributionParameter;
+
+    @Enumerated(EnumType.STRING)
+    private DependencyType dependencyType;
+
+    private int timeBox;
+
+    @Enumerated(EnumType.STRING)
+    private ConditionToProcess conditionToProcess;
+
+    @Enumerated(EnumType.STRING)
+    private ProcessingQuantity processingQuantity;
+
+    @Enumerated(EnumType.STRING)
+    private IterationBehavior iterationBehavior;
+
+    private int requiredResources;
+
 
     // Getters e Setters
 }

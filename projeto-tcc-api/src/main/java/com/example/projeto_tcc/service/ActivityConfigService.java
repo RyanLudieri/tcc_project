@@ -46,10 +46,11 @@ public class ActivityConfigService {
         observer.setActivityConfig(config);
         config.getObservers().add(observer);
 
-        // 🟨 Verifica se é um tipo que **não precisa de medições**
-        boolean isFixed = activity instanceof Milestone || activity instanceof Phase;
-        double defaultValue = isFixed ? 0.0 : 480.0;
-        int sampleSize = isFixed ? 0 : 30;
+        // 🟨 Verifica se é um tipo que deve receber medições (apenas TaskDescriptor)
+        boolean isTask = activity instanceof TaskDescriptor;
+        double defaultValue = isTask ? 480.0 : 0.0;
+        int sampleSize = isTask ? 30 : 0;
+
 
         // 🔹 Parâmetros de distribuição
         config.setDistributionType(BestFitDistribution.CONSTANT);
