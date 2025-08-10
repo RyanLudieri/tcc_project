@@ -1,15 +1,11 @@
 package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.entity.*;
-import com.example.projeto_tcc.enums.BestFitDistribution;
-import com.example.projeto_tcc.enums.ObserverActivityType;
+import com.example.projeto_tcc.enums.*;
 import com.example.projeto_tcc.repository.*;
-import com.example.projeto_tcc.util.DistributionFactory;
 import com.example.projeto_tcc.util.MeasurementFactory;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.math3.distribution.IntegerDistribution;
-import org.apache.commons.math3.distribution.RealDistribution;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,6 +26,9 @@ public class ActivityConfigService {
     public ActivityConfig createDefaultConfig(Activity activity) {
         ActivityConfig config = new ActivityConfig();
         config.setActivity(activity);
+
+        // Chama função auxiliar para setar atributos padrões específicos por tipo
+        setDefaultAttributesByActivityType(activity, config);
 
         // 🔹 Define a posição do novo observer
         int position = 1;
@@ -102,6 +101,39 @@ public class ActivityConfigService {
             }
         }
     }
+
+    private void setDefaultAttributesByActivityType(Activity activity, ActivityConfig config) {
+        if (activity instanceof Phase) {
+            config.setConditionToProcess(ConditionToProcess.SINGLE_ENTITY_AVAILABLE);
+            config.setProcessingQuantity(ProcessingQuantity.UNIT);
+        }
+        else if (activity instanceof Iteration) {
+            config.setDependencyType(DependencyType.FINISH_TO_START);
+            config.setConditionToProcess(ConditionToProcess.SINGLE_ENTITY_AVAILABLE);
+            config.setIterationBehavior(IterationBehavior.MOVE_BACK);
+            config.setProcessingQuantity(ProcessingQuantity.UNIT);
+            config.setTimeBox(0);
+        }
+        else if (activity instanceof TaskDescriptor) {
+            config.setDependencyType(DependencyType.FINISH_TO_START);
+            config.setConditionToProcess(ConditionToProcess.SINGLE_ENTITY_AVAILABLE);
+            config.setTimeBox(0);
+            config.setProcessingQuantity(ProcessingQuantity.UNIT);
+            config.setRequiredResources(1);
+        }
+        else if (activity instanceof Milestone){
+            config.setDependencyType(DependencyType.FINISH_TO_START);
+            config.setConditionToProcess(ConditionToProcess.SINGLE_ENTITY_AVAILABLE);
+            config.setProcessingQuantity(ProcessingQuantity.UNIT);
+        }
+        else {
+            config.setDependencyType(DependencyType.FINISH_TO_START);
+            config.setConditionToProcess(ConditionToProcess.SINGLE_ENTITY_AVAILABLE);
+            config.setProcessingQuantity(ProcessingQuantity.UNIT);
+            config.setTimeBox(0);
+        }
+    }
+
 
 
 }
