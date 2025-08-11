@@ -103,13 +103,13 @@ public class ProcessService {
 
         wbs.setMethodElements(methodElements);
 
-        // Passa a lista raiz (elements) em vez da lista achatada para gerar configurações
-        workProductConfigService.generateConfigurations(methodElements, elements);
-        roleConfigService.generateConfigurations(methodElements);
-
         // Associa a WBS ao processo
         deliveryProcess.setWbs(wbs);
+        deliveryProcess = repository.save(deliveryProcess);
 
+        // Passa a lista raiz (elements) em vez da lista achatada para gerar configurações
+        workProductConfigService.generateConfigurations(methodElements, elements);
+        roleConfigService.generateConfigurations(methodElements, deliveryProcess);
 
         return repository.save(deliveryProcess);
     }

@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.service;
 
+import com.example.projeto_tcc.dto.ObserverUpdateDTO;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Observer;
 import com.example.projeto_tcc.enums.MethodType;
@@ -25,7 +26,7 @@ public class RoleConfigService {
 
 
     @Transactional
-    public void generateConfigurations(List<MethodElement> methodElements) {
+    public void generateConfigurations(List<MethodElement> methodElements, DeliveryProcess deliveryProcess) {
         // Filtra apenas os MethodElements do tipo ROLE
         List<MethodElement> roleElements = methodElements.stream()
                 .filter(me -> me.getMethodType() == MethodType.ROLE)
@@ -51,6 +52,7 @@ public class RoleConfigService {
                     .collect(Collectors.toList());
 
             config.setRoleIds(ids);
+            config.setDeliveryProcess(deliveryProcess);
 
             // Cria e adiciona o Observer padrão
             MethodElementObserver observer = new MethodElementObserver();
@@ -84,10 +86,11 @@ public class RoleConfigService {
         observer.setRoleConfig(config);
 
         config.getObservers().add(observer);
-        configRepository.save(config);
 
-        return observer;
+        // Salva explicitamente o observer para garantir o ID
+        return observerRepository.save(observer);
     }
+
 
     @Transactional
     public void removeObserverFromRoleConfig(Long roleConfigId, Long observerId) {
@@ -103,6 +106,34 @@ public class RoleConfigService {
         observerRepository.delete(observerToRemove); // necessário para remover do banco
         configRepository.save(config); // persiste a mudança no RoleConfig (opcional, mas seguro)
     }
+
+    @Transactional
+    public MethodElementObserver updateObserver(Long observerId, ObserverUpdateDTO dto) {
+        MethodElementObserver observer = observerRepository.findById(observerId)
+                .orElseThrow(() -> new IllegalArgumentException("Observer não encontrado com id: " + observerId));
+
+        if (dto.getType() != null) {
+            observer.setType(dto.getType());
+        }
+        if (dto.getQueueName() != null) {
+            observer.setQueue_name(dto.getQueueName());
+        }
+
+        return observerRepository.save(observer);
+    }
+
+
+    @Transactional
+    public List<RoleConfig> getRolesByDeliveryProcess(Long deliveryProcessId) {
+        List<RoleConfig> roles = configRepository.findByDeliveryProcessId(deliveryProcessId);
+        // Força carregar observers (para evitar LazyInitializationException)
+        roles.forEach(role -> role.getObservers().size());
+        return roles;
+    }
+
+
+
+
 
 
 
