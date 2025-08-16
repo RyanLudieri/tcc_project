@@ -14,31 +14,6 @@ import java.util.List;
 @Setter
 public class TaskDescriptor extends Activity{
 
-    private int requiredResources;
 
-    public void configureFromDTO(SimulationParamsDTO dto) {
-        this.setConditionToProcess(dto.getConditionToProcess());
-        this.setProcessingQuantity(dto.getProcessingQuantity());
-        this.setRequiredResources(dto.getRequiredResources());
-    }
-
-    @Override
-    public ActivityResponseDTO toSimulationDTO() {
-        ActivityResponseDTO baseDTO = super.toSimulationDTO();
-        return new ActivityResponseDTO(
-                baseDTO.getId(),
-                baseDTO.getName(),
-                baseDTO.getType(),
-                this.getRequiredResources(),
-                baseDTO.getTimeBox(),
-                baseDTO.getTimeScale(),
-                null,
-                baseDTO.getConditionToProcess(),
-                baseDTO.getProcessingQuantity(),
-                null,    // o campo exclusivo do Iteration
-                baseDTO.getObserverIds(),
-                baseDTO.getSampleId()
-        );
-    }
 
 }

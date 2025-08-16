@@ -16,17 +16,6 @@ public class Observer {
     private String name;
     private Integer position; // posição sequencial
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Role role;
-
-    @ManyToOne
-    @JoinColumn(name = "workproduct_id")
-    private WorkProduct workproduct;
-
-
-    @ManyToOne
-    private Activity activity;
 
 
 

@@ -108,7 +108,7 @@ public class ProcessService {
         deliveryProcess = repository.save(deliveryProcess);
 
         // Passa a lista raiz (elements) em vez da lista achatada para gerar configurações
-        workProductConfigService.generateConfigurations(methodElements, elements);
+        workProductConfigService.generateConfigurations(methodElements, elements, deliveryProcess);
         roleConfigService.generateConfigurations(methodElements, deliveryProcess);
 
         return repository.save(deliveryProcess);

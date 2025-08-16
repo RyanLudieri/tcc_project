@@ -42,66 +42,8 @@ public class Activity extends AbstractElement {
     @JsonSerialize(using = CustomElementSerializer.class)
     private List<Activity> predecessors;
 
-
-    // --------------------------
-    // CAMPOS DE SIMULAÇÃO AQUI
-    // --------------------------
-
-    @OneToOne(cascade = CascadeType.ALL)
-    private Sample sample;
-
-    @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL)
-    private List<Observer> observers;
-
-    @Enumerated(EnumType.STRING)
-    private ConditionToProcess conditionToProcess;
-
-    @Enumerated(EnumType.STRING)
-    private ProcessingQuantity processingQuantity;
-
-    private int timeBox;
-
     @Getter
     private TimeScale timeScale;
-
-    // --------------------------
-
-
-    public void configureFromDTO(SimulationParamsDTO dto) {
-        this.setTimeBox(dto.getTimeBox());
-        this.setTimeScale(dto.getTimeScale());
-        this.setConditionToProcess(dto.getConditionToProcess());
-        this.setProcessingQuantity(dto.getProcessingQuantity());
-        // Sample e Observer setados fora
-    }
-
-    // Método polimórfico com valores padrão (Activity “raiz”)
-    public ActivityResponseDTO toSimulationDTO() {
-        List<Long> observerIds = observers == null ? List.of() : observers.stream()
-                .map(Observer::getId)
-                .collect(Collectors.toList());
-
-        Integer sampleId = sample != null ? sample.getId() : null;
-
-        return new ActivityResponseDTO(
-                this.getId(),
-                this.getName(),
-                this.getType(),
-                null, // requiredResources, se não aplicável aqui
-                this.getTimeBox(),
-                this.getTimeScale(),
-                null, // dependencyType se não aplicável aqui
-                this.getConditionToProcess(),
-                this.getProcessingQuantity(),
-                null, // iterationBehavior não aplicável aqui
-                observerIds,
-                sampleId
-        );
-    }
-
-
-
-
 
 
 

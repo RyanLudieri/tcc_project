@@ -16,6 +16,10 @@ public class DeliveryProcess extends Process {
     @JsonManagedReference
     private List<RoleConfig> roleConfigs = new ArrayList<>();
 
+    @OneToMany(mappedBy = "deliveryProcess", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<WorkProductConfig> workProductConfigs = new ArrayList<>();
+
 }
 
 

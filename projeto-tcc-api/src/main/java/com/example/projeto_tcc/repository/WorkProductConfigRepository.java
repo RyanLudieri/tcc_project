@@ -8,5 +8,8 @@ import java.util.List;
 
 public interface WorkProductConfigRepository extends JpaRepository<WorkProductConfig, Long> {
     List<WorkProductConfig> findByActivity(Activity activity);
+
+    List<WorkProductConfig> findByDeliveryProcessId(Long deliveryProcessId);
+
 }
 

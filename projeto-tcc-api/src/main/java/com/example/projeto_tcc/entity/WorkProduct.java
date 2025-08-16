@@ -14,27 +14,6 @@ import java.util.List;
 @Data
 public class WorkProduct extends MethodElement{
 
-    private String input_output;
-
-    private String task_name;
-
-    private String queue_name;
-
-    private String queue_type;
-
-    private Integer queue_size;
-
-    private Integer initial_quantity;
-
-    @Enumerated(EnumType.STRING)
-    private Queue policy;
-
-    @OneToMany(mappedBy = "workproduct", cascade = CascadeType.ALL)
-    private List<Observer> observers;
-
-    @Enumerated(EnumType.STRING)
-    private WorkProductType workProductType;
-
 
 
 }

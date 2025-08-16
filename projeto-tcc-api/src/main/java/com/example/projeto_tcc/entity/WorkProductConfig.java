@@ -1,6 +1,8 @@
 package com.example.projeto_tcc.entity;
 
 import com.example.projeto_tcc.enums.Queue;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -37,7 +39,13 @@ public class WorkProductConfig {
     @ManyToOne
     private Activity activity;
 
-    @OneToMany(mappedBy = "workProductConfig", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "workProductConfig", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<MethodElementObserver> observers = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_process_id")
+    @JsonBackReference
+    private DeliveryProcess deliveryProcess;
 
 }

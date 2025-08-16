@@ -9,6 +9,7 @@ import lombok.Data;
 @Table(name = "activity_observer")
 public class ActivityObserver extends Observer{
 
+    @Enumerated(EnumType.STRING)
     private ObserverActivityType type;
 
     @ManyToOne

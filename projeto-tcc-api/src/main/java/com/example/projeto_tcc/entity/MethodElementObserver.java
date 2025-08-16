@@ -8,8 +8,9 @@ import lombok.Data;
 @Entity
 @Data
 @Table(name = "method_element_observer")
-public class MethodElementObserver extends Observer{
+public class MethodElementObserver extends Observer {
 
+    @Enumerated(EnumType.STRING)
     private ObserverMethodElementType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -17,8 +18,8 @@ public class MethodElementObserver extends Observer{
     @JsonBackReference
     private RoleConfig roleConfig;
 
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "work_product_config_id")
     private WorkProductConfig workProductConfig;
 }
+

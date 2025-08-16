@@ -14,37 +14,6 @@ import lombok.Setter;
 @Setter
 public class Iteration extends Activity{
 
-    @Enumerated(EnumType.STRING)
-    private IterationBehavior iterationBehavior;
 
-
-
-    public void configureFromDTO(SimulationParamsDTO dto) {
-        this.setTimeBox(dto.getTimeBox());
-        this.setTimeScale(dto.getTimeScale());
-        this.setConditionToProcess(dto.getConditionToProcess());
-        this.setProcessingQuantity(dto.getProcessingQuantity());
-        this.setIterationBehavior(dto.getIterationBehavior());
-        // Sample e Observer setados fora
-    }
-
-    @Override
-    public ActivityResponseDTO toSimulationDTO() {
-        ActivityResponseDTO baseDTO = super.toSimulationDTO();
-        return new ActivityResponseDTO(
-                baseDTO.getId(),
-                baseDTO.getName(),
-                baseDTO.getType(),
-                null,
-                baseDTO.getTimeBox(),
-                baseDTO.getTimeScale(),
-                null,
-                baseDTO.getConditionToProcess(),
-                baseDTO.getProcessingQuantity(),
-                this.getIterationBehavior(),    // o campo exclusivo do Iteration
-                baseDTO.getObserverIds(),
-                baseDTO.getSampleId()
-        );
-    }
 
 }
