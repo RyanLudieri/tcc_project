@@ -20,6 +20,7 @@ public class MethodElementObserver extends Observer {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "work_product_config_id")
+    @JsonBackReference
     private WorkProductConfig workProductConfig;
 }
 

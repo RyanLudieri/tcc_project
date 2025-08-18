@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.dto.ObserverUpdateDTO;
+import com.example.projeto_tcc.dto.RoleConfigUpdateDTO;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Observer;
 import com.example.projeto_tcc.enums.MethodType;
@@ -129,6 +130,29 @@ public class RoleConfigService {
         // Força carregar observers (para evitar LazyInitializationException)
         roles.forEach(role -> role.getObservers().size());
         return roles;
+    }
+
+
+
+    @Transactional
+    public RoleConfig updateRoleConfig(Long roleConfigId, RoleConfigUpdateDTO dto) {
+        RoleConfig config = configRepository.findById(roleConfigId)
+                .orElseThrow(() -> new IllegalArgumentException("RoleConfig não encontrado"));
+
+        if (dto.getName() != null) {
+            config.setName(dto.getName());
+        }
+        if (dto.getQueueName() != null) {
+            config.setQueue_name(dto.getQueueName());
+        }
+        if (dto.getQueueType() != null) {
+            config.setQueue_type(dto.getQueueType());
+        }
+        if (dto.getInitialQuantity() != null) {
+            config.setInitial_quantity(dto.getInitialQuantity());
+        }
+
+        return configRepository.save(config);
     }
 
 

@@ -1,23 +1,22 @@
 package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.dto.MethodElementObserverDTO;
+import com.example.projeto_tcc.dto.ObserverUpdateDTO;
 import com.example.projeto_tcc.dto.WorkProductConfigDTO;
 import com.example.projeto_tcc.entity.*;
+import com.example.projeto_tcc.entity.Observer;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.enums.ProcessType;
 import com.example.projeto_tcc.enums.Queue;
 import com.example.projeto_tcc.repository.MethodElementObserverRepository;
 
 import com.example.projeto_tcc.repository.WorkProductConfigRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -170,6 +169,7 @@ public class WorkProductConfigService {
         workProducts.forEach(wp -> wp.getObservers().size());
 
         return workProducts.stream()
+                .sorted(Comparator.comparingInt(wp -> Integer.parseInt(wp.getQueue_name().substring(1)))) // ordena pelo número da fila
                 .map(wp -> new WorkProductConfigDTO(
                         wp.getId(),
                         wp.getWorkProductName(),
@@ -195,6 +195,111 @@ public class WorkProductConfigService {
                 ))
                 .toList();
     }
+
+
+
+
+    // ADD OBSERVER
+    @Transactional
+    public MethodElementObserver addObserverToWorkProductConfig(Long workProductConfigId) {
+        WorkProductConfig config = configRepository.findById(workProductConfigId)
+                .orElseThrow(() -> new IllegalArgumentException("WorkProductConfig não encontrado"));
+
+        int nextPosition = config.getObservers().stream()
+                .mapToInt(Observer::getPosition)
+                .max()
+                .orElse(0) + 1;
+
+        MethodElementObserver observer = new MethodElementObserver();
+        observer.setPosition(nextPosition);
+        observer.setQueue_name(config.getQueue_name());
+        observer.setName(config.getQueue_name() + " Observer " + nextPosition);
+        observer.setType(ObserverMethodElementType.LENGTH);
+        observer.setWorkProductConfig(config);
+
+        config.getObservers().add(observer);
+        return observerRepository.save(observer);
+    }
+
+
+    // REMOVE OBSERVER
+    @Transactional
+    public void removeObserverFromWorkProductConfig(Long workProductConfigId, Long observerId) {
+        WorkProductConfig config = configRepository.findById(workProductConfigId)
+                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig not found with ID: " + workProductConfigId));
+
+        MethodElementObserver observerToRemove = config.getObservers().stream()
+                .filter(obs -> obs.getId().equals(observerId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Observer not found with ID: " + observerId));
+
+        config.getObservers().remove(observerToRemove);
+        observerRepository.delete(observerToRemove);
+        configRepository.save(config);
+    }
+
+    // ---------------------------------------------------
+    // UPDATE OBSERVER
+    @Transactional
+    public MethodElementObserver updateObserver(Long observerId, ObserverUpdateDTO dto) {
+        MethodElementObserver observer = observerRepository.findById(observerId)
+                .orElseThrow(() -> new IllegalArgumentException("Observer não encontrado com id: " + observerId));
+
+        if (dto.getType() != null) {
+            observer.setType(dto.getType());
+        }
+        if (dto.getQueueName() != null) {
+            observer.setQueue_name(dto.getQueueName());
+        }
+
+        return observerRepository.save(observer);
+    }
+
+    // ---------------------------------------------------
+    // UPDATE CONFIG
+    @Transactional
+    public WorkProductConfigDTO updateWorkProductConfig(Long workProductConfigId, WorkProductConfigDTO dto) {
+        WorkProductConfig config = configRepository.findById(workProductConfigId)
+                .orElseThrow(() -> new IllegalArgumentException("WorkProductConfig não encontrado"));
+
+        if (dto.getWorkProductName() != null) config.setWorkProductName(dto.getWorkProductName());
+        if (dto.getInput_output() != null) config.setInput_output(dto.getInput_output());
+        if (dto.getTask_name() != null) config.setTask_name(dto.getTask_name());
+        if (dto.getQueue_name() != null) config.setQueue_name(dto.getQueue_name());
+        if (dto.getQueue_type() != null) config.setQueue_type(dto.getQueue_type());
+        if (dto.getQueue_size() != null) config.setQueue_size(dto.getQueue_size());
+        if (dto.getInitial_quantity() != null) config.setInitial_quantity(dto.getInitial_quantity());
+        if (dto.getPolicy() != null) config.setPolicy(dto.getPolicy());
+        config.setGenerate_activity(dto.isGenerate_activity());
+
+        WorkProductConfig saved = configRepository.save(config);
+
+        // Retorna o DTO com apenas o activityId
+        return new WorkProductConfigDTO(
+                saved.getId(),
+                saved.getWorkProductName(),
+                saved.getInput_output(),
+                saved.getTask_name(),
+                saved.getQueue_name(),
+                saved.getQueue_type(),
+                saved.getQueue_size(),
+                saved.getInitial_quantity(),
+                saved.getPolicy(),
+                saved.isGenerate_activity(),
+                saved.getActivity() != null ? saved.getActivity().getId() : null,
+                saved.getObservers().stream()
+                        .map(obs -> new MethodElementObserverDTO(
+                                obs.getId(),
+                                obs.getQueue_name(),
+                                obs.getName(),
+                                obs.getPosition(),
+                                obs.getType(),
+                                obs.getWorkProductConfig() != null ? obs.getWorkProductConfig().getId() : null
+                        ))
+                        .toList()
+        );
+    }
+
 
 
 

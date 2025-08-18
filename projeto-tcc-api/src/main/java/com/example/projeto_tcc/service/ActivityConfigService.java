@@ -1,5 +1,9 @@
 package com.example.projeto_tcc.service;
 
+import com.example.projeto_tcc.dto.ActivityConfigDTO;
+import com.example.projeto_tcc.dto.ActivityObserverDTO;
+import com.example.projeto_tcc.dto.DistributionParameterDTO;
+import com.example.projeto_tcc.dto.ObserverActivityDTO;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.enums.*;
 import com.example.projeto_tcc.repository.*;
@@ -20,6 +24,7 @@ public class ActivityConfigService {
     private final DistributionParameterRepository parameterRepository;
     private final DurationMeasurementRepository measurementRepository;
     private final ObserverRepository observerRepository;
+    private final ActivityObserverRepository activityObserverRepository;
     private final ActivityRepository activityRepository;
 
     @Transactional
@@ -133,6 +138,176 @@ public class ActivityConfigService {
             config.setTimeBox(0);
         }
     }
+
+
+    @Transactional
+    public ActivityConfigDTO getActivityConfig(Long activityId) {
+        ActivityConfig config = configRepository.findByActivityId(activityId)
+                .orElseThrow(() -> new IllegalArgumentException("Config não encontrada"));
+
+        DistributionParameter param = config.getDistributionParameter();
+        DistributionParameterDTO paramDTO = null;
+        if (param != null) {
+            paramDTO = new DistributionParameterDTO();
+            paramDTO.setId(param.getId());
+            paramDTO.setConstant(param.getConstant());
+            paramDTO.setMean(param.getMean());
+            paramDTO.setStandardDeviation(param.getStandardDeviation());
+            paramDTO.setMin(param.getMin());
+            paramDTO.setMax(param.getMax());
+            paramDTO.setShape(param.getShape());
+            paramDTO.setScale(param.getScale());
+            paramDTO.setLambda(param.getLambda());
+            paramDTO.setAlpha(param.getAlpha());
+            paramDTO.setBeta(param.getBeta());
+        }
+
+        List<ActivityObserverDTO> observers = config.getObservers().stream()
+                .map(obs -> new ActivityObserverDTO(
+                        obs.getId(),
+                        obs.getName(),
+                        obs.getQueue_name(),
+                        obs.getPosition(),
+                        obs.getType()
+                ))
+                .toList();
+
+        return new ActivityConfigDTO(
+                config.getActivity().getId(),
+                config.getActivity().getName(),
+                config.getActivity().getClass().getSimpleName(),
+                config.getActivity().getSuperActivity() != null ? config.getActivity().getSuperActivity().getId() : null,
+                config.getDependencyType(),
+                config.getTimeBox(),
+                config.getConditionToProcess(),
+                config.getProcessingQuantity(),
+                config.getIterationBehavior(),
+                config.getRequiredResources(),
+                config.getDistributionType(),
+                paramDTO,
+                observers
+        );
+    }
+
+    @Transactional
+    public ActivityConfigDTO updateActivityConfig(Long activityId, ActivityConfigDTO dto) {
+        ActivityConfig config = configRepository.findByActivityId(activityId)
+                .orElseThrow(() -> new IllegalArgumentException("Config não encontrada"));
+
+        if (dto.getDependencyType() != null) config.setDependencyType(dto.getDependencyType());
+        if (dto.getTimeBox() >= 0) config.setTimeBox(dto.getTimeBox());
+        if (dto.getConditionToProcess() != null) config.setConditionToProcess(dto.getConditionToProcess());
+        if (dto.getProcessingQuantity() != null) config.setProcessingQuantity(dto.getProcessingQuantity());
+        if (dto.getIterationBehavior() != null) config.setIterationBehavior(dto.getIterationBehavior());
+        if (dto.getRequiredResources() > 0) config.setRequiredResources(dto.getRequiredResources());
+
+        if (dto.getDistributionType() != null) config.setDistributionType(dto.getDistributionType());
+
+        DistributionParameterDTO paramDTO = dto.getDistributionParameter();
+        DistributionParameter param = config.getDistributionParameter();
+        if (paramDTO != null && param != null) {
+            if (paramDTO.getConstant() != null) param.setConstant(paramDTO.getConstant());
+            if (paramDTO.getMean() != null) param.setMean(paramDTO.getMean());
+            if (paramDTO.getStandardDeviation() != null) param.setStandardDeviation(paramDTO.getStandardDeviation());
+            if (paramDTO.getMin() != null) param.setMin(paramDTO.getMin());
+            if (paramDTO.getMax() != null) param.setMax(paramDTO.getMax());
+            if (paramDTO.getShape() != null) param.setShape(paramDTO.getShape());
+            if (paramDTO.getScale() != null) param.setScale(paramDTO.getScale());
+            if (paramDTO.getLambda() != null) param.setLambda(paramDTO.getLambda());
+            if (paramDTO.getAlpha() != null) param.setAlpha(paramDTO.getAlpha());
+            if (paramDTO.getBeta() != null) param.setBeta(paramDTO.getBeta());
+        }
+
+        configRepository.save(config);
+
+        return getActivityConfig(activityId);
+    }
+
+
+    // GET todos os observers de um ActivityConfig
+    @Transactional
+    public List<ObserverActivityDTO> getObserversByActivityConfig(Long activityConfigId) {
+        ActivityConfig config = configRepository.findById(activityConfigId)
+                .orElseThrow(() -> new IllegalArgumentException("ActivityConfig não encontrado"));
+
+        return config.getObservers().stream()
+                .map(obs -> new ObserverActivityDTO(
+                        obs.getId(),
+                        obs.getQueue_name(),
+                        obs.getName(),
+                        obs.getPosition(),
+                        obs.getType(),
+                        obs.getActivityConfig().getId()
+                ))
+                .toList();
+    }
+
+    // POST: cria novo observer em um ActivityConfig
+    @Transactional
+    public ObserverActivityDTO addObserver(Long activityConfigId) {
+        ActivityConfig config = configRepository.findById(activityConfigId)
+                .orElseThrow(() -> new IllegalArgumentException("ActivityConfig não encontrado"));
+
+        int position = config.getObservers().size() + 1;
+
+        ActivityObserver observer = new ActivityObserver();
+        observer.setActivityConfig(config);
+        observer.setPosition(position);
+        observer.setQueue_name(config.getActivity().getName());
+        observer.setName(config.getActivity().getName() + " Observer " + position);
+        observer.setType(ObserverActivityType.ACTIVE);
+
+        observerRepository.save(observer);
+        config.getObservers().add(observer);
+
+        return new ObserverActivityDTO(
+                observer.getId(),
+                observer.getQueue_name(),
+                observer.getName(),
+                observer.getPosition(),
+                observer.getType(),
+                config.getId()
+        );
+    }
+
+
+    // PATCH: atualizar observer existente
+    @Transactional
+    public ObserverActivityDTO updateObserver(Long observerId, ObserverActivityDTO dto) {
+        ActivityObserver observer = activityObserverRepository.findById(observerId)
+                .orElseThrow(() -> new IllegalArgumentException("Observer não encontrado"));
+
+        if (dto.queueName() != null) observer.setQueue_name(dto.queueName());
+        if (dto.name() != null) observer.setName(dto.name());
+        if (dto.position() != null) observer.setPosition(dto.position());
+        if (dto.type() != null) observer.setType(dto.type());
+
+        observerRepository.save(observer);
+
+        return new ObserverActivityDTO(
+                observer.getId(),
+                observer.getQueue_name(),
+                observer.getName(),
+                observer.getPosition(),
+                observer.getType(),
+                observer.getActivityConfig().getId()
+        );
+    }
+
+    // DELETE: remover observer
+    @Transactional
+    public void removeObserver(Long observerId) {
+        ActivityObserver observer = activityObserverRepository.findById(observerId)
+                .orElseThrow(() -> new IllegalArgumentException("Observer não encontrado"));
+
+        observerRepository.delete(observer);
+    }
+
+
+
+
+
+
 
 
 

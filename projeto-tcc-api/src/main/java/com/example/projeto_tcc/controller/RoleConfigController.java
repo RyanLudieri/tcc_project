@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.controller;
 
 import com.example.projeto_tcc.dto.ObserverUpdateDTO;
+import com.example.projeto_tcc.dto.RoleConfigUpdateDTO;
 import com.example.projeto_tcc.entity.MethodElementObserver;
 import com.example.projeto_tcc.entity.RoleConfig;
 import com.example.projeto_tcc.service.RoleConfigService;
@@ -44,6 +45,14 @@ public class RoleConfigController {
     public ResponseEntity<List<RoleConfig>> getRoleConfigsByProcess(@PathVariable Long deliveryProcessId) {
         List<RoleConfig> roles = roleConfigService.getRolesByDeliveryProcess(deliveryProcessId);
         return ResponseEntity.ok(roles);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<RoleConfig> updateRoleConfig(
+            @PathVariable Long id,
+            @RequestBody RoleConfigUpdateDTO dto) {
+        RoleConfig updated = roleConfigService.updateRoleConfig(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
 
