@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 50% 98%; /* Bege Claro */
+    --background-secondary: 220 13% 10%; /* Preto para Navbar, mais suave */
+    --foreground: 224 71.4% 4.1%; /* Preto para texto */
+    --card: 40 50% 98%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 40 50% 98%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 217 91% 60%; /* Azul Principal */
+    --primary-foreground: 210 20% 98%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220 9% 20%; /* Ajustado para melhor contraste em fundo claro */
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 84 80% 50%; /* Verde Limão */
+    --accent-foreground: 40 50% 5%; /* Texto escuro para contraste com verde limão */
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 13% 87%; /* Borda mais sutil */
+    --input: 220 13% 80%; /* Input com borda mais visível */
+    --ring: 217 91% 60%; /* Azul para anel de foco */
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --background-secondary: 220 13% 18%; /* Fundo escuro para navbar no modo dark */
+    --foreground: 210 20% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 20% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 217 91% 60%; /* Azul permanece o mesmo */
+    --primary-foreground: 210 20% 98%;
+    --secondary: 217 32.6% 17.5%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 217 32.6% 17.5%;
+    --muted-foreground: 210 20% 60%; /* Ajustado */
+    --accent: 84 70% 55%; /* Verde Limão um pouco mais vibrante no escuro */
+    --accent-foreground: 40 50% 5%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 217 32.6% 17.5%;
+    --input: 217 32.6% 17.5%;
+    --ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background-secondary/20;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary/60;
+  border-radius: 10px;
+  border: 3px solid transparent; /* Creates padding around thumb */
+  background-clip: content-box; /* Ensures border doesn't overlap thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary;
+}
+
+/* Glassmorphism effect for specific elements (e.g., cards or modals) */
+.glassmorphic {
+  background: rgba(255, 255, 255, 0.1); /* Light background for light theme */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glassmorphic {
+  background: rgba(30, 30, 40, 0.2); /* Darker background for dark theme */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Neumorphic effect for buttons (example) */
+.neumorphic-button {
+  @apply rounded-lg px-6 py-3 font-semibold transition-all duration-200;
+  background-color: hsl(var(--background));
+  box-shadow: 
+    -5px -5px 10px hsl(var(--background) / 0.7), /* Lighter shadow for top-left */
+    5px 5px 10px rgba(0, 0, 0, 0.1); /* Darker shadow for bottom-right */
+}
+
+.neumorphic-button:active {
+  box-shadow: 
+    inset -3px -3px 7px hsl(var(--background) / 0.6),
+    inset 3px 3px 7px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.dark .neumorphic-button {
+  background-color: hsl(var(--background));
+   box-shadow: 
+    -5px -5px 10px hsl(var(--background-secondary) / 0.5), /* Lighter shadow for top-left */
+    5px 5px 10px rgba(0, 0, 0, 0.2); /* Darker shadow for bottom-right */
+}
+
+.dark .neumorphic-button:active {
+   box-shadow: 
+    inset -3px -3px 7px hsl(var(--background-secondary) / 0.4),
+    inset 3px 3px 7px rgba(0, 0, 0, 0.2);
+}
