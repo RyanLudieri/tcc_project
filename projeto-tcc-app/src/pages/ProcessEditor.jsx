@@ -148,9 +148,8 @@ const ProcessEditor = () => {
     }
     
     try {
-      // ATENÇÃO: Substitua '/api/process' pela URL real do seu endpoint backend.
       // Se o backend estiver em um domínio/porta diferente, configure o CORS no backend.
-      const response = await fetch('/api/process', { 
+      const response = await fetch('/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
