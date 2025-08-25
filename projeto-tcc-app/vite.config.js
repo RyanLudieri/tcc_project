@@ -203,7 +203,10 @@ export default defineConfig({
 		},
 		allowedHosts: true,
 		proxy: {
-			'/process': 'http://localhost:8080',
+				'^/process($|/.*)': {
+					target: 'http://localhost:8080',
+					changeOrigin: true,
+				}
 		},
 	},
 	resolve: {
