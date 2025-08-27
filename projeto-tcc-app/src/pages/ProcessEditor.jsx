@@ -146,10 +146,9 @@ const ProcessEditor = () => {
       setIsSaving(false);
       return;
     }
-    
+
     try {
-      // Se o backend estiver em um domínio/porta diferente, configure o CORS no backend.
-      const response = await fetch('/process', {
+      const response = await fetch('http://localhost:8080/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -158,12 +157,15 @@ const ProcessEditor = () => {
       });
 
       if (response.ok) {
-        const responseData = await response.json(); // Ou response.text() se não retornar JSON
+        const savedProcess = await response.json();
+
         toast({
           title: "Process Saved!",
           description: "Your process model has been successfully saved.",
         });
-        navigate(`/processes/${processId}/simulate`);
+
+
+        navigate(`/processes/${savedProcess.id}/simulate`);
       } else {
         const errorData = await response.text();
         toast({
@@ -183,6 +185,7 @@ const ProcessEditor = () => {
       setIsSaving(false);
     }
   };
+
 
   return (
     <DndContext 
