@@ -368,7 +368,7 @@ const RoleQueueMappingTab = ({ processId }) => {
                           onClick={handleAddObserver}
                           className="bg-green-600 hover:bg-green-700 text-white"
                       >
-                        <Check className="h-4 w-4 mr-1" /> Add
+                        <Save className="h-4 w-4 mr-1" /> Add
                       </Button>
                       <Button
                           onClick={cancelAddObserver}
@@ -426,7 +426,7 @@ const RoleQueueMappingTab = ({ processId }) => {
                                       onClick={() => saveObserver(obs.id)}
                                       className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white"
                                   >
-                                    <Check className="h-4 w-4" />
+                                    <Save className="h-4 w-4" />
                                   </Button>
                                   <Button
                                       size="sm"
