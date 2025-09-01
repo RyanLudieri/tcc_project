@@ -262,9 +262,6 @@ public class WorkProductConfigService {
         WorkProductConfig config = configRepository.findById(workProductConfigId)
                 .orElseThrow(() -> new IllegalArgumentException("WorkProductConfig não encontrado"));
 
-        if (dto.getWorkProductName() != null) config.setWorkProductName(dto.getWorkProductName());
-        if (dto.getInput_output() != null) config.setInput_output(dto.getInput_output());
-        if (dto.getTask_name() != null) config.setTask_name(dto.getTask_name());
         if (dto.getQueue_name() != null) config.setQueue_name(dto.getQueue_name());
         if (dto.getQueue_type() != null) config.setQueue_type(dto.getQueue_type());
         if (dto.getQueue_size() != null) config.setQueue_size(dto.getQueue_size());
