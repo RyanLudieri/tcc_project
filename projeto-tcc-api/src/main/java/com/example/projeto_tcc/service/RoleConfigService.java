@@ -55,6 +55,13 @@ public class RoleConfigService {
             config.setRoleIds(ids);
             config.setDeliveryProcess(deliveryProcess);
 
+            // 🔹 pega todas as atividades relacionadas
+            Set<Activity> relatedActivities = groupedRoles.stream()
+                    .map(MethodElement::getParentActivity)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            config.setActivities(relatedActivities);
+
             // Cria e adiciona o Observer padrão
             MethodElementObserver observer = new MethodElementObserver();
             observer.setPosition(1);
@@ -139,9 +146,6 @@ public class RoleConfigService {
         RoleConfig config = configRepository.findById(roleConfigId)
                 .orElseThrow(() -> new IllegalArgumentException("RoleConfig não encontrado"));
 
-        if (dto.getName() != null) {
-            config.setName(dto.getName());
-        }
         if (dto.getQueueName() != null) {
             config.setQueue_name(dto.getQueueName());
         }

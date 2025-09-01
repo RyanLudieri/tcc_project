@@ -46,8 +46,13 @@ public class ActivityConfig {
 
     private int requiredResources;
 
+    @ManyToOne
+    @JoinColumn(name = "delivery_process_id")
+    private DeliveryProcess deliveryProcess;
 
-    // Getters e Setters
+
+
+
 }
 
 
