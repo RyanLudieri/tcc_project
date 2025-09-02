@@ -69,23 +69,27 @@ const RoleQueueMappingTab = ({ processId }) => {
     if (processId && processId !== "new") fetchMappings();
   }, [processId, toast]);
 
-  // Handle queue type change in mapping table
+
+
+  // ============= ROLES FUNCTIONS ==================
+
+  // Handle queue type change in roles table
   const handleSelectChange = (value, id) => {
     setMappings(mappings.map(m => m.id === id ? { ...m, queueType: value } : m));
   };
 
-  // Handle quantity change in mapping table
+  // Handle quantity change in roles table
   const handleQuantityChange = (e, id) => {
     const value = parseInt(e.target.value, 10);
     setMappings(mappings.map(m => m.id === id ? { ...m, initialQuantity: value } : m));
   };
 
-  // Toggle edit mode for mapping
+  // Toggle edit mode for roles
   const toggleEdit = (id) => {
     setMappings(mappings.map(m => m.id === id ? { ...m, isEditing: !m.isEditing } : m));
   };
 
-  // Save Role changes
+  // Save role changes
   const saveRole = async (id) => {
     const roleToSave = mappings.find(m => m.id === id);
 
@@ -122,6 +126,9 @@ const RoleQueueMappingTab = ({ processId }) => {
     }
   };
 
+
+  // ============= OBSERVERS FUNCTIONS ==================
+
   // Show add observer form
   const showAddObserverForm = () => {
     setIsAddingObserver(true);
@@ -149,7 +156,6 @@ const RoleQueueMappingTab = ({ processId }) => {
     return Math.max(...existingIndices) + 1;
   };
 
-  // Add observer
   const handleAddObserver = async () => {
     if (!selectedRole) {
       toast({
@@ -215,8 +221,6 @@ const RoleQueueMappingTab = ({ processId }) => {
     }
   };
 
-
-  // Remove observer
   const handleRemoveObserver = async (id) => {
     const observerToRemove = observers.find(o => o.id === id);
     if (!observerToRemove) return;
@@ -259,18 +263,14 @@ const RoleQueueMappingTab = ({ processId }) => {
     }
   };
 
-
-  // Toggle observer edit mode
   const toggleObserverEdit = (id) => {
     setObservers(observers.map(o => o.id === id ? { ...o, isEditing: !o.isEditing } : o));
   };
 
-  // Handle observer type change
   const handleObserverTypeChange = (value, id) => {
     setObservers(observers.map(o => o.id === id ? { ...o, type: value } : o));
   };
 
-  // Save observer changes
   const saveObserver = async (id) => {
     const observerToSave = observers.find(o => o.id === id);
 
@@ -317,21 +317,22 @@ const RoleQueueMappingTab = ({ processId }) => {
 
   return (
       <>
+        {/* ===================== CARD ROLES ======================= */}
         <Card className="bg-slate-800 border-slate-700 text-slate-50">
           <CardHeader>
             <CardTitle className="text-2xl text-sky-400">Role & Queue Mapping</CardTitle>
             <CardDescription className="text-slate-400">Roles are generated from the process. You can only edit queue type and initial quantity.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table className="min-w-full">
+            <div className="overflow-x-auto w-full">
+              <Table className="min-w-[700px] table-fixed">
                 <TableHeader>
                   <TableRow className="border-slate-700 hover:bg-slate-700/30">
-                    <TableHead className="text-sky-300">Role Name</TableHead>
-                    <TableHead className="text-sky-300">Queue Name</TableHead>
-                    <TableHead className="text-sky-300">Queue Type</TableHead>
-                    <TableHead className="text-sky-300 text-right">Initial Quantity</TableHead>
-                    <TableHead className="text-sky-300 text-center">Actions</TableHead>
+                    <TableHead className="text-sky-300 w-64 min-w-[16rem]">Role Name</TableHead>
+                    <TableHead className="text-sky-300 w-64 min-w-[16rem]">Queue Name</TableHead>
+                    <TableHead className="text-sky-300 w-32 min-w-[8rem]">Queue Type</TableHead>
+                    <TableHead className="text-sky-300 text-right w-32 min-w-[8rem]">Initial Quantity</TableHead>
+                    <TableHead className="text-sky-300 text-center w-40 min-w-[10rem]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -345,7 +346,7 @@ const RoleQueueMappingTab = ({ processId }) => {
                                   value={mapping.queueType}
                                   onValueChange={(value) => handleSelectChange(value, mapping.id)}
                               >
-                                <SelectTrigger className="bg-slate-600 border-slate-500 text-slate-100 w-32">
+                                <SelectTrigger className="w-full h-9 px-2 bg-slate-600 border-slate-500 text-slate-100">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-700 border-slate-600">
@@ -366,7 +367,7 @@ const RoleQueueMappingTab = ({ processId }) => {
                                   type="number"
                                   value={mapping.initialQuantity}
                                   onChange={(e) => handleQuantityChange(e, mapping.id)}
-                                  className="bg-slate-600 border-slate-500 text-slate-100 w-20 text-right"
+                                  className="w-full h-9 px-2 text-right bg-slate-600 border-slate-500 text-slate-100"
                                   min="1"
                               />
                           ) : (
@@ -417,6 +418,7 @@ const RoleQueueMappingTab = ({ processId }) => {
           </CardContent>
         </Card>
 
+        {/* ===================== CARD OBSERVERS ======================= */}
         <Card className="bg-slate-800 border-slate-700 text-slate-50 mt-6">
           <CardHeader>
             <CardTitle className="text-2xl text-sky-400">Configure Observers</CardTitle>
@@ -484,86 +486,89 @@ const RoleQueueMappingTab = ({ processId }) => {
             )}
 
             <div className="overflow-x-auto">
-              <Table className="min-w-full">
-                <TableHeader>
-                  <TableRow className="border-slate-700 hover:bg-slate-700/30">
-                    <TableHead className="text-sky-300">Name</TableHead>
-                    <TableHead className="text-sky-300">Type</TableHead>
-                    <TableHead className="text-sky-300 text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {observers.map((obs) => (
-                      <TableRow key={obs.id} className="border-slate-700 hover:bg-slate-700/30">
-                        <TableCell>{obs.name}</TableCell>
-                        <TableCell>
-                          {obs.isEditing ? (
-                              <Select
-                                  value={obs.type}
-                                  onValueChange={(value) => handleObserverTypeChange(value, obs.id)}
-                              >
-                                <SelectTrigger className="bg-slate-600 border-slate-500 text-slate-100 w-32">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-700 border-slate-600">
-                                  {observerTypes.map((type) => (
-                                      <SelectItem key={type} value={type} className="text-slate-100 hover:bg-slate-600">
-                                        {type}
-                                      </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                          ) : (
-                              obs.type
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex justify-center gap-2">
+              <div className="overflow-x-auto w-full mt-6">
+                <Table className="min-w-[500px] table-fixed">
+                  <TableHeader>
+                    <TableRow className="border-slate-700 hover:bg-slate-700/30">
+                      <TableHead className="text-sky-300 w-64 min-w-[16rem]">Name</TableHead>
+                      <TableHead className="text-sky-300 w-32 min-w-[8rem]">Type</TableHead>
+                      <TableHead className="text-sky-300 text-center w-40 min-w-[10rem]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {observers.map((obs) => (
+                        <TableRow key={obs.id} className="border-slate-700 hover:bg-slate-700/30">
+                          <TableCell>{obs.name}</TableCell>
+                          <TableCell>
                             {obs.isEditing ? (
-                                <>
-                                  <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => saveObserver(obs.id)}
-                                      className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white"
-                                  >
-                                    <Save className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => cancelObserverEdit(obs.id)}
-                                      className="text-slate-400 border-slate-400 hover:bg-slate-400 hover:text-white"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </>
+                                <Select
+                                    value={obs.type}
+                                    onValueChange={(value) => handleObserverTypeChange(value, obs.id)}
+                                >
+                                  <SelectTrigger className="w-full h-9 px-2 bg-slate-600 border-slate-500 text-slate-100">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-700 border-slate-600">
+                                    {observerTypes.map((type) => (
+                                        <SelectItem key={type} value={type} className="text-slate-100 hover:bg-slate-600">
+                                          {type}
+                                        </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                             ) : (
-                                <>
-                                  <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => toggleObserverEdit(obs.id)}
-                                      className="text-sky-400 border-sky-400 hover:bg-sky-400 hover:text-slate-900"
-                                  >
-                                    <Edit3 className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleRemoveObserver(obs.id)}
-                                      className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </>
+                                obs.type
                             )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex justify-center gap-2">
+                              {obs.isEditing ? (
+                                  <>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => saveObserver(obs.id)}
+                                        className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white"
+                                    >
+                                      <Save className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => cancelObserverEdit(obs.id)}
+                                        className="text-slate-400 border-slate-400 hover:bg-slate-400 hover:text-white"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                              ) : (
+                                  <>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => toggleObserverEdit(obs.id)}
+                                        className="text-sky-400 border-sky-400 hover:bg-sky-400 hover:text-slate-900"
+                                    >
+                                      <Edit3 className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleRemoveObserver(obs.id)}
+                                        className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
             </div>
             {observers.length === 0 && (
                 <p className="text-center text-slate-500 mt-4">No observers configured.</p>
