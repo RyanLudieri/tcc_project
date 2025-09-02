@@ -67,7 +67,7 @@ public class RoleConfigService {
             observer.setPosition(1);
             observer.setQueue_name(config.getQueue_name());
             observer.setName(config.getQueue_name() + " Observer " + observer.getPosition());
-            observer.setType(ObserverMethodElementType.LENGTH);
+            observer.setType(ObserverMethodElementType.NONE);
             observer.setRoleConfig(config);
             config.getObservers().add(observer);
 
@@ -77,7 +77,7 @@ public class RoleConfigService {
 
 
     @Transactional
-    public MethodElementObserver addObserverToRoleConfig(Long roleConfigId) {
+    public MethodElementObserver addObserverToRoleConfig(Long roleConfigId, ObserverMethodElementType type) {
         RoleConfig config = configRepository.findById(roleConfigId)
                 .orElseThrow(() -> new IllegalArgumentException("RoleConfig não encontrado"));
 
@@ -90,12 +90,11 @@ public class RoleConfigService {
         observer.setPosition(nextPosition);
         observer.setQueue_name(config.getQueue_name());
         observer.setName(config.getQueue_name() + " Observer " + nextPosition);
-        observer.setType(ObserverMethodElementType.LENGTH);
+        observer.setType(type != null ? type : ObserverMethodElementType.NONE);
         observer.setRoleConfig(config);
 
         config.getObservers().add(observer);
 
-        // Salva explicitamente o observer para garantir o ID
         return observerRepository.save(observer);
     }
 

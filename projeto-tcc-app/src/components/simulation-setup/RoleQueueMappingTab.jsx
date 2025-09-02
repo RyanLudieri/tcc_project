@@ -129,31 +129,16 @@ const RoleQueueMappingTab = ({ processId }) => {
 
   // ============= OBSERVERS FUNCTIONS ==================
 
-  // Show add observer form
   const showAddObserverForm = () => {
     setIsAddingObserver(true);
     setSelectedRole("");
     setSelectedType("NONE");
   };
 
-  // Cancel add observer
   const cancelAddObserver = () => {
     setIsAddingObserver(false);
     setSelectedRole("");
     setSelectedType("NONE");
-  };
-
-  // Get next observer index (sequential across all observers)
-  const getNextObserverIndex = () => {
-    if (observers.length === 0) return 1;
-
-    // Extract all existing indices and find the highest
-    const existingIndices = observers.map(obs => {
-      const match = obs.name.match(/observer (\d+)$/);
-      return match ? parseInt(match[1], 10) : 0;
-    });
-
-    return Math.max(...existingIndices) + 1;
   };
 
   const handleAddObserver = async () => {
@@ -172,26 +157,19 @@ const RoleQueueMappingTab = ({ processId }) => {
     const nextIndex = getNextObserverIndex();
     const observerName = `${selectedRole} queue observer ${nextIndex}`;
 
+    // Monta query param só se type for diferente de "NONE"
+    const query = selectedType && selectedType !== "NONE" ? `?type=${selectedType}` : "";
+
     try {
       const response = await fetch(
-          `http://localhost:8080/role-configs/${selectedRoleData.id}/observers`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              type: selectedType,
-              queueName: observerName,
-            }),
-          }
+          `http://localhost:8080/role-configs/${selectedRoleData.id}/observers${query}`,
+          { method: "POST" } // Não precisa de body
       );
 
       if (!response.ok) throw new Error("Failed to add observer");
 
       const savedObserver = await response.json();
 
-      // Adiciona no estado local usando o ID real retornado do backend
       setObservers([...observers, {
         id: savedObserver.id,
         roleConfigId: selectedRoleData.id,
@@ -263,15 +241,31 @@ const RoleQueueMappingTab = ({ processId }) => {
     }
   };
 
+  const getNextObserverIndex = () => {
+    if (observers.length === 0) return 1;
+
+    // Extract all existing indices and find the highest
+    const existingIndices = observers.map(obs => {
+      const match = obs.name.match(/observer (\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+
+    return Math.max(...existingIndices) + 1;
+  };
+
   const toggleObserverEdit = (id) => {
     setObservers(observers.map(o => o.id === id ? { ...o, isEditing: !o.isEditing } : o));
+  };
+
+  const cancelObserverEdit = (id) => {
+    toggleObserverEdit(id);
   };
 
   const handleObserverTypeChange = (value, id) => {
     setObservers(observers.map(o => o.id === id ? { ...o, type: value } : o));
   };
 
-  const saveObserver = async (id) => {
+  const updateObserver = async (id) => {
     const observerToSave = observers.find(o => o.id === id);
 
     const body = {
@@ -297,7 +291,7 @@ const RoleQueueMappingTab = ({ processId }) => {
       toggleObserverEdit(id);
       toast({
         title: "Observer Updated",
-        description: `Observer "${updated.queueName}" type updated to "${updated.type}".`,
+        description: `Observer "${updated.queue_name}" type updated to "${updated.type}".`,
         variant: "default",
       });
     } catch (error) {
@@ -310,10 +304,6 @@ const RoleQueueMappingTab = ({ processId }) => {
   };
 
 
-  // Cancel observer edit
-  const cancelObserverEdit = (id) => {
-    toggleObserverEdit(id);
-  };
 
   return (
       <>
@@ -527,7 +517,7 @@ const RoleQueueMappingTab = ({ processId }) => {
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => saveObserver(obs.id)}
+                                        onClick={() => updateObserver(obs.id)}
                                         className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white"
                                     >
                                       <Save className="h-4 w-4" />

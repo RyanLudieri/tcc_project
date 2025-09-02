@@ -4,6 +4,7 @@ import com.example.projeto_tcc.dto.ObserverUpdateDTO;
 import com.example.projeto_tcc.dto.RoleConfigUpdateDTO;
 import com.example.projeto_tcc.entity.MethodElementObserver;
 import com.example.projeto_tcc.entity.RoleConfig;
+import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.service.RoleConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +21,15 @@ public class RoleConfigController {
     private final RoleConfigService roleConfigService;
 
     @PostMapping("/{roleConfigId}/observers")
-    public ResponseEntity<MethodElementObserver> addObserver(@PathVariable Long roleConfigId) {
-        MethodElementObserver observer = roleConfigService.addObserverToRoleConfig(roleConfigId);
+    public ResponseEntity<MethodElementObserver> addObserver(
+            @PathVariable Long roleConfigId,
+            @RequestParam(name = "type", required = false) ObserverMethodElementType type) {
+        MethodElementObserver observer = roleConfigService.addObserverToRoleConfig(
+                roleConfigId,
+                type != null ? type : ObserverMethodElementType.NONE);
         return ResponseEntity.ok(observer);
     }
+
 
     @PatchMapping("/observers/{id}")
     public ResponseEntity<MethodElementObserver> updateObserver(
