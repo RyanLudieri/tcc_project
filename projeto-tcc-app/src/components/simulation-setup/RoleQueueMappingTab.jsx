@@ -216,17 +216,48 @@ const RoleQueueMappingTab = ({ processId }) => {
 
 
   // Remove observer
-  const handleRemoveObserver = (id) => {
+  const handleRemoveObserver = async (id) => {
     const observerToRemove = observers.find(o => o.id === id);
-    if (observerToRemove) {
+    if (!observerToRemove) return;
+
+    const role = mappings.find(m => m.queueName === observerToRemove.queueName);
+    if (!role) {
+      toast({
+        title: "Error",
+        description: "Unable to determine role for this observer.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+          `http://localhost:8080/role-configs/${role.id}/observers/${id}`,
+          {
+            method: "DELETE",
+          }
+      );
+
+      if (!response.ok) throw new Error("Failed to delete observer");
+
+      // Atualiza estado local só depois do sucesso
       setObservers(prevObservers => prevObservers.filter(o => o.id !== id));
+
       toast({
         title: "Observer Removed",
         description: `Observer "${observerToRemove.name}" has been removed.`,
         variant: "default",
       });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Unable to delete observer.",
+        variant: "destructive",
+      });
     }
   };
+
 
   // Toggle observer edit mode
   const toggleObserverEdit = (id) => {
