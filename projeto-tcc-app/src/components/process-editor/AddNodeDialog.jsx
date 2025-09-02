@@ -13,6 +13,8 @@ const AddNodeDialog = ({ isOpen, onClose, onAddNode, parentNode, allNodes, hasRo
   const [modelInfo, setModelInfo] = useState('');
   const [predecessors, setPredecessors] = useState([]);
   const [artifactURL, setArtifactURL] = useState('');
+  const [optional, setOptional] = useState(false);
+
 
   useEffect(() => {
     if (isOpen) {
@@ -21,6 +23,7 @@ const AddNodeDialog = ({ isOpen, onClose, onAddNode, parentNode, allNodes, hasRo
       setModelInfo('');
       setPredecessors([]);
       setArtifactURL('');
+      setOptional(false);
       // Set default type based on context
       if (parentNode) {
         if (parentNode.type === 'Process') setNodeType('Phase');
@@ -39,6 +42,7 @@ const AddNodeDialog = ({ isOpen, onClose, onAddNode, parentNode, allNodes, hasRo
       modelInfo,
       predecessors,
       artifactURL: nodeType === 'Artifact' ? artifactURL : '',
+      optional: false
     };
     onAddNode(nodeData, parentNode ? parentNode.id : null);
     onClose();
@@ -176,6 +180,7 @@ const AddNodeDialog = ({ isOpen, onClose, onAddNode, parentNode, allNodes, hasRo
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSubmit}>Add Node</Button>
+          {/*setOptional(false);*/}
         </DialogFooter>
       </DialogContent>
     </Dialog>

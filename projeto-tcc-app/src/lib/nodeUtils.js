@@ -55,7 +55,8 @@ const buildProcessElementsRecursive = (nodes, parentId, allNodes) => {
         name: node.presentationName,
         type: mapFrontendTypeToBackendProcessType(node.type),
         predecessors: predecessorsNames,
-        children: buildProcessElementsRecursive(nodes, node.id, allNodes)
+        children: buildProcessElementsRecursive(nodes, node.id, allNodes),
+        optional: false
       };
     });
 };
@@ -78,8 +79,9 @@ export const transformNodesForBackend = (nodes) => {
       return {
         name: node.presentationName,
         type: mapFrontendTypeToBackendMethodType(node.type),
-        modelInfo: node.modelInfo || "", 
+        modelInfo: node.modelInfo.toUpperCase() || "",
         parentIndex: Number.isFinite(parentIndex) ? parentIndex : null,
+        optional: false
       };
     });
 
@@ -92,6 +94,7 @@ export const transformNodesForBackend = (nodes) => {
     predecessors: rootPredecessorsNames,
     processElements: processElements,
     methodElements: methodElements,
+    optional: false
   };
 };
 

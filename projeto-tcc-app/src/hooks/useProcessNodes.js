@@ -22,6 +22,7 @@ const initialNodesData = [
   {
     id: 'root-process',
     presentationName: 'Meu Processo de Desenvolvimento Ágil',
+    optional: false,
     type: 'Process',
     index: null,
     parentId: null,
@@ -31,6 +32,7 @@ const initialNodesData = [
     children: [
       {
         id: uuidv4(),
+        optional: false,
         presentationName: 'Fase de Iniciação',
         type: 'Phase',
         index: "1",
@@ -41,6 +43,7 @@ const initialNodesData = [
         children: [
           {
             id: uuidv4(),
+            optional: false,
             presentationName: 'Reunião de Kick-off',
             type: 'Activity',
             index: "2",
@@ -51,6 +54,7 @@ const initialNodesData = [
             children: [
               {
                 id: uuidv4(),
+                optional: false,
                 presentationName: 'Definir Pauta',
                 type: 'Task',
                 index: "3",
@@ -62,6 +66,7 @@ const initialNodesData = [
               },
               {
                 id: uuidv4(),
+                optional: false,
                 presentationName: 'Apresentação do Projeto',
                 type: 'Artifact',
                 index: null, 
@@ -75,6 +80,7 @@ const initialNodesData = [
           },
           {
             id: uuidv4(),
+            optional: false,
             presentationName: 'Analista de Requisitos',
             type: 'Role',
             index: null,
@@ -88,6 +94,7 @@ const initialNodesData = [
       },
       {
         id: uuidv4(),
+        optional: false,
         presentationName: 'Fase de Desenvolvimento',
         type: 'Phase',
         index: "4",
@@ -98,6 +105,7 @@ const initialNodesData = [
         children: [
           {
             id: uuidv4(),
+            optional: false,
             presentationName: 'Sprint 1',
             type: 'Iteration',
             index: "5",
@@ -108,6 +116,7 @@ const initialNodesData = [
             children: [
               {
                 id: uuidv4(),
+                optional: false,
                 presentationName: 'Desenvolver Feature X',
                 type: 'Activity',
                 index: "6",
@@ -118,7 +127,8 @@ const initialNodesData = [
                 children: [
                    {
                     id: uuidv4(),
-                    presentationName: 'Codificar Módulo A',
+                     optional: false,
+                     presentationName: 'Codificar Módulo A',
                     type: 'Task',
                     index: "7",
                     parentId: null,
@@ -129,6 +139,7 @@ const initialNodesData = [
                   },
                   {
                     id: uuidv4(),
+                    optional: false,
                     presentationName: 'Desenvolvedor Backend',
                     type: 'Role',
                     index: null,
@@ -140,7 +151,8 @@ const initialNodesData = [
                   },
                    {
                     id: uuidv4(),
-                    presentationName: 'Código Fonte Feature X',
+                     optional: false,
+                     presentationName: 'Código Fonte Feature X',
                     type: 'Artifact',
                     index: null,
                     parentId: null,
@@ -155,6 +167,7 @@ const initialNodesData = [
           },
           {
             id: uuidv4(),
+            optional: false,
             presentationName: 'Revisão de Código',
             type: 'Milestone',
             index: "8",
@@ -168,6 +181,7 @@ const initialNodesData = [
       },
       {
         id: uuidv4(),
+        optional: false,
         presentationName: 'Fase de Testes',
         type: 'Phase',
         index: "9",
@@ -178,6 +192,7 @@ const initialNodesData = [
         children: [
           {
             id: uuidv4(),
+            optional: false,
             presentationName: 'Testar Feature X',
             type: 'Activity',
             index: "10",
@@ -188,6 +203,7 @@ const initialNodesData = [
             children: [
               {
                 id: uuidv4(),
+                optional: false,
                 presentationName: 'Relatório de Testes',
                 type: 'Artifact',
                 index: null,
@@ -199,6 +215,7 @@ const initialNodesData = [
               },
               {
                 id: uuidv4(),
+                optional: false,
                 presentationName: 'Engenheiro de QA',
                 type: 'Role',
                 index: null,
@@ -214,7 +231,8 @@ const initialNodesData = [
       },
        {
         id: uuidv4(),
-        presentationName: 'Fase de Implantação',
+         optional: false,
+         presentationName: 'Fase de Implantação',
         type: 'Phase',
         index: "11",
         parentId: 'root-process',
@@ -224,6 +242,7 @@ const initialNodesData = [
         children: [
           {
             id: uuidv4(),
+            optional: false,
             presentationName: 'Deploy em Produção',
             type: 'Activity',
             index: "12",
@@ -235,6 +254,7 @@ const initialNodesData = [
           },
           {
             id: uuidv4(),
+            optional: false,
             presentationName: 'Manual do Usuário',
             type: 'Artifact',
             index: null,
@@ -361,6 +381,7 @@ export const useProcessNodes = (processId) => {
       index: newIndex,
       children: [],
       predecessors: nodeData.predecessors || [],
+      optional: false
     };
     
     setNodes(prevNodes => insertNode(prevNodes, newNode));

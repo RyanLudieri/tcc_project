@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Settings2, ListChecks, FileText, PlayCircle, Trash2 } from 'lucide-react';
 import RoleQueueMappingTab from '@/components/simulation-setup/RoleQueueMappingTab';
-import ResourceTableTab from '@/components/simulation-setup/ResourceTableTab';
+import WorkProductsTableTab from '@/components/simulation-setup/WorkProductsTableTab.jsx';
 import XACDMLExportTab from '@/components/simulation-setup/XACDMLExportTab';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -74,7 +74,7 @@ const SimulationSetupPage = () => {
                 value="resource-table"
                 className="data-[state=active]:bg-sky-500 data-[state=active]:text-white data-[state=inactive]:text-slate-300 hover:bg-sky-600/30 transition-colors py-2.5"
             >
-              <ListChecks className="mr-2 h-5 w-5" /> Resource Table
+              <ListChecks className="mr-2 h-5 w-5" /> Work Products Table
             </TabsTrigger>
             <TabsTrigger
                 value="xacdml-export"
@@ -88,7 +88,7 @@ const SimulationSetupPage = () => {
             <RoleQueueMappingTab processId={processId} />
           </TabsContent>
           <TabsContent value="resource-table" className="flex-1 bg-slate-800/70 p-6 rounded-lg shadow-inner">
-            <ResourceTableTab processId={processId} />
+            <WorkProductsTableTab processId={processId} />
           </TabsContent>
           <TabsContent value="xacdml-export" className="flex-1 bg-slate-800/70 p-6 rounded-lg shadow-inner">
             <XACDMLExportTab processId={processId} />
