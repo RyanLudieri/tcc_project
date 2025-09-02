@@ -27,26 +27,35 @@ const RoleQueueMappingTab = ({ processId }) => {
 
         const data = await response.json();
 
+        // Roles (mappings)
         const mapped = data.map((role) => ({
           id: role.id,
           name: role.name,
-          queueName: `${role.name} queue`,
+          queueName: role.queue_name,
           queueType: role.queue_type || "QUEUE",
-          initialQuantity: role.initialQuantity ?? 1,
-          isEditing: false
+          initialQuantity: role.initial_quantity ?? 1,
+          isEditing: false,
         }));
-
         setMappings(mapped);
 
-        // Create default observers for each mapped role
-        const defaultObservers = mapped.map((role, index) => ({
-          id: `observer-${role.id}-${index + 1}`,
-          name: `${role.name} queue observer ${index + 1}`,
-          type: 'NONE',
-          isEditing: false
-        }));
+        // Observers (direto da API)
+        const mappedObservers = data.flatMap((role) =>
+            (role.observers || []).map((obs) => ({
+              id: obs.id,
+              name: obs.name,
+              queueName: obs.queue_name,
+              type: obs.type,
+              position: obs.position,
+              isEditing: false,
+            }))
+        );
+        setObservers(mappedObservers);
 
-        setObservers(defaultObservers);
+        const mappedActivities = data.flatMap((role) =>
+            role.activities || []
+        );
+
+
       } catch (error) {
         console.error(error);
         toast({
@@ -199,15 +208,44 @@ const RoleQueueMappingTab = ({ processId }) => {
   };
 
   // Save observer changes
-  const saveObserver = (id) => {
+  const saveObserver = async (id) => {
     const observerToSave = observers.find(o => o.id === id);
-    toggleObserverEdit(id);
-    toast({
-      title: "Observer Updated",
-      description: `Observer "${observerToSave.name}" type updated to "${observerToSave.type}".`,
-      variant: "default",
-    });
+
+    const body = {
+      type: observerToSave.type,
+      queueName: observerToSave.name,
+    };
+
+    try {
+      const response = await fetch(`http://localhost:8080/role-configs/observers/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ao atualizar: ${response.statusText}`);
+      }
+
+      const updated = await response.json();
+
+      toggleObserverEdit(id);
+      toast({
+        title: "Observer Updated",
+        description: `Observer "${updated.queueName}" type updated to "${updated.type}".`,
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
+
 
   // Cancel observer edit
   const cancelObserverEdit = (id) => {
