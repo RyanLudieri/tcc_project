@@ -27,7 +27,7 @@ const RoleQueueMappingTab = ({ processId }) => {
 
         const data = await response.json();
 
-        // Roles (mappings)
+        // Roles
         const mapped = data.map((role) => ({
           id: role.id,
           name: role.name,
@@ -38,7 +38,7 @@ const RoleQueueMappingTab = ({ processId }) => {
         }));
         setMappings(mapped);
 
-        // Observers (direto da API)
+        // Observers
         const mappedObservers = data.flatMap((role) =>
             (role.observers || []).map((obs) => ({
               id: obs.id,
@@ -85,9 +85,9 @@ const RoleQueueMappingTab = ({ processId }) => {
     setMappings(mappings.map(m => m.id === id ? { ...m, isEditing: !m.isEditing } : m));
   };
 
-  // Save mapping changes
-  const saveMapping = async (id) => {
-    const mappingToSave = mappings.find(m => m.id === id);
+  // Save Role changes
+  const saveRole = async (id) => {
+    const roleToSave = mappings.find(m => m.id === id);
 
     try {
       const response = await fetch(`http://localhost:8080/role-configs/${id}`, {
@@ -96,9 +96,9 @@ const RoleQueueMappingTab = ({ processId }) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          queueName: mappingToSave.queueName,
-          queueType: mappingToSave.queueType || "QUEUE",
-          initialQuantity: mappingToSave.initialQuantity ?? 1,
+          queueName: roleToSave.queueName,
+          queueType: roleToSave.queueType || "QUEUE",
+          initialQuantity: roleToSave.initialQuantity ?? 1,
         }),
       });
 
@@ -109,7 +109,7 @@ const RoleQueueMappingTab = ({ processId }) => {
       toggleEdit(id);
       toast({
         title: "Saved",
-        description: `Role config for "${mappingToSave.name}" updated successfully.`,
+        description: `Role config for "${roleToSave.name}" updated successfully.`,
         variant: "default",
       });
     } catch (error) {
@@ -150,7 +150,7 @@ const RoleQueueMappingTab = ({ processId }) => {
   };
 
   // Add observer
-  const handleAddObserver = () => {
+  const handleAddObserver = async () => {
     if (!selectedRole) {
       toast({
         title: "Error",
@@ -165,24 +165,55 @@ const RoleQueueMappingTab = ({ processId }) => {
 
     const nextIndex = getNextObserverIndex();
     const observerName = `${selectedRole} queue observer ${nextIndex}`;
-    const newObserver = {
-      id: `observer-${selectedRoleData.id}-${Date.now()}`,
-      name: observerName,
-      type: selectedType,
-      isEditing: false
-    };
 
-    setObservers([...observers, newObserver]);
-    setIsAddingObserver(false);
-    setSelectedRole("");
-    setSelectedType("NONE");
+    try {
+      const response = await fetch(
+          `http://localhost:8080/role-configs/${selectedRoleData.id}/observers`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              type: selectedType,
+              queueName: observerName,
+            }),
+          }
+      );
 
-    toast({
-      title: "Observer Added",
-      description: `Observer "${observerName}" has been added.`,
-      variant: "default",
-    });
+      if (!response.ok) throw new Error("Failed to add observer");
+
+      const savedObserver = await response.json();
+
+      // Adiciona no estado local usando o ID real retornado do backend
+      setObservers([...observers, {
+        id: savedObserver.id,
+        name: savedObserver.name,
+        queueName: savedObserver.queue_name,
+        type: savedObserver.type,
+        position: savedObserver.position,
+        isEditing: false,
+      }]);
+
+      setIsAddingObserver(false);
+      setSelectedRole("");
+      setSelectedType("NONE");
+
+      toast({
+        title: "Observer Added",
+        description: `Observer "${observerName}" has been added.`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Unable to save observer.",
+        variant: "destructive",
+      });
+    }
   };
+
 
   // Remove observer
   const handleRemoveObserver = (id) => {
@@ -317,7 +348,7 @@ const RoleQueueMappingTab = ({ processId }) => {
                                   <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => saveMapping(mapping.id)}
+                                      onClick={() => saveRole(mapping.id)}
                                       className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white"
                                   >
                                     <Save className="h-4 w-4" />
