@@ -188,6 +188,7 @@ const RoleQueueMappingTab = ({ processId }) => {
       // Adiciona no estado local usando o ID real retornado do backend
       setObservers([...observers, {
         id: savedObserver.id,
+        roleConfigId: selectedRoleData.id,
         name: savedObserver.name,
         queueName: savedObserver.queue_name,
         type: savedObserver.type,
