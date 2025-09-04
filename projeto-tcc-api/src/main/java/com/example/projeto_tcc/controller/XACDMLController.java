@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/xacdml")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*") // permite chamadas do frontend
 public class XACDMLController {
 
     private final XACDMLService xacdmlService;

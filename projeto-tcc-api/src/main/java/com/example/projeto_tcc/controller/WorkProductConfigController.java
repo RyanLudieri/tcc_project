@@ -14,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/work-product-configs")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*") // permite chamadas do frontend
 public class WorkProductConfigController {
 
     private final WorkProductConfigService service;
