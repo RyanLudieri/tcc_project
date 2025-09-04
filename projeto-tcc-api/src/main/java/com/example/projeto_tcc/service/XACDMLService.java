@@ -24,7 +24,7 @@ public class XACDMLService {
     private final DeliveryProcessRepository deliveryProcessRepository;
 
     @Transactional
-    public XACDMLFile generateXACDML(Long processId) {
+    public XACDMLFile generateXACDML(Long processId, String acdId) {
         // Buscar o processo no banco pelo ID
         DeliveryProcess process = deliveryProcessRepository.findById(processId)
                 .orElseThrow(() -> new RuntimeException("Process not found"));
@@ -34,7 +34,7 @@ public class XACDMLService {
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\"?>\n");
         sb.append("<!DOCTYPE acd PUBLIC  \"acd description//EN\" \"xacdml.dtd\">\n");
-        sb.append("<acd id=\"").append(processName).append("\">\n");
+        sb.append("<acd id=\"").append(acdId).append("\">\n");
 
         // ---------------- Classes ----------------
         Set<String> classes = new TreeSet<>();

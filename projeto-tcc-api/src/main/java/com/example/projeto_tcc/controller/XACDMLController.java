@@ -15,8 +15,9 @@ public class XACDMLController {
     private final XACDMLService xacdmlService;
 
     @PostMapping("/generate/{processId}")
-    public ResponseEntity<String> generate(@PathVariable Long processId) {
-        XACDMLFile file = xacdmlService.generateXACDML(processId);
+    public ResponseEntity<String> generate(
+            @PathVariable Long processId, @RequestParam String acdId) {
+        XACDMLFile file = xacdmlService.generateXACDML(processId, acdId);
         return ResponseEntity.ok(file.getContent());
     }
 
