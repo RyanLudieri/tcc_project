@@ -38,8 +38,38 @@ const WorkProductsTableTab = ({ processId }) => {
   ]);
 
   useEffect(() => {
-    localStorage.setItem(`workProductTable_${processId}`, JSON.stringify(workProducts));
-  }, [workProducts, processId]);
+    const fetchWorkProducts = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/work-product-configs/process/${processId}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+
+        // map para adequar os nomes dos campos ao state
+        const formatted = data.map((wp) => ({
+          id: wp.id,
+          workProduct: wp.workProductName,
+          inputOutput: wp.input_output,
+          taskName: wp.task_name,
+          queueName: wp.queue_name,
+          queueSize: wp.queue_size,
+          queueInitialQuantity: wp.initial_quantity,
+          policy: wp.policy,
+          generateActivity: wp.generate_activity,
+          observers: wp.observers || [],
+          isEditing: false
+        }));
+
+        setWorkProducts(formatted);
+      } catch (error) {
+        console.error("Error ao buscar work products:", error);
+        setWorkProducts([]); // fallback vazio
+      }
+    };
+
+    fetchWorkProducts();
+  }, [processId]);
+
+
 
   // --- Work Products Functions ---
   const handleInputChange = (e, id) => {
