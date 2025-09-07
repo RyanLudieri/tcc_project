@@ -7,6 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -142,6 +146,34 @@ public class XACDMLService {
         file.setContent(sb.toString());
         return xacdmlRepo.save(file);
     }
+
+    @Transactional
+    public Path generateXACDMLFile(Long processId, String acdId) {
+        // Gera o XACDML como string
+        XACDMLFile file = generateXACDML(processId, acdId);
+
+        // Escapa caracteres problemáticos (apenas &)
+        String escapedContent = file.getContent().replace("&", "&amp;");
+
+        // Define o caminho dentro do src/main/java/com/example/projeto_tcc/xacdml_output
+        Path path = Path.of("src", "main", "java", "com", "example", "projeto_tcc", "xacdml_output", acdId + ".xacdml");
+
+        try {
+            // Garante que o diretório exista
+            Files.createDirectories(path.getParent());
+
+            // Salva o arquivo
+            Files.writeString(path, escapedContent, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao salvar arquivo XACDML", e);
+        }
+
+        return path;
+    }
+
+
+
 
 
 }

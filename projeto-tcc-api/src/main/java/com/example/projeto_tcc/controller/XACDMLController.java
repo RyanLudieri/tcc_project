@@ -8,6 +8,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.Path;
+
 @RestController
 @RequestMapping("/xacdml")
 @RequiredArgsConstructor
@@ -33,6 +35,18 @@ public class XACDMLController {
                 .contentType(MediaType.APPLICATION_XML) // ou TEXT_XML
                 .body(file.getContent());
     }
+
+    @PostMapping("/generate-file/{processId}")
+    public ResponseEntity<String> generateXACDMLFile(
+            @PathVariable Long processId,
+            @RequestParam String acdId) {
+
+        // Gera o arquivo .xacdml escapando caracteres e salvando em xacdml_output
+        Path path = xacdmlService.generateXACDMLFile(processId, acdId);
+
+        return ResponseEntity.ok("Arquivo gerado em: " + path.toAbsolutePath());
+    }
+
 
 
 }
