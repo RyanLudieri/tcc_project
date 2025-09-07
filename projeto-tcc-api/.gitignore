@@ -4,6 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Ignorar arquivos gerados XACDML
+/src/main/java/com/example/projeto_tcc/xacdml_output/
+
 ### STS ###
 .apt_generated
 .classpath
