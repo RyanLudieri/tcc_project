@@ -8,8 +8,8 @@ import com.example.projeto_tcc.entity.Observer;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.enums.ProcessType;
 import com.example.projeto_tcc.enums.Queue;
+import com.example.projeto_tcc.repository.MethodElementRepository;
 import com.example.projeto_tcc.repository.MethodElementObserverRepository;
-
 import com.example.projeto_tcc.repository.WorkProductConfigRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -24,110 +24,144 @@ import java.util.stream.Collectors;
 public class WorkProductConfigService {
 
     private final WorkProductConfigRepository configRepository;
-
     private final MethodElementObserverRepository observerRepository;
+    private final MethodElementRepository methodElementRepository;
 
-    // índice global das filas (q0, q1, ...)
     private int queueIndex = 0;
-
-    // mapa para evitar duplicatas: key = wpName + "|" + taskName + "|" + inputOutput
     private final Map<String, WorkProductConfig> queueMap = new LinkedHashMap<>();
 
     @Transactional
     public void generateConfigurations(List<MethodElement> methodElements, List<Activity> roots, DeliveryProcess deliveryProcess) {
-        // Preserva ordem de aparição dos work products (determinístico)
-        Set<String> uniqueWPNames = methodElements.stream()
-                .filter(me -> me.getModelInfo() != null &&
-                        (me.getModelInfo().equals("MANDATORY_INPUT") || me.getModelInfo().equals("OUTPUT")))
-                .map(MethodElement::getName)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-
-        // Reset de estado
         queueIndex = 0;
         queueMap.clear();
 
-        // 1. Executa a travessia normal, onde todos os eventos de ligação são "INPUT"
+        Set<String> activeWorkProducts = new LinkedHashSet<>();
+
         for (Activity root : roots) {
-            traverseAndCreateConfigs(root, uniqueWPNames, deliveryProcess);
+            traverseAndCreateConfigs(root, deliveryProcess, activeWorkProducts);
         }
 
-        // 2. Adiciona o evento OUTPUT extra apenas para a última atividade de todo o processo
+        // --- INÍCIO DA LÓGICA DE OUTPUT FINAL ---
         if (roots != null && !roots.isEmpty()) {
             Activity lastRoot = roots.get(roots.size() - 1);
 
-            String finalTaskName;
-            ProcessType type = lastRoot.getType();
-
-            // Determina o nome correto para a "tarefa" de output final
-            if (type == ProcessType.TASK_DESCRIPTOR || type == ProcessType.MILESTONE) {
-                finalTaskName = lastRoot.getName();
+            String finalEventName;
+            if (lastRoot.getType() == ProcessType.TASK_DESCRIPTOR || lastRoot.getType() == ProcessType.MILESTONE) {
+                finalEventName = lastRoot.getName();
             } else {
-                // Para nós internos, o evento de finalização correspondente é "END_<nome>"
-                finalTaskName = "END_" + lastRoot.getName();
+                finalEventName = "END_" + lastRoot.getName();
             }
 
-            // Cria a configuração final e especial de OUTPUT
-            createConfigsIfAbsent(lastRoot, uniqueWPNames, finalTaskName, "OUTPUT", deliveryProcess);
+            // OUTPUT final para apenas o último WorkProduct
+            if (!activeWorkProducts.isEmpty()) {
+                List<String> wpList = new ArrayList<>(activeWorkProducts);
+                Set<String> finalOutputWPs = new LinkedHashSet<>();
+                finalOutputWPs.add(wpList.get(wpList.size() - 1));
+                createConfigsIfAbsent(lastRoot, finalOutputWPs, finalEventName, "OUTPUT", deliveryProcess);
+            }
+        }
+        // --- FIM DA LÓGICA DE OUTPUT FINAL ---
+    }
+
+    private void traverseAndCreateConfigs(Activity activity, DeliveryProcess deliveryProcess, Set<String> activeWorkProducts) {
+        ProcessType type = activity.getType();
+        boolean isTask = type == ProcessType.TASK_DESCRIPTOR;
+        boolean isMilestone = type == ProcessType.MILESTONE;
+        boolean isContainer = !isTask && !isMilestone;
+
+        if (isTask) {
+            Set<String> inputWPs = getAssociatedWorkProductNames(activity, "INPUT");
+            createConfigsIfAbsent(activity, inputWPs, activity.getName(), "INPUT", deliveryProcess);
+
+            Set<String> outputWPs = getAssociatedWorkProductNames(activity, "OUTPUT");
+            activeWorkProducts.addAll(outputWPs);
+
+        } else if (isMilestone) {
+            createConfigsIfAbsent(activity, new LinkedHashSet<>(activeWorkProducts), activity.getName(), "INPUT", deliveryProcess);
+
+        } else if (isContainer) {
+            Set<String> wpsInThisScope = getAllWorkProductsInScope(activity);
+            createConfigsIfAbsent(activity, wpsInThisScope, "BEGIN_" + activity.getName(), "INPUT", deliveryProcess);
+
+            Set<String> activeWPsForChildren = new LinkedHashSet<>(activeWorkProducts);
+            if (activity.getChildren() != null) {
+                for (Object childObj : activity.getChildren()) {
+                    if (childObj instanceof Activity) {
+                        traverseAndCreateConfigs((Activity) childObj, deliveryProcess, activeWPsForChildren);
+                    }
+                }
+            }
+
+            activeWorkProducts.addAll(activeWPsForChildren);
+
+            createConfigsIfAbsent(activity, wpsInThisScope, "END_" + activity.getName(), "INPUT", deliveryProcess);
         }
     }
 
-    /**
-     * Implementa a travessia recursiva para gerar a cadeia de eventos de INPUT.
-     * - TASK (folha)         -> criar INPUT (apenas)
-     * - MILESTONE (folha)    -> criar INPUT (antes) e INPUT (depois)
-     * - Nó Interno           -> criar BEGIN_<nome> (INPUT) ; recursão nos filhos ; criar END_<nome> (INPUT)
-     */
-    private void traverseAndCreateConfigs(Activity activity, Set<String> uniqueWPNames, DeliveryProcess deliveryProcess) {
-        boolean isTask = activity.getType() == ProcessType.TASK_DESCRIPTOR;
-        boolean isMilestone = activity.getType() == ProcessType.MILESTONE;
+    private Activity findLastTask(Activity activity) {
+        if (activity.getChildren() == null || activity.getChildren().isEmpty() || activity.getType() == ProcessType.TASK_DESCRIPTOR) {
+            return activity;
+        }
+        List<Activity> children = activity.getChildren();
+        return findLastTask(children.get(children.size() - 1));
+    }
 
-        if (isTask) {
-            // Task: sempre gera apenas um INPUT
-            createConfigsIfAbsent(activity, uniqueWPNames, activity.getName(), "INPUT", deliveryProcess);
-            if (activity.getChildren() != null) {
-                for (Activity child : activity.getChildren()) {
-                    traverseAndCreateConfigs(child, uniqueWPNames, deliveryProcess);
+    private Set<String> getAssociatedWorkProductNames(Activity activity, String type) {
+        if(activity == null) return Collections.emptySet();
+        String modelInfoToFind = type.equals("INPUT") ? "MANDATORY_INPUT" : "OUTPUT";
+        List<MethodElement> associatedElements = methodElementRepository.findByParentActivity(activity);
+
+        return associatedElements.stream()
+                .filter(me -> me.getModelInfo() != null && me.getModelInfo().equals(modelInfoToFind))
+                .map(MethodElement::getName)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private Set<String> getAllWorkProductsInScope(Activity container) {
+        Set<String> workProducts = new LinkedHashSet<>();
+        if (container == null) {
+            return workProducts;
+        }
+        collectWorkProductsRecursively(container, workProducts);
+        return workProducts;
+    }
+
+    private void collectWorkProductsRecursively(Activity currentActivity, Set<String> collectedWorkProducts) {
+        collectedWorkProducts.addAll(getAssociatedWorkProductNames(currentActivity, "INPUT"));
+        collectedWorkProducts.addAll(getAssociatedWorkProductNames(currentActivity, "OUTPUT"));
+
+        if (currentActivity.getChildren() != null) {
+            for (Object childObj : currentActivity.getChildren()) {
+                if (childObj instanceof Activity) {
+                    collectWorkProductsRecursively((Activity) childObj, collectedWorkProducts);
                 }
             }
-            return;
         }
-
-        if (isMilestone) {
-            // Milestone intermediário: gera INPUT antes e INPUT depois para ligar com o próximo passo
-            createConfigsIfAbsent(activity, uniqueWPNames, activity.getName(), "INPUT", deliveryProcess);
-            if (activity.getChildren() != null) {
-                for (Activity child : activity.getChildren()) {
-                    traverseAndCreateConfigs(child, uniqueWPNames, deliveryProcess);
-                }
-            }
-            createConfigsIfAbsent(activity, uniqueWPNames, activity.getName(), "INPUT", deliveryProcess); // Padronizado para INPUT
-            return;
-        }
-
-        // Nó Interno: BEGIN (INPUT) -> filhos -> END (INPUT)
-        createConfigsIfAbsent(activity, uniqueWPNames, "BEGIN_" + activity.getName(), "INPUT", deliveryProcess);
-
-        if (activity.getChildren() != null) {
-            for (Activity child : activity.getChildren()) {
-                traverseAndCreateConfigs(child, uniqueWPNames, deliveryProcess);
-            }
-        }
-
-        createConfigsIfAbsent(activity, uniqueWPNames, "END_" + activity.getName(), "INPUT", deliveryProcess);
     }
 
     private void createConfigsIfAbsent(Activity activity, Set<String> wpNames, String taskName, String inputOutput, DeliveryProcess deliveryProcess) {
-        for (String wpName : wpNames) {
+        if (wpNames == null || wpNames.isEmpty()) {
+            return;
+        }
+
+        // Se for OUTPUT e houver mais de um WorkProduct, pega apenas o último
+        Set<String> workProductsToCreate = new LinkedHashSet<>(wpNames);
+        if ("OUTPUT".equals(inputOutput) && wpNames.size() > 1) {
+            List<String> wpList = new ArrayList<>(wpNames);
+            workProductsToCreate.clear();
+            workProductsToCreate.add(wpList.get(wpList.size() - 1));
+        }
+
+        for (String wpName : workProductsToCreate) {
             String key = wpName + "|" + taskName + "|" + inputOutput;
             if (queueMap.containsKey(key)) {
-                // Já existe essa fila para essa combinação — pula
                 continue;
             }
 
             WorkProductConfig config = new WorkProductConfig();
             config.setActivity(activity);
             config.setWorkProductName(wpName);
-            config.setQueue_name("q" + queueIndex++); // Só incrementa quando realmente cria a fila
+            config.setQueue_name("q" + queueIndex++);
             config.setQueue_type("QUEUE");
             config.setQueue_size(50);
             config.setInitial_quantity(0);
@@ -135,41 +169,34 @@ public class WorkProductConfigService {
             config.setGenerate_activity(false);
             config.setInput_output(inputOutput);
             config.setTask_name(taskName);
-
-            // Associa ao DeliveryProcess
             config.setDeliveryProcess(deliveryProcess);
 
             configRepository.save(config);
             queueMap.put(key, config);
 
-            // 🚀 cria observer padrão
             createDefaultObserver(config);
         }
     }
 
-    //Metodo auxiliar para criar o observer padrão
     private void createDefaultObserver(WorkProductConfig config) {
         MethodElementObserver observer = new MethodElementObserver();
         observer.setPosition(1);
         observer.setName(config.getQueue_name() + " Observer " + queueIndex);
         observer.setQueue_name(config.getQueue_name());
-        observer.setType(ObserverMethodElementType.LENGTH); // enum específico do seu domínio
+        observer.setType(ObserverMethodElementType.LENGTH);
         observer.setWorkProductConfig(config);
 
         observerRepository.save(observer);
     }
 
-
-    //GET
     @Transactional
     public List<WorkProductConfigDTO> getWorkProductsByDeliveryProcess(Long deliveryProcessId) {
         List<WorkProductConfig> workProducts = configRepository.findByDeliveryProcessId(deliveryProcessId);
 
-        // força carregar observers (LazyInitializationException)
         workProducts.forEach(wp -> wp.getObservers().size());
 
         return workProducts.stream()
-                .sorted(Comparator.comparingInt(wp -> Integer.parseInt(wp.getQueue_name().substring(1)))) // ordena pelo número da fila
+                .sorted(Comparator.comparingInt(wp -> Integer.parseInt(wp.getQueue_name().substring(1))))
                 .map(wp -> new WorkProductConfigDTO(
                         wp.getId(),
                         wp.getWorkProductName(),
@@ -196,10 +223,6 @@ public class WorkProductConfigService {
                 .toList();
     }
 
-
-
-
-    // ADD OBSERVER
     @Transactional
     public MethodElementObserver addObserverToWorkProductConfig(Long workProductConfigId) {
         WorkProductConfig config = configRepository.findById(workProductConfigId)
@@ -221,8 +244,6 @@ public class WorkProductConfigService {
         return observerRepository.save(observer);
     }
 
-
-    // REMOVE OBSERVER
     @Transactional
     public void removeObserverFromWorkProductConfig(Long workProductConfigId, Long observerId) {
         WorkProductConfig config = configRepository.findById(workProductConfigId)
@@ -238,8 +259,6 @@ public class WorkProductConfigService {
         configRepository.save(config);
     }
 
-    // ---------------------------------------------------
-    // UPDATE OBSERVER
     @Transactional
     public MethodElementObserver updateObserver(Long observerId, ObserverUpdateDTO dto) {
         MethodElementObserver observer = observerRepository.findById(observerId)
@@ -255,8 +274,6 @@ public class WorkProductConfigService {
         return observerRepository.save(observer);
     }
 
-    // ---------------------------------------------------
-    // UPDATE CONFIG
     @Transactional
     public WorkProductConfigDTO updateWorkProductConfig(Long workProductConfigId, WorkProductConfigDTO dto) {
         WorkProductConfig config = configRepository.findById(workProductConfigId)
@@ -271,7 +288,6 @@ public class WorkProductConfigService {
 
         WorkProductConfig saved = configRepository.save(config);
 
-        // Retorna o DTO com apenas o activityId
         return new WorkProductConfigDTO(
                 saved.getId(),
                 saved.getWorkProductName(),
@@ -296,8 +312,4 @@ public class WorkProductConfigService {
                         .toList()
         );
     }
-
-
-
-
 }
