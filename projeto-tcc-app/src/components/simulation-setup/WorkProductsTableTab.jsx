@@ -31,7 +31,7 @@ const WorkProductsTableTab = ({ processId }) => {
   const [isAddingObserver, setIsAddingObserver] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState("");
   const [selectedType, setSelectedType] = useState("NONE");
-  const [mappings, setMappings] = useState([
+  const [mappings] = useState([
     { id: 1, name: 'Role A' },
     { id: 2, name: 'Role B' },
     { id: 3, name: 'Role C' },
@@ -44,7 +44,6 @@ const WorkProductsTableTab = ({ processId }) => {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
 
-        // map para adequar os nomes dos campos ao state
         const formatted = data.map((wp) => ({
           id: wp.id,
           workProduct: wp.workProductName,
@@ -60,18 +59,29 @@ const WorkProductsTableTab = ({ processId }) => {
         }));
 
         setWorkProducts(formatted);
+
+        const mappedObservers = data.flatMap((wp) =>
+            (wp.observers || []).map((obs) => ({
+              id: obs.id,
+              name: obs.name,
+              queueName: obs.queue_name,
+              type: obs.type,
+              position: obs.position,
+              isEditing: false,
+            }))
+        );
+        setObservers(mappedObservers);
+
+
       } catch (error) {
-        console.error("Error ao buscar work products:", error);
-        setWorkProducts([]); // fallback vazio
+        console.error("Unable to load work products from process:", error);
+        setWorkProducts([]);
       }
     };
 
     fetchWorkProducts();
   }, [processId]);
 
-
-
-  // --- Work Products Functions ---
   const handleInputChange = (e, id) => {
     const { name, value, type, checked } = e.target;
     const val = type === 'checkbox' ? checked : (name === 'queueSize' || name === 'queueInitialQuantity' ? parseInt(value, 10) : value);
@@ -116,12 +126,6 @@ const WorkProductsTableTab = ({ processId }) => {
     toast({ title: "Work Product Added", description: `New workProduct "${newWorkProduct.workProduct}" added.`, variant: "default" });
   };
 
-  const removeWorkProduct = (id) => {
-    const wp = workProducts.find(r => r.id === id);
-    setWorkProducts(workProducts.filter(r => r.id !== id));
-    toast({ title: "Work Product Removed", description: `Work Product "${wp?.workProduct}" removed.`, variant: "default" });
-  };
-
   const renderInputField = (wp, fieldName, placeholder, type = "text") => (
       <Input
           name={fieldName}
@@ -140,7 +144,7 @@ const WorkProductsTableTab = ({ processId }) => {
           <SelectValue placeholder={`Select ${fieldName === 'inputOutput' ? 'Input/Output' : 'Policy'}`} />
         </SelectTrigger>
         <SelectContent className="bg-card border-border text-foreground">
-          {options.map(opt => <SelectItem key={opt.value} value={opt.value} className="hover:bg-slate-700">{opt.label}</SelectItem>)}
+          {options.map(opt => <SelectItem key={opt.value} value={opt.value} className="hover:bg-muted">{opt.label}</SelectItem>)}
         </SelectContent>
       </Select>
   );
@@ -156,7 +160,6 @@ const WorkProductsTableTab = ({ processId }) => {
       </div>
   );
 
-  // --- Observer Functions ---
   const showAddObserverForm = () => {
     setIsAddingObserver(true);
     setSelectedQueue("");
@@ -226,44 +229,44 @@ const WorkProductsTableTab = ({ processId }) => {
           <CardContent>
             {/* Add Work Product Form */}
             {isAdding && (
-                <div className="mb-6 p-4 border border-slate-700 rounded-lg bg-slate-700/50 space-y-4">
-                  <h3 className="text-lg font-semibold text-sky-300">New Work Product</h3>
+                <div className="mb-6 p-4 border border-border rounded-lg bg-muted space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">New Work Product</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                     <div>
-                      <Label className="text-slate-300">Work Product</Label>
+                      <Label className="text-foreground">Work Product</Label>
                       {renderInputField(newWorkProduct, 'workProduct', 'e.g., Document X')}
                     </div>
                     <div>
-                      <Label className="text-slate-300">Input/Output</Label>
+                      <Label className="text-foreground">Input/Output</Label>
                       {renderSelectField(newWorkProduct, 'inputOutput', [{ value: 'Input', label: 'Input' }, { value: 'Output', label: 'Output' }])}
                     </div>
                     <div>
-                      <Label className="text-slate-300">Task Name</Label>
+                      <Label className="text-foreground">Task Name</Label>
                       {renderInputField(newWorkProduct, 'taskName', 'Task Name')}
                     </div>
                     <div>
-                      <Label className="text-slate-300">Queue Name</Label>
+                      <Label className="text-foreground">Queue Name</Label>
                       {renderInputField(newWorkProduct, 'queueName', 'Queue Name')}
                     </div>
                     <div>
-                      <Label className="text-slate-300">Queue Size</Label>
+                      <Label className="text-foreground">Queue Size</Label>
                       {renderInputField(newWorkProduct, 'queueSize', '10', 'number')}
                     </div>
                     <div>
-                      <Label className="text-slate-300">Initial Quantity</Label>
+                      <Label className="text-foreground">Initial Quantity</Label>
                       {renderInputField(newWorkProduct, 'queueInitialQuantity', '0', 'number')}
                     </div>
                     <div>
-                      <Label className="text-slate-300">Policy</Label>
+                      <Label className="text-foreground">Policy</Label>
                       {renderSelectField(newWorkProduct, 'policy', [{ value: 'FIFO', label: 'FIFO' }, { value: 'LIFO', label: 'LIFO' }, { value: 'Priority', label: 'Priority' }])}
                     </div>
                     <div className="flex flex-col items-start">
-                      <Label className="text-slate-300 mb-1.5">Generate Activity?</Label>
+                      <Label className="text-foreground mb-1.5">Generate Activity?</Label>
                       {renderCheckboxField(newWorkProduct, 'generateActivity')}
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 mt-2">
-                    <Button variant="outline" onClick={() => setIsAdding(false)} className="text-slate-300 border-slate-600 hover:bg-slate-700">
+                    <Button variant="outline" onClick={() => setIsAdding(false)} className="text-foreground border-border hover:bg-muted">
                       <XCircle className="mr-2 h-4 w-4" /> Cancel
                     </Button>
                     <Button onClick={addWorkProduct} className="bg-green-500 hover:bg-green-600 text-white">
@@ -307,13 +310,10 @@ const WorkProductsTableTab = ({ processId }) => {
                                   <Save className="h-4 w-4" />
                                 </Button>
                             ) : (
-                                <Button size="sm" variant="outline" onClick={() => toggleEdit(wp.id)} className="text-sky-400 border-sky-400 hover:bg-sky-400 hover:text-slate-900">
+                                <Button size="sm" variant="outline" onClick={() => toggleEdit(wp.id)} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
                                   <Edit3 className="h-4 w-4" />
                                 </Button>
                             )}
-                            <Button size="sm" variant="outline" onClick={() => removeWorkProduct(wp.id)} className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -321,9 +321,6 @@ const WorkProductsTableTab = ({ processId }) => {
                 </TableBody>
               </Table>
             </div>
-
-
-
           </CardContent>
         </Card>
 
@@ -331,10 +328,13 @@ const WorkProductsTableTab = ({ processId }) => {
         <Card className="bg-card border-border text-foreground">
           <CardHeader>
             <CardTitle className="text-2xl text-primary">Configure Observers</CardTitle>
-            <CardDescription className="text-muted-foreground">Manage global observers for queues in this process.</CardDescription>
+            <CardDescription className="text-muted-foreground">
+              Manage global observers for queues in this process.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={showAddObserverForm} className="bg-sky-500 hover:bg-sky-600 text-white mb-4">
+            {/* Botão agora segue padrão de primary */}
+            <Button onClick={showAddObserverForm} className="bg-primary hover:bg-primary/90 text-primary-foreground mb-4">
               <PlusCircle className="mr-2 h-5 w-5" /> Add Observer
             </Button>
 
@@ -381,9 +381,9 @@ const WorkProductsTableTab = ({ processId }) => {
             )}
 
             <div className="overflow-x-auto max-h-[400px] border border-border rounded-lg">
-            <Table className="min-w-[500px] w-full table-fixed">
-              <TableHeader className="sticky top-0 bg-muted z-10">
-                <TableRow className="border-border h-12">
+              <Table className="min-w-[500px] w-full table-fixed">
+                <TableHeader className="sticky top-0 bg-muted z-10">
+                  <TableRow className="border-border h-12">
                     <TableHead className="text-primary min-w-[150px]">Name</TableHead>
                     <TableHead className="text-primary min-w-[120px]">Type</TableHead>
                     <TableHead className="text-primary text-center min-w-[120px]">Actions</TableHead>
@@ -391,7 +391,7 @@ const WorkProductsTableTab = ({ processId }) => {
                 </TableHeader>
                 <TableBody>
                   {observers.map((obs) => (
-                      <TableRow key={wp.id} className="border-border hover:bg-muted h-12">
+                      <TableRow key={obs.id} className="border-border hover:bg-muted h-12">
                         <TableCell className="min-w-[150px]">{obs.name}</TableCell>
                         <TableCell className="min-w-[120px]">
                           {obs.isEditing ? (
@@ -401,7 +401,7 @@ const WorkProductsTableTab = ({ processId }) => {
                                 </SelectTrigger>
                                 <SelectContent className="bg-card border-border text-foreground">
                                   {observerTypes.map((t) => (
-                                      <SelectItem key={t} value={t} className="text-slate-100 hover:bg-slate-600">{t}</SelectItem>
+                                      <SelectItem key={t} value={t} className="hover:bg-muted">{t}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
@@ -411,19 +411,19 @@ const WorkProductsTableTab = ({ processId }) => {
                           <div className="flex justify-center gap-2">
                             {obs.isEditing ? (
                                 <>
-                                  <Button size="sm" variant="outline" onClick={() => saveObserver(obs.id)} className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white">
+                                  <Button size="sm" variant="outline" onClick={() => saveObserver(obs.id)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
                                     <Save className="h-4 w-4" />
                                   </Button>
-                                  <Button size="sm" variant="outline" onClick={() => cancelObserverEdit(obs.id)} className="text-slate-400 border-slate-400 hover:bg-slate-400 hover:text-white">
+                                  <Button size="sm" variant="outline" onClick={() => cancelObserverEdit(obs.id)} className="text-muted-foreground border-border hover:bg-muted">
                                     <X className="h-4 w-4" />
                                   </Button>
                                 </>
                             ) : (
                                 <>
-                                  <Button size="sm" variant="outline" onClick={() => toggleObserverEdit(obs.id)} className="text-sky-400 border-sky-400 hover:bg-sky-400 hover:text-slate-900">
+                                  <Button size="sm" variant="outline" onClick={() => toggleObserverEdit(obs.id)} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
                                     <Edit3 className="h-4 w-4" />
                                   </Button>
-                                  <Button size="sm" variant="outline" onClick={() => removeObserver(obs.id)} className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white">
+                                  <Button size="sm" variant="outline" onClick={() => removeObserver(obs.id)} className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </>
