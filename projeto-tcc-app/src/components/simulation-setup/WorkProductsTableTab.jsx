@@ -129,17 +129,17 @@ const WorkProductsTableTab = ({ processId }) => {
           value={wp[fieldName]}
           onChange={(e) => handleInputChange(e, wp.id)}
           placeholder={placeholder}
-          className="bg-slate-700 border-slate-600 text-slate-50 placeholder:text-slate-500"
+          className="bg-card border-border text-foreground placeholder:text-muted-foreground"
           min={type === "number" ? "0" : undefined}
       />
   );
 
   const renderSelectField = (wp, fieldName, options) => (
       <Select name={fieldName} value={wp[fieldName]} onValueChange={(value) => handleSelectChange(value, fieldName, wp.id)}>
-        <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-50">
+        <SelectTrigger className="bg-card border-border text-foreground">
           <SelectValue placeholder={`Select ${fieldName === 'inputOutput' ? 'Input/Output' : 'Policy'}`} />
         </SelectTrigger>
-        <SelectContent className="bg-slate-800 border-slate-600 text-slate-50">
+        <SelectContent className="bg-card border-border text-foreground">
           {options.map(opt => <SelectItem key={opt.value} value={opt.value} className="hover:bg-slate-700">{opt.label}</SelectItem>)}
         </SelectContent>
       </Select>
@@ -151,7 +151,7 @@ const WorkProductsTableTab = ({ processId }) => {
             name={fieldName}
             checked={wp[fieldName]}
             onCheckedChange={(checked) => handleInputChange({ target: { name: fieldName, checked, type: 'checkbox' } }, wp.id)}
-            className="data-[state=checked]:bg-sky-500 data-[state=checked]:text-white border-slate-600"
+            className="border-border data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
         />
       </div>
   );
@@ -216,10 +216,10 @@ const WorkProductsTableTab = ({ processId }) => {
   return (
       <>
         {/* ====== CARD Work Products Table ======*/}
-        <Card className="bg-slate-800 border-slate-700 text-slate-50">
+        <Card className="bg-card border-border text-foreground">
           <CardHeader>
-            <CardTitle className="text-2xl text-sky-400">Work Products and Queues Table</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardTitle className="text-2xl text-primary">Work Products and Queues Table</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Configure work products, their associated tasks, queues, and policies for the simulation.
             </CardDescription>
           </CardHeader>
@@ -274,24 +274,24 @@ const WorkProductsTableTab = ({ processId }) => {
             )}
 
             {/* =============== Work Products Table ===================*/}
-            <div className="overflow-x-auto max-h-[400px] border border-slate-600 rounded-lg">
+            <div className="overflow-x-auto max-h-[400px] border border-border rounded-lg">
               <Table className="min-w-[800px] w-full table-fixed">
-                <TableHeader className="sticky top-0 bg-slate-800 z-10">
-                  <TableRow className="border-slate-700 h-12">
-                    <TableHead className="text-sky-300">Work Product</TableHead>
-                    <TableHead className="text-sky-300">Input/Output</TableHead>
-                    <TableHead className="text-sky-300">Task Name</TableHead>
-                    <TableHead className="text-sky-300">Queue Name</TableHead>
-                    <TableHead className="text-sky-300 text-right">Queue Size</TableHead>
-                    <TableHead className="text-sky-300 text-right">Initial Quantity</TableHead>
-                    <TableHead className="text-sky-300">Policy</TableHead>
-                    <TableHead className="text-sky-300 text-center">Generate Activity?</TableHead>
-                    <TableHead className="text-sky-300 text-center">Actions</TableHead>
+                <TableHeader className="sticky top-0 bg-muted z-10">
+                  <TableRow className="border-border h-12">
+                    <TableHead className="text-primary">Work Product</TableHead>
+                    <TableHead className="text-primary">Input/Output</TableHead>
+                    <TableHead className="text-primary">Task Name</TableHead>
+                    <TableHead className="text-primary">Queue Name</TableHead>
+                    <TableHead className="text-primary text-right">Queue Size</TableHead>
+                    <TableHead className="text-primary text-right">Initial Quantity</TableHead>
+                    <TableHead className="text-primary">Policy</TableHead>
+                    <TableHead className="text-primary text-center">Generate Activity?</TableHead>
+                    <TableHead className="text-primary text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {workProducts.map((wp) => (
-                      <TableRow key={wp.id} className="border-slate-700 hover:bg-slate-700/20 h-12">
+                      <TableRow key={wp.id} className="border-border hover:bg-muted h-12">
                         <TableCell className="min-w-[120px]">{wp.isEditing ? renderInputField(wp, 'workProduct', 'Work Product') : wp.workProduct}</TableCell>
                         <TableCell className="min-w-[80px]">{wp.isEditing ? renderSelectField(wp, 'inputOutput', [{ value: 'Input', label: 'Input' }, { value: 'Output', label: 'Output' }]) : wp.inputOutput}</TableCell>
                         <TableCell className="min-w-[120px]">{wp.isEditing ? renderInputField(wp, 'taskName', 'Task Name') : wp.taskName}</TableCell>
@@ -328,10 +328,10 @@ const WorkProductsTableTab = ({ processId }) => {
         </Card>
 
         {/* ======= CARD Observers ========== */}
-        <Card className="bg-slate-800 border-slate-700 text-slate-50 mt-6">
+        <Card className="bg-card border-border text-foreground">
           <CardHeader>
-            <CardTitle className="text-2xl text-sky-400">Configure Observers</CardTitle>
-            <CardDescription className="text-slate-400">Manage global observers for queues in this process.</CardDescription>
+            <CardTitle className="text-2xl text-primary">Configure Observers</CardTitle>
+            <CardDescription className="text-muted-foreground">Manage global observers for queues in this process.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={showAddObserverForm} className="bg-sky-500 hover:bg-sky-600 text-white mb-4">
@@ -339,31 +339,31 @@ const WorkProductsTableTab = ({ processId }) => {
             </Button>
 
             {isAddingObserver && (
-                <div className="mb-4 p-4 border border-slate-600 rounded-lg bg-slate-700">
-                  <h3 className="text-lg font-semibold text-sky-300 mb-3">Add New Observer</h3>
+                <div className="mb-4 p-4 border border-border rounded-lg bg-muted">
+                  <h3 className="text-lg font-semibold text-primary mb-3">Add New Observer</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <Label className="text-slate-300 mb-2">Select Role</Label>
+                      <Label className="text-foreground mb-2">Select Role</Label>
                       <Select value={selectedQueue} onValueChange={setSelectedQueue}>
-                        <SelectTrigger className="bg-slate-600 border-slate-500 text-slate-100">
+                        <SelectTrigger className="bg-card border-border text-foreground">
                           <SelectValue placeholder="Choose a role" />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-700 border-slate-600">
+                        <SelectContent className="bg-card border-border text-foreground">
                           {mappings.map((m) => (
-                              <SelectItem key={m.id} value={m.name} className="text-slate-100 hover:bg-slate-600">{m.name}</SelectItem>
+                              <SelectItem key={m.id} value={m.name} className="hover:bg-muted">{m.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-slate-300 mb-2">Observer Type</Label>
+                      <Label className="text-foreground mb-2">Observer Type</Label>
                       <Select value={selectedType} onValueChange={setSelectedType}>
-                        <SelectTrigger className="bg-slate-600 border-slate-500 text-slate-100">
+                        <SelectTrigger className="bg-card border-border text-foreground">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-700 border-slate-600">
+                        <SelectContent className="bg-card border-border text-foreground">
                           {observerTypes.map((t) => (
-                              <SelectItem key={t} value={t} className="text-slate-100 hover:bg-slate-600">{t}</SelectItem>
+                              <SelectItem key={t} value={t} className="hover:bg-muted">{t}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -372,7 +372,7 @@ const WorkProductsTableTab = ({ processId }) => {
                       <Button onClick={handleAddObserver} className="bg-green-600 hover:bg-green-700 text-white">
                         <Save className="h-4 w-4 mr-1" /> Add
                       </Button>
-                      <Button onClick={cancelAddObserver} variant="outline" className="text-slate-300 border-slate-500 hover:bg-slate-600">
+                      <Button onClick={cancelAddObserver} variant="outline" className="text-foreground border-border hover:bg-muted">
                         <X className="h-4 w-4 mr-1" /> Cancel
                       </Button>
                     </div>
@@ -380,26 +380,26 @@ const WorkProductsTableTab = ({ processId }) => {
                 </div>
             )}
 
-            <div className="overflow-x-auto max-h-[400px] border border-slate-600 rounded-lg">
-              <Table className="min-w-[500px] w-full table-fixed">
-                <TableHeader className="sticky top-0 bg-slate-800 z-10">
-                  <TableRow className="border-slate-700 h-12">
-                    <TableHead className="text-sky-300 min-w-[150px]">Name</TableHead>
-                    <TableHead className="text-sky-300 min-w-[120px]">Type</TableHead>
-                    <TableHead className="text-sky-300 text-center min-w-[120px]">Actions</TableHead>
+            <div className="overflow-x-auto max-h-[400px] border border-border rounded-lg">
+            <Table className="min-w-[500px] w-full table-fixed">
+              <TableHeader className="sticky top-0 bg-muted z-10">
+                <TableRow className="border-border h-12">
+                    <TableHead className="text-primary min-w-[150px]">Name</TableHead>
+                    <TableHead className="text-primary min-w-[120px]">Type</TableHead>
+                    <TableHead className="text-primary text-center min-w-[120px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {observers.map((obs) => (
-                      <TableRow key={obs.id} className="border-slate-700 hover:bg-slate-700/20 h-12">
+                      <TableRow key={wp.id} className="border-border hover:bg-muted h-12">
                         <TableCell className="min-w-[150px]">{obs.name}</TableCell>
                         <TableCell className="min-w-[120px]">
                           {obs.isEditing ? (
                               <Select value={obs.type} onValueChange={(val) => handleObserverTypeChange(val, obs.id)}>
-                                <SelectTrigger className="bg-slate-600 border-slate-500 text-slate-100 w-32">
+                                <SelectTrigger className="bg-card border-border text-foreground">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectContent className="bg-card border-border text-foreground">
                                   {observerTypes.map((t) => (
                                       <SelectItem key={t} value={t} className="text-slate-100 hover:bg-slate-600">{t}</SelectItem>
                                   ))}
@@ -436,7 +436,7 @@ const WorkProductsTableTab = ({ processId }) => {
               </Table>
             </div>
 
-            {observers.length === 0 && <p className="text-center text-slate-500 mt-4">No observers configured.</p>}
+            {observers.length === 0 && <p className="text-center text-muted-foreground mt-4">No observers configured.</p>}
           </CardContent>
         </Card>
       </>
