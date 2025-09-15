@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit3, PlusCircle, Save, Trash2, X, Check } from 'lucide-react';
+import { Edit3, PlusCircle, Save, Trash2, X } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
@@ -18,7 +18,6 @@ const RoleQueueMappingTab = ({ processId }) => {
   const observerTypes = ["NONE", "LENGTH", "TIME", "STATIONARY"];
   const queueTypes = ["QUEUE", "SET", "STACK"];
 
-  // Fetch roles from backend
   useEffect(() => {
     const fetchMappings = async () => {
       try {
@@ -27,7 +26,6 @@ const RoleQueueMappingTab = ({ processId }) => {
 
         const data = await response.json();
 
-        // Roles
         const mapped = data.map((role) => ({
           id: role.id,
           name: role.name,
@@ -38,7 +36,6 @@ const RoleQueueMappingTab = ({ processId }) => {
         }));
         setMappings(mapped);
 
-        // Observers
         const mappedObservers = data.flatMap((role) =>
             (role.observers || []).map((obs) => ({
               id: obs.id,
@@ -50,11 +47,6 @@ const RoleQueueMappingTab = ({ processId }) => {
             }))
         );
         setObservers(mappedObservers);
-
-        const mappedActivities = data.flatMap((role) =>
-            role.activities || []
-        );
-
 
       } catch (error) {
         console.error(error);
@@ -69,36 +61,27 @@ const RoleQueueMappingTab = ({ processId }) => {
     if (processId && processId !== "new") fetchMappings();
   }, [processId, toast]);
 
-
-
-  // ============= ROLES FUNCTIONS ==================
-
-  // Handle queue type change in roles table
+  // ===== ROLES =====
   const handleSelectChange = (value, id) => {
     setMappings(mappings.map(m => m.id === id ? { ...m, queueType: value } : m));
   };
 
-  // Handle quantity change in roles table
   const handleQuantityChange = (e, id) => {
     const value = parseInt(e.target.value, 10);
     setMappings(mappings.map(m => m.id === id ? { ...m, initialQuantity: value } : m));
   };
 
-  // Toggle edit mode for roles
   const toggleEdit = (id) => {
     setMappings(mappings.map(m => m.id === id ? { ...m, isEditing: !m.isEditing } : m));
   };
 
-  // Save role changes
   const saveRole = async (id) => {
     const roleToSave = mappings.find(m => m.id === id);
 
     try {
       const response = await fetch(`http://localhost:8080/role-configs/${id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           queueName: roleToSave.queueName,
           queueType: roleToSave.queueType || "QUEUE",
@@ -106,9 +89,7 @@ const RoleQueueMappingTab = ({ processId }) => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update role config");
-      }
+      if (!response.ok) throw new Error("Failed to update role config");
 
       toggleEdit(id);
       toast({
@@ -117,7 +98,6 @@ const RoleQueueMappingTab = ({ processId }) => {
         variant: "default",
       });
     } catch (error) {
-      console.error(error);
       toast({
         title: "Error",
         description: "Unable to save role config.",
@@ -126,9 +106,7 @@ const RoleQueueMappingTab = ({ processId }) => {
     }
   };
 
-
-  // ============= OBSERVERS FUNCTIONS ==================
-
+  // ===== OBSERVERS =====
   const showAddObserverForm = () => {
     setIsAddingObserver(true);
     setSelectedRole("");
@@ -141,13 +119,18 @@ const RoleQueueMappingTab = ({ processId }) => {
     setSelectedType("NONE");
   };
 
+  const getNextObserverIndex = () => {
+    if (observers.length === 0) return 1;
+    const existingIndices = observers.map(obs => {
+      const match = obs.name.match(/observer (\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    return Math.max(...existingIndices) + 1;
+  };
+
   const handleAddObserver = async () => {
     if (!selectedRole) {
-      toast({
-        title: "Error",
-        description: "Please select a role first.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Please select a role first.", variant: "destructive" });
       return;
     }
 
@@ -156,16 +139,13 @@ const RoleQueueMappingTab = ({ processId }) => {
 
     const nextIndex = getNextObserverIndex();
     const observerName = `${selectedRole} queue observer ${nextIndex}`;
-
-    // Monta query param só se type for diferente de "NONE"
     const query = selectedType && selectedType !== "NONE" ? `?type=${selectedType}` : "";
 
     try {
       const response = await fetch(
           `http://localhost:8080/role-configs/${selectedRoleData.id}/observers${query}`,
-          { method: "POST" } // Não precisa de body
+          { method: "POST" }
       );
-
       if (!response.ok) throw new Error("Failed to add observer");
 
       const savedObserver = await response.json();
@@ -181,21 +161,13 @@ const RoleQueueMappingTab = ({ processId }) => {
       }]);
 
       setIsAddingObserver(false);
-      setSelectedRole("");
-      setSelectedType("NONE");
-
       toast({
         title: "Observer Added",
         description: `Observer "${observerName}" has been added.`,
         variant: "default",
       });
     } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: "Unable to save observer.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Unable to save observer.", variant: "destructive" });
     }
   };
 
@@ -205,60 +177,26 @@ const RoleQueueMappingTab = ({ processId }) => {
 
     const role = mappings.find(m => m.queueName === observerToRemove.queueName);
     if (!role) {
-      toast({
-        title: "Error",
-        description: "Unable to determine role for this observer.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Unable to determine role for this observer.", variant: "destructive" });
       return;
     }
 
     try {
       const response = await fetch(
           `http://localhost:8080/role-configs/${role.id}/observers/${id}`,
-          {
-            method: "DELETE",
-          }
+          { method: "DELETE" }
       );
-
       if (!response.ok) throw new Error("Failed to delete observer");
 
-      // Atualiza estado local só depois do sucesso
-      setObservers(prevObservers => prevObservers.filter(o => o.id !== id));
-
-      toast({
-        title: "Observer Removed",
-        description: `Observer "${observerToRemove.name}" has been removed.`,
-        variant: "default",
-      });
+      setObservers(prev => prev.filter(o => o.id !== id));
+      toast({ title: "Observer Removed", description: `Observer "${observerToRemove.name}" has been removed.`, variant: "default" });
     } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: "Unable to delete observer.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Unable to delete observer.", variant: "destructive" });
     }
-  };
-
-  const getNextObserverIndex = () => {
-    if (observers.length === 0) return 1;
-
-    // Extract all existing indices and find the highest
-    const existingIndices = observers.map(obs => {
-      const match = obs.name.match(/observer (\d+)$/);
-      return match ? parseInt(match[1], 10) : 0;
-    });
-
-    return Math.max(...existingIndices) + 1;
   };
 
   const toggleObserverEdit = (id) => {
     setObservers(observers.map(o => o.id === id ? { ...o, isEditing: !o.isEditing } : o));
-  };
-
-  const cancelObserverEdit = (id) => {
-    toggleObserverEdit(id);
   };
 
   const handleObserverTypeChange = (value, id) => {
@@ -267,89 +205,63 @@ const RoleQueueMappingTab = ({ processId }) => {
 
   const updateObserver = async (id) => {
     const observerToSave = observers.find(o => o.id === id);
-
-    const body = {
-      type: observerToSave.type,
-      queueName: observerToSave.name,
-    };
+    const body = { type: observerToSave.type, queueName: observerToSave.name };
 
     try {
       const response = await fetch(`http://localhost:8080/role-configs/observers/${id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-
-      if (!response.ok) {
-        throw new Error(`Erro ao atualizar: ${response.statusText}`);
-      }
-
-      const updated = await response.json();
+      if (!response.ok) throw new Error("Error updating observer");
 
       toggleObserverEdit(id);
-      toast({
-        title: "Observer Updated",
-        description: `Observer "${updated.queue_name}" type updated to "${updated.type}".`,
-        variant: "default",
-      });
+      toast({ title: "Observer Updated", description: `Observer "${observerToSave.name}" updated.`, variant: "default" });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
-
-
   return (
       <>
-        {/* ===================== CARD ROLES ======================= */}
-        <Card className="bg-slate-800 border-slate-700 text-slate-50">
+        {/* ROLES */}
+        <Card className="bg-card border-border text-foreground">
           <CardHeader>
-            <CardTitle className="text-2xl text-sky-400">Role & Queue Mapping</CardTitle>
-            <CardDescription className="text-slate-400">Roles are generated from the process. You can only edit queue type and initial quantity.</CardDescription>
+            <CardTitle className="text-2xl text-primary">Role & Queue Mapping</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Roles are generated from the process. You can only edit queue type and initial quantity.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto w-full">
               <Table className="min-w-[700px] table-fixed">
                 <TableHeader>
-                  <TableRow className="border-slate-700 hover:bg-slate-700/30">
-                    <TableHead className="text-sky-300 w-64 min-w-[16rem]">Role Name</TableHead>
-                    <TableHead className="text-sky-300 w-64 min-w-[16rem]">Queue Name</TableHead>
-                    <TableHead className="text-sky-300 w-32 min-w-[8rem]">Queue Type</TableHead>
-                    <TableHead className="text-sky-300 text-right w-32 min-w-[8rem]">Initial Quantity</TableHead>
-                    <TableHead className="text-sky-300 text-center w-40 min-w-[10rem]">Actions</TableHead>
+                  <TableRow className="border-border hover:bg-muted/30">
+                    <TableHead className="text-primary">Role Name</TableHead>
+                    <TableHead className="text-primary">Queue Name</TableHead>
+                    <TableHead className="text-primary">Queue Type</TableHead>
+                    <TableHead className="text-primary text-right">Initial Quantity</TableHead>
+                    <TableHead className="text-primary text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {mappings.map((mapping) => (
-                      <TableRow key={mapping.id} className="border-slate-700 hover:bg-slate-700/30">
+                      <TableRow key={mapping.id} className="border-border hover:bg-muted/30">
                         <TableCell>{mapping.name}</TableCell>
                         <TableCell>{mapping.queueName}</TableCell>
                         <TableCell>
                           {mapping.isEditing ? (
-                              <Select
-                                  value={mapping.queueType}
-                                  onValueChange={(value) => handleSelectChange(value, mapping.id)}
-                              >
-                                <SelectTrigger className="w-full h-9 px-2 bg-slate-600 border-slate-500 text-slate-100">
+                              <Select value={mapping.queueType} onValueChange={(v) => handleSelectChange(v, mapping.id)}>
+                                <SelectTrigger className="w-full h-9 px-2 bg-card border-border text-foreground">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectContent className="bg-card border-border text-foreground">
                                   {queueTypes.map((type) => (
-                                      <SelectItem key={type} value={type} className="text-slate-100 hover:bg-slate-600">
-                                        {type}
-                                      </SelectItem>
+                                      <SelectItem key={type} value={type} className="hover:bg-muted">{type}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
-                          ) : (
-                              mapping.queueType
-                          )}
+                          ) : mapping.queueType}
                         </TableCell>
                         <TableCell className="text-right">
                           {mapping.isEditing ? (
@@ -357,41 +269,24 @@ const RoleQueueMappingTab = ({ processId }) => {
                                   type="number"
                                   value={mapping.initialQuantity}
                                   onChange={(e) => handleQuantityChange(e, mapping.id)}
-                                  className="w-full h-9 px-2 text-right bg-slate-600 border-slate-500 text-slate-100"
+                                  className="w-full h-9 px-2 text-right bg-card border-border text-foreground"
                                   min="1"
                               />
-                          ) : (
-                              mapping.initialQuantity
-                          )}
+                          ) : mapping.initialQuantity}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex justify-center gap-2">
                             {mapping.isEditing ? (
                                 <>
-                                  <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => saveRole(mapping.id)}
-                                      className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white"
-                                  >
+                                  <Button size="sm" variant="outline" onClick={() => saveRole(mapping.id)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
                                     <Save className="h-4 w-4" />
                                   </Button>
-                                  <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => toggleEdit(mapping.id)}
-                                      className="text-slate-400 border-slate-400 hover:bg-slate-400 hover:text-white"
-                                  >
+                                  <Button size="sm" variant="outline" onClick={() => toggleEdit(mapping.id)} className="text-muted-foreground border-border hover:bg-muted">
                                     <X className="h-4 w-4" />
                                   </Button>
                                 </>
                             ) : (
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => toggleEdit(mapping.id)}
-                                    className="text-sky-400 border-sky-400 hover:bg-sky-400 hover:text-slate-900"
-                                >
+                                <Button size="sm" variant="outline" onClick={() => toggleEdit(mapping.id)} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
                                   <Edit3 className="h-4 w-4" />
                                 </Button>
                             )}
@@ -402,72 +297,56 @@ const RoleQueueMappingTab = ({ processId }) => {
                 </TableBody>
               </Table>
             </div>
-            {mappings.length === 0 && (
-                <p className="text-center text-slate-500 mt-4">No roles found for this process.</p>
-            )}
+            {mappings.length === 0 && <p className="text-center text-muted-foreground mt-4">No roles found for this process.</p>}
           </CardContent>
         </Card>
 
-        {/* ===================== CARD OBSERVERS ======================= */}
-        <Card className="bg-slate-800 border-slate-700 text-slate-50 mt-6">
+        {/* OBSERVERS */}
+        <Card className="bg-card border-border text-foreground mt-6">
           <CardHeader>
-            <CardTitle className="text-2xl text-sky-400">Configure Observers</CardTitle>
-            <CardDescription className="text-slate-400">Manage global observers for queues in this process.</CardDescription>
+            <CardTitle className="text-2xl text-primary">Configure Observers</CardTitle>
+            <CardDescription className="text-muted-foreground">Manage global observers for queues in this process.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-                onClick={showAddObserverForm}
-                className="bg-sky-500 hover:bg-sky-600 text-white mb-4"
-            >
+            <Button onClick={showAddObserverForm} className="bg-primary hover:bg-primary/80 text-primary-foreground mb-4">
               <PlusCircle className="mr-2 h-5 w-5" /> Add Observer
             </Button>
 
             {isAddingObserver && (
-                <div className="mb-4 p-4 border border-slate-600 rounded-lg bg-slate-700">
-                  <h3 className="text-lg font-semibold text-sky-300 mb-3">Add New Observer</h3>
+                <div className="mb-4 p-4 border border-border rounded-lg bg-muted">
+                  <h3 className="text-lg font-semibold text-primary mb-3">Add New Observer</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Select Role</label>
+                      <label className="block text-sm font-medium text-foreground mb-2">Select Role</label>
                       <Select value={selectedRole} onValueChange={setSelectedRole}>
-                        <SelectTrigger className="bg-slate-600 border-slate-500 text-slate-100">
+                        <SelectTrigger className="bg-card border-border text-foreground">
                           <SelectValue placeholder="Choose a role" />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-700 border-slate-600">
-                          {mappings.map((mapping) => (
-                              <SelectItem key={mapping.id} value={mapping.name} className="text-slate-100 hover:bg-slate-600">
-                                {mapping.name}
-                              </SelectItem>
+                        <SelectContent className="bg-card border-border text-foreground">
+                          {mappings.map((m) => (
+                              <SelectItem key={m.id} value={m.name} className="hover:bg-muted">{m.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Observer Type</label>
+                      <label className="block text-sm font-medium text-foreground mb-2">Observer Type</label>
                       <Select value={selectedType} onValueChange={setSelectedType}>
-                        <SelectTrigger className="bg-slate-600 border-slate-500 text-slate-100">
+                        <SelectTrigger className="bg-card border-border text-foreground">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-700 border-slate-600">
-                          {observerTypes.map((type) => (
-                              <SelectItem key={type} value={type} className="text-slate-100 hover:bg-slate-600">
-                                {type}
-                              </SelectItem>
+                        <SelectContent className="bg-card border-border text-foreground">
+                          {observerTypes.map((t) => (
+                              <SelectItem key={t} value={t} className="hover:bg-muted">{t}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="flex items-end gap-2">
-                      <Button
-                          onClick={handleAddObserver}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                      >
+                      <Button onClick={handleAddObserver} className="bg-green-600 hover:bg-green-700 text-white">
                         <Save className="h-4 w-4 mr-1" /> Add
                       </Button>
-                      <Button
-                          onClick={cancelAddObserver}
-                          variant="outline"
-                          className="text-slate-300 border-slate-500 hover:bg-slate-600"
-                      >
+                      <Button onClick={cancelAddObserver} variant="outline" className="text-foreground border-border hover:bg-muted">
                         <X className="h-4 w-4 mr-1" /> Cancel
                       </Button>
                     </div>
@@ -475,94 +354,63 @@ const RoleQueueMappingTab = ({ processId }) => {
                 </div>
             )}
 
-            <div className="overflow-x-auto">
-              <div className="overflow-x-auto w-full mt-6">
-                <Table className="min-w-[500px] table-fixed">
-                  <TableHeader>
-                    <TableRow className="border-slate-700 hover:bg-slate-700/30">
-                      <TableHead className="text-sky-300 w-64 min-w-[16rem]">Name</TableHead>
-                      <TableHead className="text-sky-300 w-32 min-w-[8rem]">Type</TableHead>
-                      <TableHead className="text-sky-300 text-center w-40 min-w-[10rem]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {observers.map((obs) => (
-                        <TableRow key={obs.id} className="border-slate-700 hover:bg-slate-700/30">
-                          <TableCell>{obs.name}</TableCell>
-                          <TableCell>
+            <div className="overflow-x-auto mt-6">
+              <Table className="min-w-[500px] table-fixed">
+                <TableHeader>
+                  <TableRow className="border-border hover:bg-muted/30">
+                    <TableHead className="text-primary">Name</TableHead>
+                    <TableHead className="text-primary">Type</TableHead>
+                    <TableHead className="text-primary text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {observers.map((obs) => (
+                      <TableRow key={obs.id} className="border-border hover:bg-muted/30">
+                        <TableCell>{obs.name}</TableCell>
+                        <TableCell>
+                          {obs.isEditing ? (
+                              <Select value={obs.type} onValueChange={(v) => handleObserverTypeChange(v, obs.id)}>
+                                <SelectTrigger className="w-full h-9 px-2 bg-card border-border text-foreground">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-card border-border text-foreground">
+                                  {observerTypes.map((t) => (
+                                      <SelectItem key={t} value={t} className="hover:bg-muted">{t}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                          ) : obs.type}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center gap-2">
                             {obs.isEditing ? (
-                                <Select
-                                    value={obs.type}
-                                    onValueChange={(value) => handleObserverTypeChange(value, obs.id)}
-                                >
-                                  <SelectTrigger className="w-full h-9 px-2 bg-slate-600 border-slate-500 text-slate-100">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-700 border-slate-600">
-                                    {observerTypes.map((type) => (
-                                        <SelectItem key={type} value={type} className="text-slate-100 hover:bg-slate-600">
-                                          {type}
-                                        </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <>
+                                  <Button size="sm" variant="outline" onClick={() => updateObserver(obs.id)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
+                                    <Save className="h-4 w-4" />
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => toggleObserverEdit(obs.id)} className="text-muted-foreground border-border hover:bg-muted">
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </>
                             ) : (
-                                obs.type
+                                <>
+                                  <Button size="sm" variant="outline" onClick={() => toggleObserverEdit(obs.id)} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
+                                    <Edit3 className="h-4 w-4" />
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => handleRemoveObserver(obs.id)} className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </>
                             )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex justify-center gap-2">
-                              {obs.isEditing ? (
-                                  <>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => updateObserver(obs.id)}
-                                        className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white"
-                                    >
-                                      <Save className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => cancelObserverEdit(obs.id)}
-                                        className="text-slate-400 border-slate-400 hover:bg-slate-400 hover:text-white"
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  </>
-                              ) : (
-                                  <>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => toggleObserverEdit(obs.id)}
-                                        className="text-sky-400 border-sky-400 hover:bg-sky-400 hover:text-slate-900"
-                                    >
-                                      <Edit3 className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleRemoveObserver(obs.id)}
-                                        className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-            {observers.length === 0 && (
-                <p className="text-center text-slate-500 mt-4">No observers configured.</p>
-            )}
+
+            {observers.length === 0 && <p className="text-center text-muted-foreground mt-4">No observers configured.</p>}
           </CardContent>
         </Card>
       </>
@@ -570,4 +418,3 @@ const RoleQueueMappingTab = ({ processId }) => {
 };
 
 export default RoleQueueMappingTab;
-
