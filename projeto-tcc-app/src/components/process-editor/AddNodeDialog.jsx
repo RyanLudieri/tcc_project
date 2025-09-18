@@ -27,7 +27,7 @@ const AddNodeDialog = ({ isOpen, onClose, onAddNode, parentNode, allNodes, hasRo
       // Set default type based on context
       if (parentNode) {
         if (parentNode.type === 'Process') setNodeType('Phase');
-        else if (parentNode.type === 'TaskDescriptor') setNodeType('Role'); // Example restriction
+        else if (parentNode.type === 'Task') setNodeType('Role'); // Example restriction
         else setNodeType('Activity');
       } else {
         setNodeType(hasRootNode ? 'Phase' : 'Process'); // Should be 'Process' if no root, but dialog might not open then
@@ -51,7 +51,7 @@ const AddNodeDialog = ({ isOpen, onClose, onAddNode, parentNode, allNodes, hasRo
   const availableNodeTypes = parentNode 
     ? initialNodeTypes.filter(nt => {
         if (nt.name === 'Process') return false; // Cannot add Process as a child
-        if (parentNode.type === 'TaskDescriptor' && nt.name === 'Activity') return false; // Task cannot have Activity child
+        if (parentNode.type === 'Task' && nt.name === 'Activity') return false; // Task cannot have Activity child
         if ((parentNode.type === 'Artifact' || parentNode.type === 'Role') && nt.name !== 'None') return false; // Artifacts/Roles are typically leaf-like
         return true;
       })

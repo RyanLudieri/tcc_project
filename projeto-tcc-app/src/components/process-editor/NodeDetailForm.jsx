@@ -60,7 +60,7 @@ const NodeDetailForm = ({ node, allNodes, onUpdateNode, onAddChildNode }) => {
     if (node.type === 'Process') {
         return initialNodeTypes.some(nt => nt.name === 'Phase');
     }
-    if (node.type === 'TaskDescriptor') {
+    if (node.type === 'Task') {
       return initialNodeTypes.some(nt => (nt.name === 'Role' || nt.name === 'Artifact'));
     }
     if (node.type === 'Artifact' || node.type === 'Role') {

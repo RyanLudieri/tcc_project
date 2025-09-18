@@ -19,7 +19,7 @@ const NodeSelectorPanel = ({ onNodeSelect, parentNodeType, hasRootNode }) => {
     }
     if (parentNodeType) {
       // Example restriction: TaskDescriptor cannot have Activity as child
-      if (parentNodeType === 'TaskDescriptor') {
+      if (parentNodeType === 'Task') {
         return initialNodeTypes.filter(nt => nt.name !== 'Activity' && nt.name !== 'Process');
       }
       // Process node can only have Phase as direct child (example rule)
