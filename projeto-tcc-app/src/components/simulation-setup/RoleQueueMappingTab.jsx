@@ -203,7 +203,7 @@ const RoleQueueMappingTab = ({ processId }) => {
     setObservers(observers.map(o => o.id === id ? { ...o, type: value } : o));
   };
 
-  const updateObserver = async (id) => {
+  const saveObserver = async (id) => {
     const observerToSave = observers.find(o => o.id === id);
     const body = { type: observerToSave.type, queueName: observerToSave.name };
 
@@ -385,7 +385,7 @@ const RoleQueueMappingTab = ({ processId }) => {
                           <div className="flex justify-center gap-2">
                             {obs.isEditing ? (
                                 <>
-                                  <Button size="sm" variant="outline" onClick={() => updateObserver(obs.id)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
+                                  <Button size="sm" variant="outline" onClick={() => saveObserver(obs.id)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
                                     <Save className="h-4 w-4" />
                                   </Button>
                                   <Button size="sm" variant="outline" onClick={() => toggleObserverEdit(obs.id)} className="text-muted-foreground border-border hover:bg-muted">
