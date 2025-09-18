@@ -62,33 +62,34 @@ const initialNodesData = [
                 predecessors: [],
                 description: 'Preparar os tópicos da reunião.',
                 modelInfo: 'Essencial',
-                children: []
-              },
-              {
-                id: uuidv4(),
-                optional: false,
-                presentationName: 'Apresentação do Projeto',
-                type: 'Artifact',
-                index: null, 
-                parentId: null, 
-                predecessors: [],
-                description: 'Slides com visão geral do projeto.',
-                modelInfo: 'Output',
-                children: []
+                children: [
+                  {
+                    id: uuidv4(),
+                    optional: false,
+                    presentationName: 'Apresentação do Projeto',
+                    type: 'Artifact',
+                    index: null,
+                    parentId: null,
+                    predecessors: [],
+                    description: 'Slides com visão geral do projeto.',
+                    modelInfo: 'Output',
+                    children: []
+                  },
+                  {
+                    id: uuidv4(),
+                    optional: false,
+                    presentationName: 'Analista de Requisitos',
+                    type: 'Role',
+                    index: null,
+                    parentId: null,
+                    predecessors: [],
+                    description: 'Responsável por levantar e documentar requisitos.',
+                    modelInfo: 'Primary Performer',
+                    children: []
+                  }
+                ]
               }
             ]
-          },
-          {
-            id: uuidv4(),
-            optional: false,
-            presentationName: 'Analista de Requisitos',
-            type: 'Role',
-            index: null,
-            parentId: null, 
-            predecessors: [],
-            description: 'Responsável por levantar e documentar requisitos.',
-            modelInfo: 'Primary Performer',
-            children: []
           }
         ]
       },
@@ -125,41 +126,42 @@ const initialNodesData = [
                 description: 'Implementar a funcionalidade X.',
                 modelInfo: '',
                 children: [
-                   {
+                  {
                     id: uuidv4(),
-                     optional: false,
-                     presentationName: 'Codificar Módulo A',
+                    optional: false,
+                    presentationName: 'Codificar Módulo A',
                     type: 'Task',
                     index: "7",
                     parentId: null,
                     predecessors: [],
                     description: 'Escrever o código para o módulo A.',
                     modelInfo: '',
-                    children: []
-                  },
-                  {
-                    id: uuidv4(),
-                    optional: false,
-                    presentationName: 'Desenvolvedor Backend',
-                    type: 'Role',
-                    index: null,
-                    parentId: null,
-                    predecessors: [],
-                    description: 'Responsável pela lógica do servidor.',
-                    modelInfo: 'Primary Performer',
-                    children: []
-                  },
-                   {
-                    id: uuidv4(),
-                     optional: false,
-                     presentationName: 'Código Fonte Feature X',
-                    type: 'Artifact',
-                    index: null,
-                    parentId: null,
-                    predecessors: [],
-                    description: 'Repositório com o código da funcionalidade X.',
-                    modelInfo: 'Output',
-                    children: []
+                    children: [
+                      {
+                        id: uuidv4(),
+                        optional: false,
+                        presentationName: 'Desenvolvedor Backend',
+                        type: 'Role',
+                        index: null,
+                        parentId: null,
+                        predecessors: [],
+                        description: 'Responsável pela lógica do servidor.',
+                        modelInfo: 'Primary Performer',
+                        children: []
+                      },
+                      {
+                        id: uuidv4(),
+                        optional: false,
+                        presentationName: 'Código Fonte Feature X',
+                        type: 'Artifact',
+                        index: null,
+                        parentId: null,
+                        predecessors: [],
+                        description: 'Repositório com o código da funcionalidade X.',
+                        modelInfo: 'Output',
+                        children: []
+                      }
+                    ]
                   }
                 ]
               }
@@ -204,65 +206,92 @@ const initialNodesData = [
               {
                 id: uuidv4(),
                 optional: false,
-                presentationName: 'Relatório de Testes',
-                type: 'Artifact',
-                index: null,
+                presentationName: 'Conferir funcionalidade X',
+                type: 'Task',
+                index: "11",
                 parentId: null,
                 predecessors: [],
-                description: 'Documento com os resultados dos testes.',
-                modelInfo: 'Output',
-                children: []
-              },
-              {
-                id: uuidv4(),
-                optional: false,
-                presentationName: 'Engenheiro de QA',
-                type: 'Role',
-                index: null,
-                parentId: null,
-                predecessors: [],
-                description: 'Responsável pela execução dos testes.',
-                modelInfo: 'Primary Performer',
-                children: []
+                description: 'Escrever o código para o módulo A.',
+                modelInfo: '',
+                children: [
+                  {
+                    id: uuidv4(),
+                    optional: false,
+                    presentationName: 'Relatório de Testes',
+                    type: 'Artifact',
+                    index: null,
+                    parentId: null,
+                    predecessors: [],
+                    description: 'Documento com os resultados dos testes.',
+                    modelInfo: 'Output',
+                    children: []
+                  },
+                  {
+                    id: uuidv4(),
+                    optional: false,
+                    presentationName: 'Engenheiro de QA',
+                    type: 'Role',
+                    index: null,
+                    parentId: null,
+                    predecessors: [],
+                    description: 'Responsável pela execução dos testes.',
+                    modelInfo: 'Primary Performer',
+                    children: []
+                  }
+                ]
               }
             ]
-          }
-        ]
-      },
-       {
-        id: uuidv4(),
-         optional: false,
-         presentationName: 'Fase de Implantação',
-        type: 'Phase',
-        index: "11",
-        parentId: 'root-process',
-        predecessors: [],
-        description: 'Colocar o software em produção.',
-        modelInfo: '',
-        children: [
-          {
-            id: uuidv4(),
-            optional: false,
-            presentationName: 'Deploy em Produção',
-            type: 'Activity',
-            index: "12",
-            parentId: null,
-            predecessors: [],
-            description: 'Publicar a nova versão do software.',
-            modelInfo: '',
-            children: []
           },
           {
             id: uuidv4(),
             optional: false,
-            presentationName: 'Manual do Usuário',
-            type: 'Artifact',
-            index: null,
-            parentId: null,
+            presentationName: 'Fase de Implantação',
+            type: 'Phase',
+            index: "12",
+            parentId: 'root-process',
             predecessors: [],
-            description: 'Guia para usuários finais.',
-            modelInfo: 'Output',
-            children: []
+            description: 'Colocar o software em produção.',
+            modelInfo: '',
+            children: [
+              {
+                id: uuidv4(),
+                optional: false,
+                presentationName: 'Deploy em Produção',
+                type: 'Activity',
+                index: "13",
+                parentId: null,
+                predecessors: [],
+                description: 'Publicar a nova versão do software.',
+                modelInfo: '',
+                children: [
+                  {
+                    id: uuidv4(),
+                    optional: false,
+                    presentationName: 'Fazer deploy',
+                    type: 'Task',
+                    index: "14",
+                    parentId: null,
+                    predecessors: [],
+                    description: 'Publicar a nova versão do software.',
+                    modelInfo: '',
+                    children: [
+                      {
+                        id: uuidv4(),
+                        optional: false,
+                        presentationName: 'Manual do Usuário',
+                        type: 'Artifact',
+                        index: null,
+                        parentId: null,
+                        predecessors: [],
+                        description: 'Guia para usuários finais.',
+                        modelInfo: 'Output',
+                        children: []
+                      }
+                    ]
+                  },
+                ]
+              },
+            ]
           }
         ]
       }
