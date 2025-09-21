@@ -17,6 +17,7 @@ const initialWorkProducts = [
 ];
 
 const observerTypes = ['NONE', 'LENGTH', 'TIME'];
+const wpTypes = ['QUEUE', 'SET', 'STACK'];
 
 const WorkProductsTableTab = ({ processId }) => {
   const { toast } = useToast();
@@ -26,16 +27,11 @@ const WorkProductsTableTab = ({ processId }) => {
   });
   const [newWorkProduct, setNewWorkProduct] = useState({ workProduct: '', inputOutput: 'Input', taskName: '', queueName: '', queueSize: 10, queueInitialQuantity: 0, policy: 'FIFO', generateActivity: true });
   const [isAdding, setIsAdding] = useState(false);
-
   const [observers, setObservers] = useState([]);
+  const [selectedWorkProduct, setSelectedWorkProduct] = useState("");
   const [isAddingObserver, setIsAddingObserver] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState("");
   const [selectedType, setSelectedType] = useState("NONE");
-  const [mappings] = useState([
-    { id: 1, name: 'Role A' },
-    { id: 2, name: 'Role B' },
-    { id: 3, name: 'Role C' },
-  ]);
 
   useEffect(() => {
     const fetchWorkProducts = async () => {
@@ -44,12 +40,13 @@ const WorkProductsTableTab = ({ processId }) => {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
 
-        const formatted = data.map((wp) => ({
+        const workProducts = data.map((wp) => ({
           id: wp.id,
           workProduct: wp.workProductName,
           inputOutput: wp.input_output,
           taskName: wp.task_name,
           queueName: wp.queue_name,
+          queueType: wp.queue_type,
           queueSize: wp.queue_size,
           queueInitialQuantity: wp.initial_quantity,
           policy: wp.policy,
@@ -57,8 +54,7 @@ const WorkProductsTableTab = ({ processId }) => {
           observers: wp.observers || [],
           isEditing: false
         }));
-
-        setWorkProducts(formatted);
+        setWorkProducts(workProducts);
 
         const mappedObservers = data.flatMap((wp) =>
             (wp.observers || []).map((obs) => ({
@@ -104,14 +100,38 @@ const WorkProductsTableTab = ({ processId }) => {
     setWorkProducts(workProducts.map(r => r.id === id ? { ...r, isEditing: !r.isEditing } : r));
   };
 
-  const saveWorkProduct = (id) => {
-    const wp = workProducts.find(r => r.id === id);
-    if (!wp.workProduct || !wp.taskName || !wp.queueName) {
-      toast({ title: "Error", description: "Work Product, Task Name, and Queue Name are required.", variant: "destructive" });
-      return;
+  const saveWorkProduct = async (id) => {
+    const wpToSave = workProducts.find(r => r.id === id);
+
+    try {
+      const response = await fetch(`http://localhost:8080/work-product-configs/${id}`, {
+        method: "PATCH",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          queue_name: wpToSave.queueName,
+          queue_type: wpToSave.queueType || "QUEUE",
+          initial_quantity: wpToSave.queueInitialQuantity,
+          queue_size: wpToSave.queueSize,
+          policy: wpToSave.policy,
+          generate_activity: wpToSave.generateActivity,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update work product config");
+
+      toggleEdit(id);
+      toast({
+        title: "Saved",
+        description: `Work product config for "${wpToSave.queueName}" updated successfully.`,
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Unable to save work product config.",
+        variant: "destructive",
+      });
     }
-    toggleEdit(id);
-    toast({ title: "Work Product Saved", description: `Work Product "${wp.workProduct}" saved.`, variant: "default" });
   };
 
   const addWorkProduct = () => {
@@ -160,15 +180,17 @@ const WorkProductsTableTab = ({ processId }) => {
       </div>
   );
 
+
+  /* ===== OBSERVERS ===== */
   const showAddObserverForm = () => {
     setIsAddingObserver(true);
-    setSelectedQueue("");
+    setSelectedWorkProduct("");
     setSelectedType("NONE");
   };
 
   const cancelAddObserver = () => {
     setIsAddingObserver(false);
-    setSelectedQueue("");
+    setSelectedWorkProduct("");
     setSelectedType("NONE");
   };
 
@@ -181,17 +203,48 @@ const WorkProductsTableTab = ({ processId }) => {
     return Math.max(...existingIndices) + 1;
   };
 
-  const handleAddObserver = () => {
-    if (!selectedQueue) {
-      toast({ title: "Error", description: "Please select a role first.", variant: "destructive" });
+  const handleAddObserver = async () => {
+    if (!selectedWorkProduct) {
+      toast({ title: "Error", description: "Please select a work product first.", variant: "destructive" });
       return;
     }
-    const nextIndex = getNextObserverIndex();
-    const name = `${selectedQueue} queue observer ${nextIndex}`;
-    const obs = { id: `obs-${Date.now()}`, name, type: selectedType, isEditing: false };
-    setObservers([...observers, obs]);
-    cancelAddObserver();
-    toast({ title: "Observer Added", description: `Observer "${name}" has been added.`, variant: "default" });
+
+    // Obter o `workProduct` completo usando o `selectedWorkProduct.id`
+    const selectedWorkProductData = workProducts.find(wp => wp.id === selectedWorkProduct);
+    if (!selectedWorkProductData) return;
+
+    const nextIndex = getNextObserverIndex() + 1;
+    const observerName = `${selectedWorkProductData.queueName} observer ${nextIndex}`;
+    const query = selectedType && selectedType !== "NONE" ? `?type=${selectedType}` : "";
+
+    try {
+      const response = await fetch(
+          `http://localhost:8080/work-product-configs/${selectedWorkProductData.id}/observers${query}`,
+          { method: "POST" }
+      );
+      if (!response.ok) throw new Error("Failed to add observer");
+
+      const savedObserver = await response.json();
+
+      setObservers([...observers, {
+        id: savedObserver.id,
+        workProductConfigId: selectedWorkProductData.id,  // Enviar o workProduct.id ao backend
+        name: savedObserver.name,
+        queueName: savedObserver.queue_name,
+        type: savedObserver.type,
+        position: savedObserver.position,
+        isEditing: false,
+      }]);
+
+      setIsAddingObserver(false);
+      toast({
+        title: "Observer Added",
+        description: `Observer "${observerName}" has been added.`,
+        variant: "default",
+      });
+    } catch (error) {
+      toast({ title: "Error", description: "Unable to save observer.", variant: "destructive" });
+    }
   };
 
   const toggleObserverEdit = (id) => {
@@ -202,18 +255,56 @@ const WorkProductsTableTab = ({ processId }) => {
     setObservers(observers.map(o => o.id === id ? { ...o, type: value } : o));
   };
 
-  const saveObserver = (id) => {
-    const obs = observers.find(o => o.id === id);
-    toggleObserverEdit(id);
-    toast({ title: "Observer Updated", description: `Observer "${obs.name}" type updated to "${obs.type}".`, variant: "default" });
+  const saveUpdateObserver = async (id) => {
+    const observerToSave = observers.find(o => o.id === id);
+    const body = { type: observerToSave.type, queueName: observerToSave.name };
+
+    try {
+      const response = await fetch(`http://localhost:8080/work-product-configs/observers/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) throw new Error("Error updating observer");
+
+      toggleObserverEdit(id);
+      toast({ title: "Observer Updated", description: `Observer "${observerToSave.name}" updated.`, variant: "default" });
+    } catch (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
   const cancelObserverEdit = (id) => toggleObserverEdit(id);
 
-  const removeObserver = (id) => {
-    const obs = observers.find(o => o.id === id);
-    setObservers(observers.filter(o => o.id !== id));
-    toast({ title: "Observer Removed", description: `Observer "${obs?.name}" removed.`, variant: "default" });
+  const handleRemoveObserver = async (id) => {
+    const observerToRemove = observers.find(o => o.id === id);
+    if (!observerToRemove) return;
+
+    // setObservers(observers.filter(o => o.id !== id));
+
+    const wp = workProducts.find(wp => wp.queueName === observerToRemove.queueName);
+    if (!wp) {
+      toast({ title: "Error", description: "Unable to determine work product for this observer.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+          `http://localhost:8080/work-product-configs/${wp.id}/observers/${id}`,
+          {method: "DELETE"}
+      );
+      if (!response.ok) throw new Error("Failed to delete observer");
+
+      setObservers(prev => prev.filter(o => o.id !== id));
+      toast({
+        title: "Observer Removed",
+        description: `Observer "${observerToRemove.name}" has been removed.`,
+        variant: "default"
+      });
+    } catch (error) {
+      toast({title: "Error", description: "Unable to delete observer.", variant: "destructive"});
+    }
+
   };
 
   return (
@@ -285,6 +376,7 @@ const WorkProductsTableTab = ({ processId }) => {
                     <TableHead className="text-primary">Input/Output</TableHead>
                     <TableHead className="text-primary">Task Name</TableHead>
                     <TableHead className="text-primary">Queue Name</TableHead>
+                    <TableHead className="text-primary">Queue Type</TableHead>
                     <TableHead className="text-primary text-right">Queue Size</TableHead>
                     <TableHead className="text-primary text-right">Initial Quantity</TableHead>
                     <TableHead className="text-primary">Policy</TableHead>
@@ -295,13 +387,14 @@ const WorkProductsTableTab = ({ processId }) => {
                 <TableBody>
                   {workProducts.map((wp) => (
                       <TableRow key={wp.id} className="border-border hover:bg-muted h-12">
-                        <TableCell className="min-w-[120px]">{wp.isEditing ? renderInputField(wp, 'workProduct', 'Work Product') : wp.workProduct}</TableCell>
-                        <TableCell className="min-w-[80px]">{wp.isEditing ? renderSelectField(wp, 'inputOutput', [{ value: 'Input', label: 'Input' }, { value: 'Output', label: 'Output' }]) : wp.inputOutput}</TableCell>
-                        <TableCell className="min-w-[120px]">{wp.isEditing ? renderInputField(wp, 'taskName', 'Task Name') : wp.taskName}</TableCell>
-                        <TableCell className="min-w-[120px]">{wp.isEditing ? renderInputField(wp, 'queueName', 'Queue Name') : wp.queueName}</TableCell>
+                        <TableCell className="min-w-[120px]">{wp.workProduct}</TableCell>
+                        <TableCell className="min-w-[80px]">{wp.inputOutput}</TableCell>
+                        <TableCell className="min-w-[120px]">{wp.taskName}</TableCell>
+                        <TableCell className="min-w-[120px]">{wp.queueName}</TableCell>
+                        <TableCell className="min-w-[80px]">{wp.isEditing ? renderSelectField(wp, 'queueType', [{ value: 'QUEUE', label: 'QUEUE' }, { value: 'SET', label: 'SET' }, { value: 'STACK', label: 'STACK' }]) : wp.queueType}</TableCell>
                         <TableCell className="text-right min-w-[80px]">{wp.isEditing ? renderInputField(wp, 'queueSize', '10', 'number') : wp.queueSize}</TableCell>
                         <TableCell className="text-right min-w-[100px]">{wp.isEditing ? renderInputField(wp, 'queueInitialQuantity', '0', 'number') : wp.queueInitialQuantity}</TableCell>
-                        <TableCell className="min-w-[80px]">{wp.isEditing ? renderSelectField(wp, 'policy', [{ value: 'FIFO', label: 'FIFO' }, { value: 'LIFO', label: 'LIFO' }, { value: 'Priority', label: 'Priority' }]) : wp.policy}</TableCell>
+                        <TableCell className="min-w-[80px]">{wp.isEditing ? renderSelectField(wp, 'policy', [{ value: 'FIFO', label: 'FIFO' }]) : wp.policy}</TableCell>
                         <TableCell className="text-center min-w-[120px]">{wp.isEditing ? renderCheckboxField(wp, 'generateActivity') : (wp.generateActivity ? 'Yes' : 'No')}</TableCell>
                         <TableCell className="text-center min-w-[120px]">
                           <div className="flex justify-center gap-2">
@@ -327,7 +420,7 @@ const WorkProductsTableTab = ({ processId }) => {
         {/* ======= CARD Observers ========== */}
         <Card className="bg-card border-border text-foreground">
           <CardHeader>
-            <CardTitle className="text-2xl text-primary">Configure Observers</CardTitle>
+            <CardTitle className="text-2xl text-primary">Configure Queue Observers</CardTitle>
             <CardDescription className="text-muted-foreground">
               Manage global observers for queues in this process.
             </CardDescription>
@@ -343,17 +436,20 @@ const WorkProductsTableTab = ({ processId }) => {
                   <h3 className="text-lg font-semibold text-primary mb-3">Add New Observer</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <Label className="text-foreground mb-2">Select Role</Label>
-                      <Select value={selectedQueue} onValueChange={setSelectedQueue}>
+                      <Label className="text-foreground mb-2">Select Queue Name</Label>
+                      <Select value={selectedWorkProduct} onValueChange={setSelectedWorkProduct}>
                         <SelectTrigger className="bg-card border-border text-foreground">
-                          <SelectValue placeholder="Choose a role" />
+                          <SelectValue placeholder="Choose a queue" />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-border text-foreground">
-                          {mappings.map((m) => (
-                              <SelectItem key={m.id} value={m.name} className="hover:bg-muted">{m.name}</SelectItem>
+                          {workProducts.map((wp) => (
+                              <SelectItem key={wp.id} value={wp.id} className="hover:bg-muted">
+                                {wp.queueName}
+                              </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+
                     </div>
                     <div>
                       <Label className="text-foreground mb-2">Observer Type</Label>
@@ -411,7 +507,7 @@ const WorkProductsTableTab = ({ processId }) => {
                           <div className="flex justify-center gap-2">
                             {obs.isEditing ? (
                                 <>
-                                  <Button size="sm" variant="outline" onClick={() => saveObserver(obs.id)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
+                                  <Button size="sm" variant="outline" onClick={() => saveUpdateObserver(obs.id)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
                                     <Save className="h-4 w-4" />
                                   </Button>
                                   <Button size="sm" variant="outline" onClick={() => cancelObserverEdit(obs.id)} className="text-muted-foreground border-border hover:bg-muted">
@@ -423,7 +519,7 @@ const WorkProductsTableTab = ({ processId }) => {
                                   <Button size="sm" variant="outline" onClick={() => toggleObserverEdit(obs.id)} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
                                     <Edit3 className="h-4 w-4" />
                                   </Button>
-                                  <Button size="sm" variant="outline" onClick={() => removeObserver(obs.id)} className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                                  <Button size="sm" variant="outline" onClick={() => handleRemoveObserver(obs.id)} className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </>
