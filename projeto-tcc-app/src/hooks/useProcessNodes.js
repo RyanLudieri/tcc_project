@@ -18,6 +18,23 @@ import {
 } from '@/lib/nodeUtils';
 import { useToast } from "@/components/ui/use-toast";
 
+const ALLOWED_CHILDREN = {
+  Process: ["Phase"],
+  Phase: ["Iteration", "Milestone", "Activity", "Task"],
+  Iteration: ["Milestone", "Activity", "Task"],
+  Activity: ["Activity", "Task", "Milestone"],
+  Task: ["Artifact", "Role"],
+  Milestone: [],
+  Artifact: [],
+  Role: [],
+};
+
+const canInsert = (parentType, childType) => {
+  if (!parentType || !childType) return false;
+  const allowed = ALLOWED_CHILDREN[parentType] || [];
+  return allowed.includes(childType);
+};
+
 const initialNodesData = [
   {
     id: 'root-process',
@@ -371,6 +388,10 @@ export const useProcessNodes = (processId) => {
     const actualParentId = parentId || (selectedNodeId || (nodes.find(n => n.type === 'Process') || nodes[0])?.id);
     const parentNode = findNode(nodes, actualParentId);
 
+    if (!canInsert(parentNode?.type, nodeData.type)) {
+      return { success: false, error: `Not allowed to insert "${nodeData.type}" inside "${parentNode?.type || 'Root'}".` };
+    }
+
     let newIndex = null;
     if (nodeData.type !== 'Artifact' && nodeData.type !== 'Role') {
         const siblings = parentNode ? nodes.filter(n => n.parentId === actualParentId && n.type !== 'Artifact' && n.type !== 'Role') : nodes.filter(n => !n.parentId && n.type !== 'Artifact' && n.type !== 'Role');
@@ -522,7 +543,7 @@ export const useProcessNodes = (processId) => {
     const isDirectChildAttempt = activeNode.parentId === overNode.id;
 
     if (position === 'child' && overNode.type === 'Artifact' || overNode.type === 'Role') {
-        position = 'after'; 
+        position = 'after';
     }
     if (activeNode.type === 'Process') {
         setDropTargetInfo(null);
@@ -533,14 +554,28 @@ export const useProcessNodes = (processId) => {
             position = 'after';
         }
     }
-  
+
+    let tentativeParent = null;
+
+    if (position === 'child') {
+      tentativeParent = overNode; // will become child of overNode
+    } else if (position === 'before' || position === 'after') {
+      tentativeParent = findNode(nodes, overNode.parentId); // keeps overNode's parent
+    }
+
+    if (!canInsert(tentativeParent?.type, activeNode.type)) {
+      setDropTargetInfo(null);
+      return;
+    }
+
+
     setDropTargetInfo({
       nodeId: overNode.id,
       position: position,
       depth: overNodeDepth,
     });
   }, [nodes]);
-  
+
 
   const handleDragEndLogicInternal = (activeId, currentDropTargetInfo) => {
     setActiveDragItemId(null);
@@ -549,52 +584,55 @@ export const useProcessNodes = (processId) => {
     if (!currentDropTargetInfo || !activeId || activeId === currentDropTargetInfo.nodeId) {
       return { success: false, error: "No valid drop target." };
     }
-  
+
     const activeNode = findNode(nodes, activeId);
-    const overNode = findNode(nodes, currentDropTargetInfo.nodeId);
-  
+    const overNode   = findNode(nodes, currentDropTargetInfo.nodeId);
     if (!activeNode || !overNode) {
       return { success: false, error: "Node not found." };
     }
     if (activeNode.type === 'Process') {
-      return { success: false, error: "Process node cannot be moved." };
-    }
-     if (currentDropTargetInfo.position === 'child' && (overNode.type === 'Task' || overNode.type === 'Milestone') && activeNode.type !== 'Artifact' && activeNode.type !== 'Role') {
-      return { success: false, error: `Cannot make ${activeNode.type} a child of ${overNode.type}.` };
-    }
-    if (currentDropTargetInfo.position === 'child' && (overNode.type === 'Artifact' || overNode.type === 'Role')) {
-      return { success: false, error: `Cannot make ${activeNode.type} a child of ${overNode.type}.` };
+      return { success: false, error: "The root Process node cannot be moved." };
     }
 
-    let newNodes = [...nodes];
-    const originalNodeArrayIndex = newNodes.findIndex(n => n.id === activeNode.id);
-    const [movedNode] = newNodes.splice(originalNodeArrayIndex, 1); 
-  
-    let targetNodeArrayIndex = newNodes.findIndex(n => n.id === overNode.id);
-    let newParentId = overNode.parentId;
-    let insertionIndex = targetNodeArrayIndex;
-  
-    if (currentDropTargetInfo.position === 'before') {
-      newParentId = overNode.parentId;
-      insertionIndex = targetNodeArrayIndex;
-    } else if (currentDropTargetInfo.position === 'after') {
-      newParentId = overNode.parentId;
-      insertionIndex = targetNodeArrayIndex + 1;
-    } else { 
-      newParentId = overNode.id;
-      const childrenOfOver = newNodes.filter(n => n.parentId === overNode.id);
-      insertionIndex = targetNodeArrayIndex + 1 + childrenOfOver.length;
+    // ✅ NEW: determine new parent and validate with centralized rules
+    let newParentId;
+    if (currentDropTargetInfo.position === 'child') {
+      newParentId = overNode.id;            // will become a child of overNode
+    } else {
+      newParentId = overNode.parentId;      // before/after keeps overNode's parent
     }
-    
+    const newParentNode = findNode(nodes, newParentId);
+    if (!canInsert(newParentNode?.type, activeNode.type)) {
+      return {
+        success: false,
+        error: `Not allowed to move "${activeNode.type}" inside "${newParentNode?.type || 'Root'}".`
+      };
+    }
+
+    // Move and reindex (your current flow)
+    let newNodes = [...nodes];
+    const fromIdx = newNodes.findIndex(n => n.id === activeNode.id);
+    const [movedNode] = newNodes.splice(fromIdx, 1);
+
+    const overIdx = newNodes.findIndex(n => n.id === overNode.id);
+    let insertionIndex = overIdx;
+
+    if (currentDropTargetInfo.position === 'before') {
+      insertionIndex = overIdx;
+    } else if (currentDropTargetInfo.position === 'after') {
+      insertionIndex = overIdx + 1;
+    } else { // child
+      const childrenOfOver = newNodes.filter(n => n.parentId === overNode.id);
+      insertionIndex = overIdx + 1 + childrenOfOver.length;
+    }
+
     movedNode.parentId = newParentId;
     newNodes.splice(insertionIndex, 0, movedNode);
-    
-    const reorderedNodes = reorderAndReindexNodes([...newNodes]); 
-  
+
+    const reorderedNodes = reorderAndReindexNodes([...newNodes]);
     setNodes(reorderedNodes);
-    if (newParentId) {
-      setOpenStates(prev => ({ ...prev, [newParentId]: true }));
-    }
+    if (newParentId) setOpenStates(prev => ({ ...prev, [newParentId]: true }));
+
     return { success: true, message: `"${activeNode.presentationName}" was reorganized.` };
   };
   
