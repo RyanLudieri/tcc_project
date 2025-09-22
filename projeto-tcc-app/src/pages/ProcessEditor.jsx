@@ -40,6 +40,7 @@ const ProcessEditor = () => {
     handleDragStartLogic,
     handleDragOverLogic,
     handleDragEndLogic,
+    getAllowedChildTypes,
   } = useProcessNodes(processId);
 
   const [selectedNodeId, setSelectedNodeId] = useState(null);
@@ -83,6 +84,15 @@ const ProcessEditor = () => {
 
   const openAddChildDialog = (parentId) => {
     const parentNode = findNode(parentId);
+    const allowed = getAllowedChildTypes(parentNode?.type);
+    if (!allowed || allowed.length === 0) {
+      toast({
+          title: "Not allowed",
+          description: `The type "${parentNode?.type}" doesn't allow children.`,
+          variant: "destructive",
+          });
+      return;
+      }
     setParentNodeForDialog(parentNode);
     setIsAddNodeDialogOpen(true);
   };
@@ -186,6 +196,9 @@ const ProcessEditor = () => {
     }
   };
 
+  const allowedTypesForDialog = parentNodeForDialog
+  ? getAllowedChildTypes(parentNodeForDialog.type)
+      : ["Process"];
 
   return (
     <DndContext 
@@ -261,6 +274,7 @@ const ProcessEditor = () => {
           parentNode={parentNodeForDialog}
           allNodes={nodes}
           hasRootNode={hasRootNode}
+          allowedTypes={allowedTypesForDialog}
         />
       </div>
       <DragOverlay dropAnimation={null} zIndex={2000}>

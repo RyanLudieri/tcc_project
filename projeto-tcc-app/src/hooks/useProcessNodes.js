@@ -315,8 +315,6 @@ const initialNodesData = [
     ]
   }
 ];
-
-
 const assignParentIds = (nodes, parentId = null) => {
   return nodes.map(node => {
     const newNode = { ...node, parentId: parentId };
@@ -326,11 +324,11 @@ const assignParentIds = (nodes, parentId = null) => {
     return newNode;
   });
 };
-
 const initialNodesWithParents = assignParentIds(initialNodesData);
 const flattenedInitialNodes = getFlatNodes(initialNodesWithParents);
 
 export const useProcessNodes = (processId) => {
+
   const { toast } = useToast();
   const [nodes, setNodes] = useState(() => {
     const savedNodes = localStorage.getItem(`processNodes_${processId}`);
@@ -360,7 +358,6 @@ export const useProcessNodes = (processId) => {
   const [activeDragItemId, setActiveDragItemId] = useState(null);
   const [dropTargetInfo, setDropTargetInfo] = useState(null);
   const activeDragItem = activeDragItemId ? findNode(nodes, activeDragItemId) : null;
-
 
   useEffect(() => {
     try {
@@ -576,7 +573,6 @@ export const useProcessNodes = (processId) => {
     });
   }, [nodes]);
 
-
   const handleDragEndLogicInternal = (activeId, currentDropTargetInfo) => {
     setActiveDragItemId(null);
     setDropTargetInfo(null);
@@ -647,6 +643,11 @@ export const useProcessNodes = (processId) => {
     return nodes.filter(node => node.parentId === parentId);
   }, [nodes]);
 
+  const getAllowedChildTypes = useCallback((parentType) => {
+    if (!parentType) return [];
+    return ALLOWED_CHILDREN[parentType] || [];
+  }, []);
+
   return {
     nodes,
     setNodes,
@@ -668,6 +669,7 @@ export const useProcessNodes = (processId) => {
     transformNodesForBackend,
     findNode: (nodeId) => findNode(nodes, nodeId),
     getChildNodes,
+    getAllowedChildTypes,
     flattenedNodes: getFlatNodes(assignParentIds(nodes)), 
   };
 };
