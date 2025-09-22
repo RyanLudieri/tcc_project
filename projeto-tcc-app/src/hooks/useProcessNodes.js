@@ -481,34 +481,36 @@ export const useProcessNodes = (processId) => {
        setOpenStates({});
     }
   }, [nodes]);
-  
+
   const reorderAndReindexNodes = (newOrderedNodes) => {
-    const reindexRecursively = (items, currentParentId = null, prefix = "") => {
-      let elementCounter = 1;
-      items.forEach(item => {
-        if (item.parentId === currentParentId) {
-          if (item.type !== 'Artifact' && item.type !== 'Role') {
-            item.index = prefix ? `${prefix}.${elementCounter}` : `${String(elementCounter)}`;
-            elementCounter++;
-          } else {
-            item.index = null; 
-          }
-          const childrenOfCurrentItem = newOrderedNodes.filter(n => n.parentId === item.id);
-          if (childrenOfCurrentItem.length > 0) {
-            reindexRecursively(childrenOfCurrentItem, item.id, item.index || prefix); 
-          }
-        }
-      });
+    let counter = 1;
+
+    const assignFlatIndices = (nodesList, parentId = null) => {
+      // pega nós filhos de parentId na ordem em que aparecem
+      nodesList
+          .filter(n => n.parentId === parentId)
+          .forEach(node => {
+            // só indexa se não for Artifact nem Role
+            if (node.type !== 'Artifact' && node.type !== 'Role') {
+              node.index = String(counter++);
+            } else {
+              node.index = null;
+            }
+
+            // continua recursivamente nos filhos
+            assignFlatIndices(nodesList, node.id);
+          });
     };
-  
+
+    // começa a partir do root Process
     const rootProcessNode = newOrderedNodes.find(n => n.type === 'Process');
     const rootParentId = rootProcessNode ? rootProcessNode.id : null;
-    
-    const topLevelNodes = newOrderedNodes.filter(node => node.parentId === rootParentId || (rootParentId === null && !node.parentId));
-    reindexRecursively(topLevelNodes, rootParentId, "");
+
+    assignFlatIndices(newOrderedNodes, rootParentId);
 
     return newOrderedNodes;
   };
+
 
   const handleDragStartLogic = useCallback((draggedNodeId) => {
     setActiveDragItemId(draggedNodeId);
