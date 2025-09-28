@@ -23,7 +23,6 @@ const AddNodeDialog = ({
   const [nodeType, setNodeType] = useState('');
   const [modelInfo, setModelInfo] = useState('');
   const [predecessors, setPredecessors] = useState([]);
-  const [artifactURL, setArtifactURL] = useState('');
   const [optional, setOptional] = useState(false);
 
   useEffect(() => {
@@ -32,7 +31,6 @@ const AddNodeDialog = ({
       setPresentationName('');
       setModelInfo('');
       setPredecessors([]);
-      setArtifactURL('');
       setOptional(false);
 
       // define tipo inicial com base na lista permitida
@@ -52,7 +50,6 @@ const AddNodeDialog = ({
       type: nodeType,
       modelInfo,
       predecessors,
-      artifactURL: nodeType === 'Artifact' ? artifactURL : '',
       optional: false,
     };
     onAddNode(nodeData, parentNode ? parentNode.id : null);
@@ -113,22 +110,6 @@ const AddNodeDialog = ({
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Campo extra só para Artifact */}
-              {nodeType === 'Artifact' && (
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="node-artifacturl" className="text-right">
-                      Artifact URL
-                    </Label>
-                    <Input
-                        id="node-artifacturl"
-                        value={artifactURL}
-                        onChange={(e) => setArtifactURL(e.target.value)}
-                        className="col-span-3"
-                        placeholder="e.g., https://example.com/doc.pdf"
-                    />
-                  </div>
-              )}
 
               {/* Model Info */}
               <div className="grid grid-cols-4 items-center gap-4">

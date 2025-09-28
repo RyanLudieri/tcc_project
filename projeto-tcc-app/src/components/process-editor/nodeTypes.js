@@ -10,7 +10,4 @@ export const initialNodeTypes = [
   { name: 'Task', icon: Briefcase, color: 'bg-orange-500', description: 'A detailed description of a task.' },
   { name: 'Role', icon: User, color: 'bg-pink-500', description: 'A person or team involved.' },
   { name: 'Artifact', icon: FileText, color: 'bg-slate-300', description: 'A document or output.' },
-  // 'None' type is handled implicitly by allowing empty type string or specific 'None' value in UI
 ];
-
-// You can add more utility functions or constants related to node types here if needed.

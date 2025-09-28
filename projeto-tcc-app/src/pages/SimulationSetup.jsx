@@ -2,25 +2,25 @@ import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings2, ListChecks, FileText, PlayCircle } from 'lucide-react';
+import {ArrowLeft, Settings2, ListChecks, FileText, PlayCircle, Layers} from 'lucide-react';
 import RoleQueueMappingTab from '@/components/simulation-setup/RoleQueueMappingTab';
 import WorkProductsTableTab from '@/components/simulation-setup/WorkProductsTableTab.jsx';
 import XACDMLExportTab from '@/components/simulation-setup/XACDMLExportTab';
+import WorkBreakdownElementsTab from '@/components/simulation-setup/work-breakdown-elements/WorkBreakdownElementsTab.jsx';
+
 import { useToast } from "@/components/ui/use-toast";
 
-const SimulationSetupPage = () => {
+const SimulationSetup = () => {
   const { id: processId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Guarda o último processo válido
   useEffect(() => {
     if (processId && processId !== "new") {
       localStorage.setItem("lastProcessId", processId);
     }
   }, [processId]);
 
-  // Recupera o último processo para o link de back
   const lastProcessId = localStorage.getItem("lastProcessId") || processId;
 
   const handleRunSimulation = () => {
@@ -33,8 +33,7 @@ const SimulationSetupPage = () => {
   };
 
   return (
-      <div className="flex-1 flex flex-col p-6 bg-background text-foreground">
-
+      <div className="flex-1 flex flex-col p-6 bg-gray-100 dark:bg-gray-900 text-foreground">
         <header className="mb-6 flex items-center justify-between">
           <div>
             <Link
@@ -63,36 +62,47 @@ const SimulationSetupPage = () => {
           </Button>
         </header>
 
-        <Tabs defaultValue="role-queue-mapping" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 bg-muted p-1 rounded-lg mb-4">
+        <Tabs defaultValue="roles-mapping" className="flex-1 flex flex-col">
+          <TabsList className="flex w-full flex-wrap gap-4 bg-muted p-1 rounded-lg mb-4">
             <TabsTrigger
-                value="role-queue-mapping"
+                value="roles-mapping"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
-                       data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5"
+            data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5 flex-1 min-w-[120px] text-center"
             >
-              <Settings2 className="mr-2 h-5 w-5" /> Role & Queue Mapping
+              <Settings2 className="mr-2 h-5 w-5" /> Roles Mapping
             </TabsTrigger>
             <TabsTrigger
                 value="resource-table"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
-                       data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5"
+            data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5 flex-1 min-w-[120px] text-center"
             >
-              <ListChecks className="mr-2 h-5 w-5" /> Work Products Table
+              <ListChecks className="mr-2 h-5 w-5" /> Work Products Mapping
+            </TabsTrigger>
+            <TabsTrigger
+                value="work-breakdown-elements-table"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
+            data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5 flex-1 min-w-[120px] text-center"
+            >
+              <Layers className="mr-2 h-5 w-5" /> Work Breakdown Elements Mapping
             </TabsTrigger>
             <TabsTrigger
                 value="xacdml-export"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
-                       data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5"
+            data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5 flex-1 min-w-[120px] text-center"
             >
               <FileText className="mr-2 h-5 w-5" /> XACDML Export
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="role-queue-mapping" className="flex-1 bg-card p-6 rounded-lg shadow-inner">
+
+          <TabsContent value="roles-mapping" className="flex-1 bg-card p-6 rounded-lg shadow-inner">
             <RoleQueueMappingTab processId={processId} />
           </TabsContent>
           <TabsContent value="resource-table" className="flex-1 bg-card p-6 rounded-lg shadow-inner">
             <WorkProductsTableTab processId={processId} />
+          </TabsContent>
+          <TabsContent value="work-breakdown-elements-table" className="flex-1 bg-card p-6 rounded-lg shadow-inner">
+            <WorkBreakdownElementsTab processId={processId} />
           </TabsContent>
           <TabsContent value="xacdml-export" className="flex-1 bg-card p-6 rounded-lg shadow-inner">
             <XACDMLExportTab processId={processId} />
@@ -102,4 +112,4 @@ const SimulationSetupPage = () => {
   );
 };
 
-export default SimulationSetupPage;
+export default SimulationSetup;
