@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.entity;
 
 import com.example.projeto_tcc.enums.ObserverActivityType;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -14,5 +15,7 @@ public class ActivityObserver extends Observer{
 
     @ManyToOne
     @JoinColumn(name = "activity_config_id")
+    @JsonBackReference
     private ActivityConfig activityConfig;
+
 }

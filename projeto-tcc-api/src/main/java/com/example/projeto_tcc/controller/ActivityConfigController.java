@@ -2,6 +2,7 @@ package com.example.projeto_tcc.controller;
 
 import com.example.projeto_tcc.dto.ActivityConfigDTO;
 import com.example.projeto_tcc.dto.ObserverActivityDTO;
+import com.example.projeto_tcc.entity.ActivityConfig;
 import com.example.projeto_tcc.service.ActivityConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/activity_configs")
+@RequestMapping("/activity-configs")
 @RequiredArgsConstructor
 public class ActivityConfigController {
     private final ActivityConfigService configService;
@@ -18,6 +19,12 @@ public class ActivityConfigController {
     public ActivityConfigDTO getConfig(@PathVariable Long id) {
         return configService.getActivityConfig(id);
     }
+
+    @GetMapping("/process/{deliveryProcessId}")
+    public List<ActivityConfigDTO> getByDeliveryProcess(@PathVariable Long deliveryProcessId) {
+        return configService.getActivityByDeliveryProcess(deliveryProcessId);
+    }
+
 
     @PatchMapping("/{id}")
     public ActivityConfigDTO updateConfig(@PathVariable Long id, @RequestBody ActivityConfigDTO dto) {
