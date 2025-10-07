@@ -9,22 +9,12 @@ import { PlusCircle, Trash2, Edit3, Save, XCircle, X } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-const initialWorkProducts = [
-  { id: 'res1', workProduct: 'Requirements Document', inputOutput: 'Input', taskName: 'Requirements Analysis', queueName: 'q_analysis', queueSize: 10, queueInitialQuantity: 2, policy: 'FIFO', generateActivity: true, isEditing: false },
-  { id: 'res2', workProduct: 'UI Prototype', inputOutput: 'Output', taskName: 'Interface Design', queueName: 'q_design_review', queueSize: 5, queueInitialQuantity: 1, policy: 'FIFO', generateActivity: false, isEditing: false },
-  { id: 'res3', workProduct: 'Login Module', inputOutput: 'Output', taskName: 'Backend API Development', queueName: 'q_dev_backend', queueSize: 20, queueInitialQuantity: 5, policy: 'LIFO', generateActivity: true, isEditing: false },
-  { id: 'res4', workProduct: 'Bug Report', inputOutput: 'Input', taskName: 'Acceptance Testing', queueName: 'q_testing_bugs', queueSize: 15, queueInitialQuantity: 0, policy: 'Priority', generateActivity: true, isEditing: false },
-];
-
 const observerTypes = ['NONE', 'LENGTH', 'TIME'];
 const wpTypes = ['QUEUE', 'SET', 'STACK'];
 
 const WorkProductsTableTab = ({ processId }) => {
   const { toast } = useToast();
-  const [workProducts, setWorkProducts] = useState(() => {
-    const saved = localStorage.getItem(`workProductTable_${processId}`);
-    return saved ? JSON.parse(saved) : initialWorkProducts;
-  });
+  const [workProducts, setWorkProducts] = useState([]);
   const [newWorkProduct, setNewWorkProduct] = useState({ workProduct: '', inputOutput: 'Input', taskName: '', queueName: '', queueSize: 10, queueInitialQuantity: 0, policy: 'FIFO', generateActivity: true });
   const [isAdding, setIsAdding] = useState(false);
   const [observers, setObservers] = useState([]);
@@ -74,7 +64,6 @@ const WorkProductsTableTab = ({ processId }) => {
         setWorkProducts([]);
       }
     };
-
     fetchWorkProducts();
   }, [processId]);
 
@@ -309,7 +298,7 @@ const WorkProductsTableTab = ({ processId }) => {
 
   return (
       <>
-        {/* ====== CARD Work Products Table ======*/}
+        {/* WORK PRODUCTS */}
         <Card className="bg-card border-border text-foreground">
           <CardHeader>
             <CardTitle className="text-2xl text-primary">Work Products and Queues Table</CardTitle>
@@ -318,6 +307,7 @@ const WorkProductsTableTab = ({ processId }) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+
             {/* Add Work Product Form */}
             {isAdding && (
                 <div className="mb-6 p-4 border border-border rounded-lg bg-muted space-y-4">
@@ -414,10 +404,11 @@ const WorkProductsTableTab = ({ processId }) => {
                 </TableBody>
               </Table>
             </div>
+            {workProducts.length === 0 && <p className="text-center text-muted-foreground mt-4">No work products found for this process.</p>}
           </CardContent>
         </Card>
 
-        {/* ======= CARD Observers ========== */}
+        {/* OBSERVERS */}
         <Card className="bg-card border-border text-foreground">
           <CardHeader>
             <CardTitle className="text-2xl text-primary">Configure Queue Observers</CardTitle>
@@ -426,7 +417,6 @@ const WorkProductsTableTab = ({ processId }) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Botão agora segue padrão de primary */}
             <Button onClick={showAddObserverForm} className="bg-primary hover:bg-primary/90 text-primary-foreground mb-4">
               <PlusCircle className="mr-2 h-5 w-5" /> Add Observer
             </Button>
