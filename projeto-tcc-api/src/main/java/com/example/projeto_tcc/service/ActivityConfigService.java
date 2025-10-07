@@ -174,7 +174,7 @@ public class ActivityConfigService {
         return new ActivityConfigDTO(
                 config.getActivity().getId(),
                 config.getActivity().getName(),
-                config.getActivity().getClass().getSimpleName(),
+                config.getActivity().getType().name(),
                 config.getActivity().getSuperActivity() != null ? config.getActivity().getSuperActivity().getId() : null,
                 config.getDependencyType(),
                 config.getTimeBox(),
@@ -341,7 +341,7 @@ public class ActivityConfigService {
                     return new ActivityConfigDTO(
                             config.getActivity().getId(),
                             config.getActivity().getName(),
-                            config.getActivity().getClass().getSimpleName(),
+                            config.getActivity().getType().name(),
                             config.getActivity().getSuperActivity() != null ? config.getActivity().getSuperActivity().getId() : null,
                             config.getDependencyType(),
                             config.getTimeBox(),
