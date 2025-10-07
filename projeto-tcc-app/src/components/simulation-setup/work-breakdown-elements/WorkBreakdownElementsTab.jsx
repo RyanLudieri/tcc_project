@@ -1,73 +1,97 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import WorkElementDetailsView from "./WorkElementDetailsView.jsx";
 import { NodeIcon } from "../../process-editor/tree/NodeIcon.jsx";
 
-// ---- MOCK PROCESS + ITERATIONS + TASKS ----
-const mockProcess = [
-    {
-        id: 0,
-        presentationName: "Process",
-        type: "PROCESS",
-        children: [
-            {
-                id: 1,
-                presentationName: "Iteration 1",
-                type: "ITERATION",
-                children: [
-                    {
-                        id: 101,
-                        presentationName: "Release planning",
-                        type: "TASK_DESCRIPTOR",
-                        predecessors: [],
-                    },
-                    {
-                        id: 102,
-                        presentationName: "Pair programming with TDD",
-                        type: "TASK_DESCRIPTOR",
-                        predecessors: [101],
-                    },
-                    {
-                        id: 103,
-                        presentationName: "Code review",
-                        type: "TASK_DESCRIPTOR",
-                        predecessors: [102],
-                    },
-                ],
-            },
-            {
-                id: 2,
-                presentationName: "Iteration 2",
-                type: "ITERATION",
-                children: [
-                    {
-                        id: 201,
-                        presentationName: "Daily meeting",
-                        type: "TASK_DESCRIPTOR",
-                        predecessors: [],
-                    },
-                    {
-                        id: 202,
-                        presentationName: "Refactoring",
-                        type: "TASK_DESCRIPTOR",
-                        predecessors: [],
-                    },
-                ],
-            },
-        ],
-    },
-];
-
 function capitalizeFirst(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    return str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 }
 
-const WorkBreakdownElementsTab = () => {
+const WorkBreakdownElementsTab = ({ processId }) => {
     const [selectedItem, setSelectedItem] = useState(null);
+    const [processTree, setProcessTree] = useState([]);
+
+    useEffect(() => {
+        if (!processId || processId === "new") return;
+
+        fetch(`http://localhost:8080/activity-configs/process/${processId}`)
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to fetch activities");
+                return res.json();
+            })
+            .then((data) => {
+                const tree = buildTree(data);
+                setProcessTree(tree);
+            })
+            .catch((err) => console.error("Failed to fetch activities:", err));
+    }, [processId]);
+
+    const buildTree = (flatList) => {
+        if (!Array.isArray(flatList)) return [];
+
+        // Create map of all nodes
+        const map = {};
+        flatList.forEach((item) => {
+            map[item.activityId] = {
+                id: item.activityId,
+                activityConfigId: item.activityConfigId,
+                presentationName: item.name,
+                type: item.type.toUpperCase(),
+                children: [],
+            };
+        });
+
+        // Build parent-child relationships
+        const roots = [];
+        flatList.forEach((item) => {
+            const node = map[item.activityId];
+            if (item.parentId && map[item.parentId]) {
+                map[item.parentId].children.push(node);
+            } else {
+                roots.push(node);
+            }
+        });
+
+        const processName = flatList[0]?.processName || "Process";
+        const processId = flatList[0]?.processId || 0;
+
+        return [
+            {
+                id: processId,
+                presentationName: processName,
+                type: "PROCESS",
+                children: roots,
+            },
+        ];
+    };
+
+    const renderNode = (node) => (
+        <div key={node.id} className="pl-4">
+            <button
+                onClick={() => setSelectedItem(node)}
+                className={`flex items-center gap-1.5 p-1.5 rounded-lg w-fit ${
+                    selectedItem?.id === node.id ? "bg-gray-100" : "hover:bg-gray-100"
+                }`}
+            >
+                <NodeIcon
+                    type={capitalizeFirst(node.type || "Task")}
+                    className="mr-2 flex-shrink-0 h-4 w-4"
+                />
+                <span>{node.presentationName}</span>
+            </button>
+
+            {/* Recursive children */}
+            {node.children && node.children.length > 0 && (
+                <div className="pl-6 mt-1 space-y-1">
+                    {node.children.map((child) => renderNode(child))}
+                </div>
+            )}
+        </div>
+    );
 
     return (
         <div className="flex w-full h-full gap-10 p-6">
-            {/* Container 1 - Work Breakdown */}
+            {/* Left side - Work Breakdown Elements View */}
             <div className="flex-1 mb-4">
                 <Card className="h-full shadow-lg">
                     <CardHeader className="py-3">
@@ -77,10 +101,8 @@ const WorkBreakdownElementsTab = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {mockProcess.map((process) => (
+                            {processTree.map((process) => (
                                 <div key={process.id} className="pl-2">
-
-                                    {/* Process*/}
                                     <div className="flex items-center gap-2 p-2 w-fit">
                                         <NodeIcon
                                             type={capitalizeFirst(process.type)}
@@ -88,58 +110,18 @@ const WorkBreakdownElementsTab = () => {
                                         />
                                         <span>{process.presentationName}</span>
                                     </div>
-
-                                    {/* Iterations e Tasks*/}
                                     <div className="pl-6 mt-1 space-y-1">
-                                        {process.children.map((iteration) => (
-                                            <div key={iteration.id}>
-                                                <button
-                                                    onClick={() => setSelectedItem(iteration)}
-                                                    className={`flex items-center gap-2 p-2 rounded-lg w-fit ${
-                                                        selectedItem?.id === iteration.id
-                                                            ? "bg-gray-100"
-                                                            : "hover:bg-gray-100"
-                                                    }`}
-                                                >
-                                                    <NodeIcon
-                                                        type={capitalizeFirst(iteration.type)}
-                                                        className="mr-2 flex-shrink-0 h-4 w-4"
-                                                    />
-                                                    <span>{iteration.presentationName}</span>
-                                                </button>
-
-                                                <div className="pl-6 mt-1 space-y-1">
-                                                    {iteration.children.map((task) => (
-                                                        <button
-                                                            key={task.id}
-                                                            onClick={() => setSelectedItem(task)}
-                                                            className={`flex items-center gap-2 p-2 rounded-lg w-fit ${
-                                                                selectedItem?.id === task.id
-                                                                    ? "bg-gray-100"
-                                                                    : "hover:bg-gray-100"
-                                                            }`}
-                                                        >
-                                                            <NodeIcon
-                                                                type={capitalizeFirst(task.type)}
-                                                                className="mr-2 flex-shrink-0 h-4 w-4"
-                                                            />
-                                                            <span>{task.presentationName}</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
+                                        {process.children.map((child) => renderNode(child))}
                                     </div>
                                 </div>
                             ))}
-
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Container 2 - Work Element Details */}
-            <div className="w-[65%] mb-4">
+            {/* Right side - Work Element Details View */}
+            <div className="w-[60%] mb-4">
                 <WorkElementDetailsView selectedItem={selectedItem} />
             </div>
         </div>

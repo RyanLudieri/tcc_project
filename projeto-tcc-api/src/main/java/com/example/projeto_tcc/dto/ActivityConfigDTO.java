@@ -9,7 +9,11 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class ActivityConfigDTO {
+    private Long processId;
+    private String processName;
+
     private Long activityId;
+    private Long activityConfigId;
     private String name;
     private String type;
     private Long parentId;

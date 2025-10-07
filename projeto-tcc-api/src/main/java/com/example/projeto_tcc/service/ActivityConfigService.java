@@ -172,10 +172,15 @@ public class ActivityConfigService {
                 .toList();
 
         return new ActivityConfigDTO(
+                config.getDeliveryProcess() != null ? config.getDeliveryProcess().getId() : null,
+                config.getDeliveryProcess() != null ? config.getDeliveryProcess().getName() : null,
+
                 config.getActivity().getId(),
+                config.getId(),
                 config.getActivity().getName(),
                 config.getActivity().getType().name(),
                 config.getActivity().getSuperActivity() != null ? config.getActivity().getSuperActivity().getId() : null,
+
                 config.getDependencyType(),
                 config.getTimeBox(),
                 config.getConditionToProcess(),
@@ -186,6 +191,7 @@ public class ActivityConfigService {
                 paramDTO,
                 observers
         );
+
     }
 
     @Transactional
@@ -302,13 +308,14 @@ public class ActivityConfigService {
     }
 
 
+    // GET todos os ActivityConfig e seus observers de um DeliveryProcess
     @Transactional
     public List<ActivityConfigDTO> getActivityByDeliveryProcess(Long deliveryProcessId) {
         List<ActivityConfig> configs = configRepository.findByDeliveryProcessId(deliveryProcessId);
 
         configs.forEach(c -> c.getObservers().size());
 
-        return configs.stream()
+        List<ActivityConfigDTO> dtos = configs.stream()
                 .map(config -> {
                     DistributionParameter param = config.getDistributionParameter();
                     DistributionParameterDTO paramDTO = null;
@@ -327,7 +334,6 @@ public class ActivityConfigService {
                         paramDTO.setBeta(param.getBeta());
                     }
 
-
                     List<ActivityObserverDTO> observers = config.getObservers().stream()
                             .map(obs -> new ActivityObserverDTO(
                                     obs.getId(),
@@ -338,8 +344,11 @@ public class ActivityConfigService {
                             ))
                             .toList();
 
-                    return new ActivityConfigDTO(
+                    ActivityConfigDTO dto = new ActivityConfigDTO(
+                            config.getDeliveryProcess() != null ? config.getDeliveryProcess().getId() : null, // processId
+                            config.getDeliveryProcess() != null ? config.getDeliveryProcess().getName() : null, // processName
                             config.getActivity().getId(),
+                            config.getId(),
                             config.getActivity().getName(),
                             config.getActivity().getType().name(),
                             config.getActivity().getSuperActivity() != null ? config.getActivity().getSuperActivity().getId() : null,
@@ -353,8 +362,18 @@ public class ActivityConfigService {
                             paramDTO,
                             observers
                     );
+
+
+                    if (config.getDeliveryProcess() != null) {
+                        dto.setProcessId(config.getDeliveryProcess().getId());
+                        dto.setProcessName(config.getDeliveryProcess().getName());
+                    }
+
+                    return dto;
                 })
                 .toList();
+
+        return dtos;
     }
 
 
