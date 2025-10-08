@@ -24,6 +24,8 @@ import {
   Area,
   Cell
 } from 'recharts';
+import { API_BASE_URL } from "@/config/api";
+
 
 const ChartWrapper = ({ title, icon, children }) => (
   <Card className="h-[400px] flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">

@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Copy, Download, Save, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { API_BASE_URL } from "@/config/api";
+
 
 const XACDMLExportTab = ({ processId }) => {
   const { toast } = useToast();
@@ -19,7 +21,7 @@ const XACDMLExportTab = ({ processId }) => {
 
   const handleGenerateXACDML = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/xacdml/generate/${processId}?acdId=${acdId}`, {
+      const response = await fetch(`${API_BASE_URL}/xacdml/generate/${processId}?acdId=${acdId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });

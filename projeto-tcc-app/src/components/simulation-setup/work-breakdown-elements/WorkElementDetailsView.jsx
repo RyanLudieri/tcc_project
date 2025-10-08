@@ -8,6 +8,8 @@ import {Edit3, PlusCircle, Save, Trash2} from 'lucide-react';
 import DistributionField from './DistributionField';
 import {useToast} from "@/components/ui/use-toast.js";
 import { Activity } from "lucide-react";
+import { API_BASE_URL } from "@/config/api";
+
 
 
 const FieldSection = ({ title, children }) => {
@@ -48,7 +50,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
 
         const fetchActivityConfig = async () => {
             try {
-                const res = await fetch(`http://localhost:8080/activity-configs/${selectedItem.id}`);
+                const res = await fetch(`${API_BASE_URL}/activity-configs/${selectedItem.id}`);
                 if (!res.ok) throw new Error('Failed to fetch activity config');
                 const data = await res.json();
 
@@ -91,7 +93,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:8080/activity-configs/observers/${selectedItem.activityConfigId}`,
+                `${API_BASE_URL}/activity-configs/observers/${selectedItem.activityConfigId}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -130,7 +132,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:8080/activity-configs/observers/${observerId}`,
+                `${API_BASE_URL}/activity-configs/observers/${observerId}`,
                 { method: "DELETE" }
             );
 
@@ -175,7 +177,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:8080/activity-configs/observers/${id}`,
+                `${API_BASE_URL}/activity-configs/observers/${id}`,
                 {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
@@ -239,7 +241,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:8080/activity-configs/${selectedItem.id}`,
+                `${API_BASE_URL}/activity-configs/${selectedItem.id}`,
                 {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
@@ -304,7 +306,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
             return;
         }
 
-        fetch(`http://localhost:8080/activity-configs/${selectedItem.id}`)
+        fetch(`${API_BASE_URL}/activity-configs/${selectedItem.id}`)
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
                 if (!data) {
@@ -326,7 +328,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                 setQuantity(data.requiredResources);
 
                 // senão, busca o pai pra pegar o nome
-                fetch(`http://localhost:8080/activity-configs/${data.parentId}`)
+                fetch(`${API_BASE_URL}/activity-configs/${data.parentId}`)
                     .then((res) => (res.ok ? res.json() : null))
                     .then((parentData) => {
                         setParentName(parentData?.name || parentData?.presentationName || 'N/A')
@@ -363,7 +365,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:8080/activity-configs/${selectedItem.id}`,
+                `${API_BASE_URL}/activity-configs/${selectedItem.id}`,
                 {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },

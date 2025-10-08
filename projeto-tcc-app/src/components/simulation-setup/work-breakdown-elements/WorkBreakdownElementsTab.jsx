@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import WorkElementDetailsView from "./WorkElementDetailsView.jsx";
 import { NodeIcon } from "../../process-editor/tree/NodeIcon.jsx";
+import { API_BASE_URL } from "@/config/api";
 
 function capitalizeFirst(str) {
     return str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
@@ -14,7 +15,7 @@ const WorkBreakdownElementsTab = ({ processId }) => {
     useEffect(() => {
         if (!processId || processId === "new") return;
 
-        fetch(`http://localhost:8080/activity-configs/process/${processId}`)
+        fetch(`${API_BASE_URL}/activity-configs/process/${processId}`)
             .then((res) => {
                 if (!res.ok) throw new Error("Failed to fetch activities");
                 return res.json();
