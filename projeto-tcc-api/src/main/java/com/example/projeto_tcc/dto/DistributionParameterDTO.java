@@ -9,13 +9,11 @@ public class DistributionParameterDTO {
     private Long id;
     private Double constant;
     private Double mean;
+    private Double average;
     private Double standardDeviation;
-    private Double min;
-    private Double max;
+    private Double low;
+    private Double high;
     private Double shape;
     private Double scale;
-    private Double lambda;
-    private Double alpha;
-    private Double beta;
 }
 

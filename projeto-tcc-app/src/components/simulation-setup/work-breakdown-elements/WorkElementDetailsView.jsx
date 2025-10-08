@@ -123,7 +123,6 @@ const WorkElementDetailsView = ({ selectedItem }) => {
         }
     };
 
-
     const toggleObserverEdit = (id) => {
         setObservers(
             observers.map((o) =>
@@ -182,8 +181,97 @@ const WorkElementDetailsView = ({ selectedItem }) => {
         }
     };
 
+    /* DISTRIBUTION */
+    const saveDistribution = async (newDistribution) => {
+        if (!selectedItem?.id) {
+            toast({
+                title: "Error",
+                description: "Please select a valid Work Breakdown Element first.",
+                variant: "destructive",
+            });
+            return;
+        }
 
+        const bodyToSend = {
+            distributionType: newDistribution.type,
+            distributionParameter: {
+                id: newDistribution.params?.id || null,
+                constant: newDistribution.params?.constant || null,
+                average: newDistribution.params?.average || null,
+                mean: newDistribution.params?.mean || null,
+                standardDeviation: newDistribution.params?.standardDeviation || null,
+                low: newDistribution.params?.low || null,
+                high: newDistribution.params?.high || null,
+                shape: newDistribution.params?.shape || null,
+                scale: newDistribution.params?.scale || null,
+            },
+        };
 
+        try {
+            const res = await fetch(
+                `http://localhost:8080/activity-configs/${selectedItem.id}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(bodyToSend),
+                }
+            );
+
+            if (!res.ok) throw new Error("Failed to update distribution");
+
+            const updated = await res.json();
+
+            setDistribution({
+                type: updated.distributionType,
+                params: updated.distributionParameter,
+            });
+
+            toast({
+                title: "Distribution Updated",
+                description: `Distribution type "${updated.distributionType}" was successfully updated.`,
+            });
+        } catch (err) {
+            console.error("Error updating distribution:", err);
+            toast({
+                title: "Error",
+                description: "Unable to update distribution. Please try again.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    useEffect(() => {
+        if (!selectedItem || !selectedItem.id) return;
+
+        const fetchActivityConfig = async () => {
+            try {
+                const res = await fetch(`http://localhost:8080/activity-configs/${selectedItem.id}`);
+                if (!res.ok) throw new Error('Failed to fetch activity config');
+                const data = await res.json();
+
+                // seta observers
+                setObservers(data.observers || []);
+
+                // seta distribuição
+                if (data.distributionType && data.distributionParameter) {
+                    setDistribution({
+                        type: data.distributionType,
+                        params: data.distributionParameter,
+                    });
+                } else {
+                    setDistribution({ type: 'CONSTANT', params: {} });
+                }
+            } catch (err) {
+                console.error('Failed to fetch activity config:', err);
+                setObservers([]);
+                setDistribution({ type: 'CONSTANT', params: {} });
+            }
+        };
+
+        fetchActivityConfig();
+    }, [selectedItem]);
+
+    /* XACDML */
     useEffect(() => {
         if (!selectedItem) {
             setSpemType('');
@@ -208,24 +296,6 @@ const WorkElementDetailsView = ({ selectedItem }) => {
         } else if (selectedItem.type === 'ACTIVITY'){
             setSpemType('ACTIVITY');
         }
-    }, [selectedItem]);
-
-    useEffect(() => {
-        if (!selectedItem || !selectedItem.id) return;
-
-        const fetchObservers = async () => {
-            try {
-                const res = await fetch(`http://localhost:8080/activity-configs/${selectedItem.id}`);
-                if (!res.ok) throw new Error('Failed to fetch observers');
-                const data = await res.json();
-                setObservers(data.observers || []);
-            } catch (err) {
-                console.error('Failed to fetch observers:', err);
-                setObservers([]);
-            }
-        };
-
-        fetchObservers();
     }, [selectedItem]);
 
 
@@ -255,7 +325,13 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                     {/* Duration / Distribution Field */}
                     <FieldSection title={`Duration for ${selectedItem?.presentationName || '...'}`}>
                         {selectedItem ? (
-                            <DistributionField value={distribution} onChange={setDistribution} />
+                            <DistributionField
+                                value={distribution}
+                                onChange={(updatedDistribution) => {
+                                    setDistribution(updatedDistribution);
+                                    saveDistribution(updatedDistribution);
+                                }}
+                            />
                         ) : (
                             <p className="text-xs text-gray-500">Select an element from the Work Breakdown Elements View</p>
                         )}

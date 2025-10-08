@@ -39,7 +39,6 @@ public class ActivityConfigController {
         return configService.updateActivityConfig(id, dto);
     }
 
-
     // POST cria um novo observer em um ActivityConfig
     @PostMapping("/observers/{activityConfigId}")
     public ObserverActivityDTO addObserver(@PathVariable Long activityConfigId) {

@@ -149,16 +149,14 @@ public class ActivityConfigService {
         if (param != null) {
             paramDTO = new DistributionParameterDTO();
             paramDTO.setId(param.getId());
-            paramDTO.setConstant(param.getConstant());
+            paramDTO.setAverage(param.getAverage());
             paramDTO.setMean(param.getMean());
+            paramDTO.setConstant(param.getConstant());
             paramDTO.setStandardDeviation(param.getStandardDeviation());
-            paramDTO.setMin(param.getMin());
-            paramDTO.setMax(param.getMax());
+            paramDTO.setLow(param.getLow());
+            paramDTO.setHigh(param.getHigh());
             paramDTO.setShape(param.getShape());
             paramDTO.setScale(param.getScale());
-            paramDTO.setLambda(param.getLambda());
-            paramDTO.setAlpha(param.getAlpha());
-            paramDTO.setBeta(param.getBeta());
         }
 
         List<ActivityObserverDTO> observers = config.getObservers().stream()
@@ -211,16 +209,14 @@ public class ActivityConfigService {
         DistributionParameterDTO paramDTO = dto.getDistributionParameter();
         DistributionParameter param = config.getDistributionParameter();
         if (paramDTO != null && param != null) {
-            if (paramDTO.getConstant() != null) param.setConstant(paramDTO.getConstant());
-            if (paramDTO.getMean() != null) param.setMean(paramDTO.getMean());
-            if (paramDTO.getStandardDeviation() != null) param.setStandardDeviation(paramDTO.getStandardDeviation());
-            if (paramDTO.getMin() != null) param.setMin(paramDTO.getMin());
-            if (paramDTO.getMax() != null) param.setMax(paramDTO.getMax());
-            if (paramDTO.getShape() != null) param.setShape(paramDTO.getShape());
-            if (paramDTO.getScale() != null) param.setScale(paramDTO.getScale());
-            if (paramDTO.getLambda() != null) param.setLambda(paramDTO.getLambda());
-            if (paramDTO.getAlpha() != null) param.setAlpha(paramDTO.getAlpha());
-            if (paramDTO.getBeta() != null) param.setBeta(paramDTO.getBeta());
+            param.setConstant(paramDTO.getConstant());
+            param.setStandardDeviation(paramDTO.getStandardDeviation());
+            param.setLow(paramDTO.getLow());
+            param.setAverage(paramDTO.getAverage());
+            param.setMean(paramDTO.getMean());
+            param.setHigh(paramDTO.getHigh());
+            param.setShape(paramDTO.getShape());
+            param.setScale(paramDTO.getScale());
         }
 
         configRepository.save(config);
@@ -323,15 +319,13 @@ public class ActivityConfigService {
                         paramDTO = new DistributionParameterDTO();
                         paramDTO.setId(param.getId());
                         paramDTO.setConstant(param.getConstant());
-                        paramDTO.setMean(param.getMean());
                         paramDTO.setStandardDeviation(param.getStandardDeviation());
-                        paramDTO.setMin(param.getMin());
-                        paramDTO.setMax(param.getMax());
+                        paramDTO.setLow(param.getLow());
+                        paramDTO.setAverage(param.getAverage());
+                        paramDTO.setMean(param.getMean());
+                        paramDTO.setHigh(param.getHigh());
                         paramDTO.setShape(param.getShape());
                         paramDTO.setScale(param.getScale());
-                        paramDTO.setLambda(param.getLambda());
-                        paramDTO.setAlpha(param.getAlpha());
-                        paramDTO.setBeta(param.getBeta());
                     }
 
                     List<ActivityObserverDTO> observers = config.getObservers().stream()
