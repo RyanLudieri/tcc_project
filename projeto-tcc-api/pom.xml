@@ -89,6 +89,19 @@
             <artifactId>lombok</artifactId>
             <version>1.18.36</version>
         </dependency>
+
+		<dependency>
+			<groupId>simula</groupId>
+			<artifactId>simulation-manager</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jfree</groupId>
+			<artifactId>jfreechart</artifactId>
+			<version>1.5.4</version>
+		</dependency>
+
     </dependencies>
 
 	<build>

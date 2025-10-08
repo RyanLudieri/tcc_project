@@ -34,3 +34,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# =======================================================
+# EXCEÇÃO PARA A BIBLIOTECA DE SIMULAÇÃO
+# Ignora todos os arquivos .jar, exceto o nosso.
+# =======================================================
+*.jar
+!/libs/simulation-manager-1.0-SNAPSHOT.jar

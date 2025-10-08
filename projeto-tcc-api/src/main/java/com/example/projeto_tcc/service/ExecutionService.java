@@ -12,7 +12,7 @@ public class ExecutionService {
 
         // 1. Obtém o ClassLoader da thread atual. Este ClassLoader "conhece"
         //    todas as classes da sua aplicação Spring Boot.
-        ClassLoader parentClassLoader = Thread.currentThread().getContextClassLoader();
+        ClassLoader parentClassLoader = ExecutionService.class.getClassLoader();
 
         // 2. Cria o compilador Janino, passando o nosso ClassLoader como "pai".
         //    Agora, o compilador herdará todo o conhecimento do nosso app.
