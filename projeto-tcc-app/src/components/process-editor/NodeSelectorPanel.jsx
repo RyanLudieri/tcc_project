@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { motion } from 'framer-motion';
-import { initialNodeTypes } from '@/components/process-editor/nodeTypes'; // Import from new location
+import { initialNodeTypes } from '@/components/process-editor/nodeTypes';
 
 // This component might not be directly used if AddNodeDialog handles type selection directly.
 // However, keeping it for now as it defines the visual representation of node types.
@@ -18,11 +18,11 @@ const NodeSelectorPanel = ({ onNodeSelect, parentNodeType, hasRootNode }) => {
         return [];
     }
     if (parentNodeType) {
-      // Example restriction: TaskDescriptor cannot have Activity as child
+      // TaskDescriptor cannot have Activity as child
       if (parentNodeType === 'Task') {
         return initialNodeTypes.filter(nt => nt.name !== 'Activity' && nt.name !== 'Process');
       }
-      // Process node can only have Phase as direct child (example rule)
+      // Process node can only have Phase as direct child
       if (parentNodeType === 'Process') {
          return initialNodeTypes.filter(nt => nt.name === 'Phase');
       }
