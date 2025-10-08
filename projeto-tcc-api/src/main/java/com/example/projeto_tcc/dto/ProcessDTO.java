@@ -8,28 +8,12 @@ import java.util.List;
 
 @Data
 public class ProcessDTO {
-
     private String name;
-
-
     private Integer index;
-
-
     private String modelInfo;
-
-
     private ProcessType type;
-
-
     private List<ProcessElementDTO> processElements;
-
-
     private List<MethodElementDTO> methodElements;
-
-
-    private List<Activity> predecessors; // Corrigido para aceitar qualquer elemento de processo (Activity)
-
+    private List<Activity> predecessors;
     private boolean optional;
-
-
 }

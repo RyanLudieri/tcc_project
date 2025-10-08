@@ -20,6 +20,10 @@ public class DeliveryProcess extends Process {
     @JsonManagedReference
     private List<WorkProductConfig> workProductConfigs = new ArrayList<>();
 
+    @OneToMany(mappedBy = "deliveryProcess", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<ActivityConfig> activityConfigs = new ArrayList<>();
+
 }
 
 

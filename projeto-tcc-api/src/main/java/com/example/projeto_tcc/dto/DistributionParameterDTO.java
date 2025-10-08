@@ -1,6 +1,8 @@
 package com.example.projeto_tcc.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 public class DistributionParameterDTO {

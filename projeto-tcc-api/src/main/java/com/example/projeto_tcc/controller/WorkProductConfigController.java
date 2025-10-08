@@ -4,6 +4,7 @@ import com.example.projeto_tcc.dto.ObserverUpdateDTO;
 import com.example.projeto_tcc.dto.WorkProductConfigDTO;
 import com.example.projeto_tcc.entity.MethodElementObserver;
 import com.example.projeto_tcc.entity.WorkProductConfig;
+import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.service.WorkProductConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,26 +18,33 @@ import java.util.List;
 @CrossOrigin(origins = "*") // permite chamadas do frontend
 public class WorkProductConfigController {
 
-    private final WorkProductConfigService service;
+    private final WorkProductConfigService workProductConfigService;
 
     @GetMapping("/process/{deliveryProcessId}")
     public List<WorkProductConfigDTO> getByDeliveryProcess(@PathVariable Long deliveryProcessId) {
-        return service.getWorkProductsByDeliveryProcess(deliveryProcessId);
+        return workProductConfigService.getWorkProductsByDeliveryProcess(deliveryProcessId);
     }
+
+
 
 
     @PatchMapping("/{id}")
     public ResponseEntity<WorkProductConfigDTO> updateWorkProductConfig(
             @PathVariable Long id,
             @RequestBody WorkProductConfigDTO dto) {
-        return ResponseEntity.ok(service.updateWorkProductConfig(id, dto));
+        return ResponseEntity.ok(workProductConfigService.updateWorkProductConfig(id, dto));
     }
 
 
     // POST - adicionar observer
-    @PostMapping("/{id}/observers")
-    public ResponseEntity<MethodElementObserver> addObserver(@PathVariable Long id) {
-        return ResponseEntity.ok(service.addObserverToWorkProductConfig(id));
+    @PostMapping("/{workProductConfigId}/observers")
+    public ResponseEntity<MethodElementObserver> addObserver(
+            @PathVariable Long workProductConfigId,
+            @RequestParam(name = "type", required = false) ObserverMethodElementType type) {
+        MethodElementObserver observer = workProductConfigService.addObserverToWorkProductConfig(
+                workProductConfigId,
+                type != null ? type : ObserverMethodElementType.NONE);
+        return ResponseEntity.ok(observer);
     }
 
     // PATCH - atualizar observer
@@ -44,7 +52,7 @@ public class WorkProductConfigController {
     public ResponseEntity<MethodElementObserver> updateObserver(
             @PathVariable Long observerId,
             @RequestBody ObserverUpdateDTO dto) {
-        return ResponseEntity.ok(service.updateObserver(observerId, dto));
+        return ResponseEntity.ok(workProductConfigService.updateObserver(observerId, dto));
     }
 
     // DELETE - remover observer
@@ -52,7 +60,7 @@ public class WorkProductConfigController {
     public ResponseEntity<Void> removeObserver(
             @PathVariable Long id,
             @PathVariable Long observerId) {
-        service.removeObserverFromWorkProductConfig(id, observerId);
+        workProductConfigService.removeObserverFromWorkProductConfig(id, observerId);
         return ResponseEntity.noContent().build();
     }
 

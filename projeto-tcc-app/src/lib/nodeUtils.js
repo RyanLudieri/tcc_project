@@ -8,7 +8,7 @@ export const arrayMove = (array, from, to) => {
 };
 
 export const generateNodeIndices = (nodes) => {
-  const nodesWithIndices = [...nodes]; 
+  const nodesWithIndices = [...nodes];
   let typeNodeCounter = 1;
 
   nodesWithIndices.forEach(node => {
@@ -16,10 +16,10 @@ export const generateNodeIndices = (nodes) => {
       node.index = typeNodeCounter.toString();
       typeNodeCounter++;
     } else {
-      node.index = ''; 
+      node.index = '';
     }
   });
-  
+
   return nodesWithIndices.map(({ children, ...node }) => node);
 };
 
@@ -29,9 +29,9 @@ const mapFrontendTypeToBackendProcessType = (type) => {
     "Iteration": "ITERATION",
     "Milestone": "MILESTONE",
     "Activity": "ACTIVITY",
-    "Task": "TASK_DESCRIPTOR", 
+    "Task": "TASK_DESCRIPTOR",
   };
-  return mapping[type] || type.toUpperCase(); 
+  return mapping[type] || type.toUpperCase();
 };
 
 const mapFrontendTypeToBackendMethodType = (type) => {
@@ -44,59 +44,75 @@ const mapFrontendTypeToBackendMethodType = (type) => {
 
 const buildProcessElementsRecursive = (nodes, parentId, allNodes) => {
   return nodes
-    .filter(node => node.parentId === parentId)
-    .filter(node => ["Phase", "Iteration", "Milestone", "Activity", "Task"].includes(node.type))
-    .map(node => {
-      const predecessorsNames = (node.predecessors || [])
-        .map(pId => allNodes.find(n => n.id === pId)?.presentationName)
-        .filter(name => name);
+      .filter(node => node.parentId === parentId)
+      .filter(node => ["Phase", "Iteration", "Milestone", "Activity", "Task"].includes(node.type))
+      .map(node => {
+        // Predecessores aqui devem ser índices (inteiros)
+        const predecessorsIndices = (node.predecessors || [])
+            .map(pId => {
+              const predNode = allNodes.find(n => n.id === pId);
+              return predNode ? parseInt(predNode.index, 10) : null;
+            })
+            .filter(index => Number.isFinite(index));
 
-      return {
-        name: node.presentationName,
-        type: mapFrontendTypeToBackendProcessType(node.type),
-        predecessors: predecessorsNames,
-        optional: false,
-        children: buildProcessElementsRecursive(nodes, node.id, allNodes),
-      };
-    });
+        return {
+          name: node.presentationName,
+          type: mapFrontendTypeToBackendProcessType(node.type),
+          predecessors: predecessorsIndices,
+          optional: false,
+          children: buildProcessElementsRecursive(nodes, node.id, allNodes),
+        };
+      });
 };
 
 export const transformNodesForBackend = (nodes) => {
   const processNode = nodes.find(node => node.type === 'Process' && !node.parentId);
   if (!processNode) {
     console.error("Process node not found");
-    return null; 
+    return null;
   }
 
   const processElements = buildProcessElementsRecursive(nodes, processNode.id, nodes);
-  
+
   const methodElements = nodes
-    .filter(node => ["Artifact", "Role"].includes(node.type))
-    .map(node => {
-      const parentNode = nodes.find(p => p.id === node.parentId);
-      const parentIndex = parentNode ? parseInt(parentNode.index, 10) : null;
+      .filter(node => ["Artifact", "Role"].includes(node.type))
+      .map(node => {
+        const parentNode = nodes.find(p => p.id === node.parentId);
+        const parentIndex = parentNode ? parseInt(parentNode.index, 10) : null;
 
-      return {
-        name: node.presentationName,
-        type: mapFrontendTypeToBackendMethodType(node.type),
-        modelInfo: node.modelInfo
-            ? node.modelInfo
-                .split(" ")
-                .map(str => str.toUpperCase())
-                .join("_")
-            : "",
-        optional: false,
-        parentIndex: Number.isFinite(parentIndex) ? parentIndex : null,
-      };
-    });
+        return {
+          name: node.presentationName,
+          type: mapFrontendTypeToBackendMethodType(node.type),
+          modelInfo: node.modelInfo
+              ? node.modelInfo
+                  .split(" ")
+                  .map(str => str.toUpperCase())
+                  .join("_")
+              : "",
+          optional: false,
+          parentIndex: Number.isFinite(parentIndex) ? parentIndex : null,
+        };
+      });
 
-  const rootPredecessorsNames = (processNode.predecessors || [])
-    .map(pId => nodes.find(n => n.id === pId)?.presentationName)
-    .filter(name => name);
+  // Predecessores da raiz precisam ser "Activity-like" porque o backend espera List<Activity>
+  const rootPredecessors = (processNode.predecessors || [])
+      .map(pId => {
+        const predNode = nodes.find(n => n.id === pId);
+        if (!predNode) return null;
+        return {
+          name: predNode.presentationName,
+          type: mapFrontendTypeToBackendProcessType(predNode.type),
+          index: parseInt(predNode.index, 10) || null,
+          modelInfo: predNode.modelInfo || "",
+          optional: false,
+          children: []
+        };
+      })
+      .filter(Boolean);
 
   return {
     name: processNode.presentationName,
-    predecessors: rootPredecessorsNames,
+    predecessors: rootPredecessors, // agora manda objetos "Activity"
     processElements: processElements,
     optional: false,
     methodElements: methodElements,
@@ -114,7 +130,7 @@ export const getFlatNodes = (nodes) => {
     });
   };
   flatten(nodes);
-  return flatNodes.map(({ children, ...node }) => node); 
+  return flatNodes.map(({ children, ...node }) => node);
 };
 
 export const findNode = (nodes, nodeId) => {
@@ -131,8 +147,8 @@ export const insertNode = (nodes, newNode) => {
 };
 
 export const updateNode = (nodes, nodeId, updates) => {
-  return nodes.map(node => 
-    node.id === nodeId ? { ...node, ...updates } : node
+  return nodes.map(node =>
+      node.id === nodeId ? { ...node, ...updates } : node
   );
 };
 
@@ -159,7 +175,7 @@ export const getDragDepth = (nodeId, nodes) => {
     if (!node || !node.parentId) break;
     depth++;
     currentId = node.parentId;
-    if (findNode(nodes, currentId)?.type === 'Process') break; 
+    if (findNode(nodes, currentId)?.type === 'Process') break;
   }
   return depth;
 };

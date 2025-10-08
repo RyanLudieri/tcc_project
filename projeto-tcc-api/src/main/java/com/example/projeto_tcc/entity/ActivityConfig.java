@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.entity;
 
 import com.example.projeto_tcc.enums.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -19,7 +20,9 @@ public class ActivityConfig {
     private Activity activity;
 
     @OneToMany(mappedBy = "activityConfig", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<ActivityObserver> observers = new ArrayList<>();
+
 
     @OneToOne(cascade = CascadeType.ALL)
     private Sample sample;

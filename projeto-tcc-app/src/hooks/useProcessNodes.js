@@ -18,6 +18,23 @@ import {
 } from '@/lib/nodeUtils';
 import { useToast } from "@/components/ui/use-toast";
 
+const ALLOWED_CHILDREN = {
+  Process: ["Phase"],
+  Phase: ["Iteration", "Milestone", "Activity", "Task"],
+  Iteration: ["Milestone", "Activity", "Task"],
+  Activity: ["Activity", "Task", "Milestone"],
+  Task: ["Artifact", "Role"],
+  Milestone: [],
+  Artifact: [],
+  Role: [],
+};
+
+const canInsert = (parentType, childType) => {
+  if (!parentType || !childType) return false;
+  const allowed = ALLOWED_CHILDREN[parentType] || [];
+  return allowed.includes(childType);
+};
+
 const initialNodesData = [
   {
     id: 'root-process',
@@ -62,33 +79,34 @@ const initialNodesData = [
                 predecessors: [],
                 description: 'Preparar os tópicos da reunião.',
                 modelInfo: 'Essencial',
-                children: []
-              },
-              {
-                id: uuidv4(),
-                optional: false,
-                presentationName: 'Apresentação do Projeto',
-                type: 'Artifact',
-                index: null, 
-                parentId: null, 
-                predecessors: [],
-                description: 'Slides com visão geral do projeto.',
-                modelInfo: 'Output',
-                children: []
+                children: [
+                  {
+                    id: uuidv4(),
+                    optional: false,
+                    presentationName: 'Apresentação do Projeto',
+                    type: 'Artifact',
+                    index: null,
+                    parentId: null,
+                    predecessors: [],
+                    description: 'Slides com visão geral do projeto.',
+                    modelInfo: 'Output',
+                    children: []
+                  },
+                  {
+                    id: uuidv4(),
+                    optional: false,
+                    presentationName: 'Analista de Requisitos',
+                    type: 'Role',
+                    index: null,
+                    parentId: null,
+                    predecessors: [],
+                    description: 'Responsável por levantar e documentar requisitos.',
+                    modelInfo: 'Primary Performer',
+                    children: []
+                  }
+                ]
               }
             ]
-          },
-          {
-            id: uuidv4(),
-            optional: false,
-            presentationName: 'Analista de Requisitos',
-            type: 'Role',
-            index: null,
-            parentId: null, 
-            predecessors: [],
-            description: 'Responsável por levantar e documentar requisitos.',
-            modelInfo: 'Primary Performer',
-            children: []
           }
         ]
       },
@@ -125,41 +143,42 @@ const initialNodesData = [
                 description: 'Implementar a funcionalidade X.',
                 modelInfo: '',
                 children: [
-                   {
+                  {
                     id: uuidv4(),
-                     optional: false,
-                     presentationName: 'Codificar Módulo A',
+                    optional: false,
+                    presentationName: 'Codificar Módulo A',
                     type: 'Task',
                     index: "7",
                     parentId: null,
                     predecessors: [],
                     description: 'Escrever o código para o módulo A.',
                     modelInfo: '',
-                    children: []
-                  },
-                  {
-                    id: uuidv4(),
-                    optional: false,
-                    presentationName: 'Desenvolvedor Backend',
-                    type: 'Role',
-                    index: null,
-                    parentId: null,
-                    predecessors: [],
-                    description: 'Responsável pela lógica do servidor.',
-                    modelInfo: 'Primary Performer',
-                    children: []
-                  },
-                   {
-                    id: uuidv4(),
-                     optional: false,
-                     presentationName: 'Código Fonte Feature X',
-                    type: 'Artifact',
-                    index: null,
-                    parentId: null,
-                    predecessors: [],
-                    description: 'Repositório com o código da funcionalidade X.',
-                    modelInfo: 'Output',
-                    children: []
+                    children: [
+                      {
+                        id: uuidv4(),
+                        optional: false,
+                        presentationName: 'Desenvolvedor Backend',
+                        type: 'Role',
+                        index: null,
+                        parentId: null,
+                        predecessors: [],
+                        description: 'Responsável pela lógica do servidor.',
+                        modelInfo: 'Primary Performer',
+                        children: []
+                      },
+                      {
+                        id: uuidv4(),
+                        optional: false,
+                        presentationName: 'Código Fonte Feature X',
+                        type: 'Artifact',
+                        index: null,
+                        parentId: null,
+                        predecessors: [],
+                        description: 'Repositório com o código da funcionalidade X.',
+                        modelInfo: 'Output',
+                        children: []
+                      }
+                    ]
                   }
                 ]
               }
@@ -204,73 +223,98 @@ const initialNodesData = [
               {
                 id: uuidv4(),
                 optional: false,
-                presentationName: 'Relatório de Testes',
-                type: 'Artifact',
-                index: null,
+                presentationName: 'Conferir funcionalidade X',
+                type: 'Task',
+                index: "11",
                 parentId: null,
                 predecessors: [],
-                description: 'Documento com os resultados dos testes.',
-                modelInfo: 'Output',
-                children: []
-              },
-              {
-                id: uuidv4(),
-                optional: false,
-                presentationName: 'Engenheiro de QA',
-                type: 'Role',
-                index: null,
-                parentId: null,
-                predecessors: [],
-                description: 'Responsável pela execução dos testes.',
-                modelInfo: 'Primary Performer',
-                children: []
+                description: 'Escrever o código para o módulo A.',
+                modelInfo: '',
+                children: [
+                  {
+                    id: uuidv4(),
+                    optional: false,
+                    presentationName: 'Relatório de Testes',
+                    type: 'Artifact',
+                    index: null,
+                    parentId: null,
+                    predecessors: [],
+                    description: 'Documento com os resultados dos testes.',
+                    modelInfo: 'Output',
+                    children: []
+                  },
+                  {
+                    id: uuidv4(),
+                    optional: false,
+                    presentationName: 'Engenheiro de QA',
+                    type: 'Role',
+                    index: null,
+                    parentId: null,
+                    predecessors: [],
+                    description: 'Responsável pela execução dos testes.',
+                    modelInfo: 'Primary Performer',
+                    children: []
+                  }
+                ]
               }
             ]
-          }
-        ]
-      },
-       {
-        id: uuidv4(),
-         optional: false,
-         presentationName: 'Fase de Implantação',
-        type: 'Phase',
-        index: "11",
-        parentId: 'root-process',
-        predecessors: [],
-        description: 'Colocar o software em produção.',
-        modelInfo: '',
-        children: [
-          {
-            id: uuidv4(),
-            optional: false,
-            presentationName: 'Deploy em Produção',
-            type: 'Activity',
-            index: "12",
-            parentId: null,
-            predecessors: [],
-            description: 'Publicar a nova versão do software.',
-            modelInfo: '',
-            children: []
           },
           {
             id: uuidv4(),
             optional: false,
-            presentationName: 'Manual do Usuário',
-            type: 'Artifact',
-            index: null,
-            parentId: null,
+            presentationName: 'Fase de Implantação',
+            type: 'Phase',
+            index: "12",
+            parentId: 'root-process',
             predecessors: [],
-            description: 'Guia para usuários finais.',
-            modelInfo: 'Output',
-            children: []
+            description: 'Colocar o software em produção.',
+            modelInfo: '',
+            children: [
+              {
+                id: uuidv4(),
+                optional: false,
+                presentationName: 'Deploy em Produção',
+                type: 'Activity',
+                index: "13",
+                parentId: null,
+                predecessors: [],
+                description: 'Publicar a nova versão do software.',
+                modelInfo: '',
+                children: [
+                  {
+                    id: uuidv4(),
+                    optional: false,
+                    presentationName: 'Fazer deploy',
+                    type: 'Task',
+                    index: "14",
+                    parentId: null,
+                    predecessors: [],
+                    description: 'Publicar a nova versão do software.',
+                    modelInfo: '',
+                    children: [
+                      {
+                        id: uuidv4(),
+                        optional: false,
+                        presentationName: 'Manual do Usuário',
+                        type: 'Artifact',
+                        index: null,
+                        parentId: null,
+                        predecessors: [],
+                        description: 'Guia para usuários finais.',
+                        modelInfo: 'Output',
+                        children: []
+                      }
+                    ]
+                  },
+                ]
+              },
+            ]
           }
         ]
       }
     ]
   }
 ];
-
-
 const assignParentIds = (nodes, parentId = null) => {
   return nodes.map(node => {
     const newNode = { ...node, parentId: parentId };
@@ -280,11 +324,11 @@ const assignParentIds = (nodes, parentId = null) => {
     return newNode;
   });
 };
-
 const initialNodesWithParents = assignParentIds(initialNodesData);
 const flattenedInitialNodes = getFlatNodes(initialNodesWithParents);
 
 export const useProcessNodes = (processId) => {
+
   const { toast } = useToast();
   const [nodes, setNodes] = useState(() => {
     const savedNodes = localStorage.getItem(`processNodes_${processId}`);
@@ -315,7 +359,6 @@ export const useProcessNodes = (processId) => {
   const [dropTargetInfo, setDropTargetInfo] = useState(null);
   const activeDragItem = activeDragItemId ? findNode(nodes, activeDragItemId) : null;
 
-
   useEffect(() => {
     try {
       localStorage.setItem(`processNodes_${processId}`, JSON.stringify(nodes));
@@ -341,6 +384,10 @@ export const useProcessNodes = (processId) => {
   const addNodeInternal = useCallback((nodeData, parentId = null) => {
     const actualParentId = parentId || (selectedNodeId || (nodes.find(n => n.type === 'Process') || nodes[0])?.id);
     const parentNode = findNode(nodes, actualParentId);
+
+    if (!canInsert(parentNode?.type, nodeData.type)) {
+      return { success: false, error: `Not allowed to insert "${nodeData.type}" inside "${parentNode?.type || 'Root'}".` };
+    }
 
     let newIndex = null;
     if (nodeData.type !== 'Artifact' && nodeData.type !== 'Role') {
@@ -434,34 +481,36 @@ export const useProcessNodes = (processId) => {
        setOpenStates({});
     }
   }, [nodes]);
-  
+
   const reorderAndReindexNodes = (newOrderedNodes) => {
-    const reindexRecursively = (items, currentParentId = null, prefix = "") => {
-      let elementCounter = 1;
-      items.forEach(item => {
-        if (item.parentId === currentParentId) {
-          if (item.type !== 'Artifact' && item.type !== 'Role') {
-            item.index = prefix ? `${prefix}.${elementCounter}` : `${String(elementCounter)}`;
-            elementCounter++;
-          } else {
-            item.index = null; 
-          }
-          const childrenOfCurrentItem = newOrderedNodes.filter(n => n.parentId === item.id);
-          if (childrenOfCurrentItem.length > 0) {
-            reindexRecursively(childrenOfCurrentItem, item.id, item.index || prefix); 
-          }
-        }
-      });
+    let counter = 1;
+
+    const assignFlatIndices = (nodesList, parentId = null) => {
+      // pega nós filhos de parentId na ordem em que aparecem
+      nodesList
+          .filter(n => n.parentId === parentId)
+          .forEach(node => {
+            // só indexa se não for Artifact nem Role
+            if (node.type !== 'Artifact' && node.type !== 'Role') {
+              node.index = String(counter++);
+            } else {
+              node.index = null;
+            }
+
+            // continua recursivamente nos filhos
+            assignFlatIndices(nodesList, node.id);
+          });
     };
-  
+
+    // começa a partir do root Process
     const rootProcessNode = newOrderedNodes.find(n => n.type === 'Process');
     const rootParentId = rootProcessNode ? rootProcessNode.id : null;
-    
-    const topLevelNodes = newOrderedNodes.filter(node => node.parentId === rootParentId || (rootParentId === null && !node.parentId));
-    reindexRecursively(topLevelNodes, rootParentId, "");
+
+    assignFlatIndices(newOrderedNodes, rootParentId);
 
     return newOrderedNodes;
   };
+
 
   const handleDragStartLogic = useCallback((draggedNodeId) => {
     setActiveDragItemId(draggedNodeId);
@@ -493,7 +542,7 @@ export const useProcessNodes = (processId) => {
     const isDirectChildAttempt = activeNode.parentId === overNode.id;
 
     if (position === 'child' && overNode.type === 'Artifact' || overNode.type === 'Role') {
-        position = 'after'; 
+        position = 'after';
     }
     if (activeNode.type === 'Process') {
         setDropTargetInfo(null);
@@ -504,14 +553,27 @@ export const useProcessNodes = (processId) => {
             position = 'after';
         }
     }
-  
+
+    let tentativeParent = null;
+
+    if (position === 'child') {
+      tentativeParent = overNode; // will become child of overNode
+    } else if (position === 'before' || position === 'after') {
+      tentativeParent = findNode(nodes, overNode.parentId); // keeps overNode's parent
+    }
+
+    if (!canInsert(tentativeParent?.type, activeNode.type)) {
+      setDropTargetInfo(null);
+      return;
+    }
+
+
     setDropTargetInfo({
       nodeId: overNode.id,
       position: position,
       depth: overNodeDepth,
     });
   }, [nodes]);
-  
 
   const handleDragEndLogicInternal = (activeId, currentDropTargetInfo) => {
     setActiveDragItemId(null);
@@ -520,52 +582,55 @@ export const useProcessNodes = (processId) => {
     if (!currentDropTargetInfo || !activeId || activeId === currentDropTargetInfo.nodeId) {
       return { success: false, error: "No valid drop target." };
     }
-  
+
     const activeNode = findNode(nodes, activeId);
-    const overNode = findNode(nodes, currentDropTargetInfo.nodeId);
-  
+    const overNode   = findNode(nodes, currentDropTargetInfo.nodeId);
     if (!activeNode || !overNode) {
       return { success: false, error: "Node not found." };
     }
     if (activeNode.type === 'Process') {
-      return { success: false, error: "Process node cannot be moved." };
-    }
-     if (currentDropTargetInfo.position === 'child' && (overNode.type === 'Task' || overNode.type === 'Milestone') && activeNode.type !== 'Artifact' && activeNode.type !== 'Role') {
-      return { success: false, error: `Cannot make ${activeNode.type} a child of ${overNode.type}.` };
-    }
-    if (currentDropTargetInfo.position === 'child' && (overNode.type === 'Artifact' || overNode.type === 'Role')) {
-      return { success: false, error: `Cannot make ${activeNode.type} a child of ${overNode.type}.` };
+      return { success: false, error: "The root Process node cannot be moved." };
     }
 
-    let newNodes = [...nodes];
-    const originalNodeArrayIndex = newNodes.findIndex(n => n.id === activeNode.id);
-    const [movedNode] = newNodes.splice(originalNodeArrayIndex, 1); 
-  
-    let targetNodeArrayIndex = newNodes.findIndex(n => n.id === overNode.id);
-    let newParentId = overNode.parentId;
-    let insertionIndex = targetNodeArrayIndex;
-  
-    if (currentDropTargetInfo.position === 'before') {
-      newParentId = overNode.parentId;
-      insertionIndex = targetNodeArrayIndex;
-    } else if (currentDropTargetInfo.position === 'after') {
-      newParentId = overNode.parentId;
-      insertionIndex = targetNodeArrayIndex + 1;
-    } else { 
-      newParentId = overNode.id;
-      const childrenOfOver = newNodes.filter(n => n.parentId === overNode.id);
-      insertionIndex = targetNodeArrayIndex + 1 + childrenOfOver.length;
+    // ✅ NEW: determine new parent and validate with centralized rules
+    let newParentId;
+    if (currentDropTargetInfo.position === 'child') {
+      newParentId = overNode.id;            // will become a child of overNode
+    } else {
+      newParentId = overNode.parentId;      // before/after keeps overNode's parent
     }
-    
+    const newParentNode = findNode(nodes, newParentId);
+    if (!canInsert(newParentNode?.type, activeNode.type)) {
+      return {
+        success: false,
+        error: `Not allowed to move "${activeNode.type}" inside "${newParentNode?.type || 'Root'}".`
+      };
+    }
+
+    // Move and reindex (your current flow)
+    let newNodes = [...nodes];
+    const fromIdx = newNodes.findIndex(n => n.id === activeNode.id);
+    const [movedNode] = newNodes.splice(fromIdx, 1);
+
+    const overIdx = newNodes.findIndex(n => n.id === overNode.id);
+    let insertionIndex = overIdx;
+
+    if (currentDropTargetInfo.position === 'before') {
+      insertionIndex = overIdx;
+    } else if (currentDropTargetInfo.position === 'after') {
+      insertionIndex = overIdx + 1;
+    } else { // child
+      const childrenOfOver = newNodes.filter(n => n.parentId === overNode.id);
+      insertionIndex = overIdx + 1 + childrenOfOver.length;
+    }
+
     movedNode.parentId = newParentId;
     newNodes.splice(insertionIndex, 0, movedNode);
-    
-    const reorderedNodes = reorderAndReindexNodes([...newNodes]); 
-  
+
+    const reorderedNodes = reorderAndReindexNodes([...newNodes]);
     setNodes(reorderedNodes);
-    if (newParentId) {
-      setOpenStates(prev => ({ ...prev, [newParentId]: true }));
-    }
+    if (newParentId) setOpenStates(prev => ({ ...prev, [newParentId]: true }));
+
     return { success: true, message: `"${activeNode.presentationName}" was reorganized.` };
   };
   
@@ -579,6 +644,11 @@ export const useProcessNodes = (processId) => {
   const getChildNodes = useCallback((parentId) => {
     return nodes.filter(node => node.parentId === parentId);
   }, [nodes]);
+
+  const getAllowedChildTypes = useCallback((parentType) => {
+    if (!parentType) return [];
+    return ALLOWED_CHILDREN[parentType] || [];
+  }, []);
 
   return {
     nodes,
@@ -601,6 +671,7 @@ export const useProcessNodes = (processId) => {
     transformNodesForBackend,
     findNode: (nodeId) => findNode(nodes, nodeId),
     getChildNodes,
+    getAllowedChildTypes,
     flattenedNodes: getFlatNodes(assignParentIds(nodes)), 
   };
 };

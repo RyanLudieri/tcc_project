@@ -63,6 +63,10 @@ public class ProcessService {
         deliveryProcess.setType(ProcessType.DELIVERY_PROCESS);
         deliveryProcess.setIndex(currentIndex++);
         deliveryProcess.setOptional(dto.isOptional());
+//        deliveryProcess.setSimulationObjective(dto.getSimulationObjective());
+
+        deliveryProcess = repository.save(deliveryProcess);
+
 
         // Criação da estrutura de decomposição (WBS)
         WorkBreakdownStructure wbs = new WorkBreakdownStructure();
@@ -86,8 +90,9 @@ public class ProcessService {
 
         // ⬇️ Cria configurações padrão (Sample, Observer, DurationMeasurement) para cada Activity
         for (Activity activity : elements) {
-            activityConfigService.createDefaultConfigsRecursively(activity);
+            activityConfigService.createDefaultConfigsRecursively(activity, deliveryProcess);
         }
+
 
 
         wbs.setProcessElements(elements);
@@ -105,7 +110,7 @@ public class ProcessService {
 
         // Associa a WBS ao processo
         deliveryProcess.setWbs(wbs);
-        deliveryProcess = repository.save(deliveryProcess);
+//        deliveryProcess = repository.save(deliveryProcess);
 
         // Passa a lista raiz (elements) em vez da lista achatada para gerar configurações
         workProductConfigService.generateConfigurations(methodElements, elements, deliveryProcess);
@@ -315,6 +320,8 @@ public class ProcessService {
 
         return dto;
     }
+
+
 }
 
 

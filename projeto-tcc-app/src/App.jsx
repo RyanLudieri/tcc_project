@@ -5,8 +5,8 @@ import Navbar from "@/components/Navbar.jsx";
 import HomePage from "@/pages/HomePage.jsx";
 import ProcessLibraryPage from "@/pages/ProcessLibraryPage.jsx";
 import ProcessEditor from "@/pages/ProcessEditor.jsx";
-import SimulationSetupPage from "@/pages/SimulationSetupPage.jsx";
-import SimulationResultsPage from "@/pages/SimulationResultsPage.jsx";
+import SimulationSetup from "@/pages/SimulationSetup.jsx";
+import SimulationResults from "@/pages/SimulationResults.jsx";
 import LoginPage from "@/components/auth/LoginPage.jsx";
 import { TooltipProvider } from "@/components/ui/tooltip.jsx";
 import { AuthProvider } from "@/contexts/SupabaseAuthContext.jsx";
@@ -28,11 +28,11 @@ function App() {
               />
               <Route 
                 path="/processes/:id/simulate" 
-                element={<SimulationSetupPage />} 
+                element={<SimulationSetup />}
               />
               <Route 
                 path="/processes/:id/results" 
-                element={<SimulationResultsPage />} 
+                element={<SimulationResults />}
               /> 
             </Routes>
           </main>

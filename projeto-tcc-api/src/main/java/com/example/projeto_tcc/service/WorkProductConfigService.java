@@ -222,7 +222,7 @@ public class WorkProductConfigService {
     }
 
     @Transactional
-    public MethodElementObserver addObserverToWorkProductConfig(Long workProductConfigId) {
+    public MethodElementObserver addObserverToWorkProductConfig(Long workProductConfigId, ObserverMethodElementType type) {
         WorkProductConfig config = configRepository.findById(workProductConfigId)
                 .orElseThrow(() -> new IllegalArgumentException("WorkProductConfig não encontrado"));
 
@@ -235,7 +235,7 @@ public class WorkProductConfigService {
         observer.setPosition(nextPosition);
         observer.setQueue_name(config.getQueue_name());
         observer.setName(config.getQueue_name() + " Observer " + nextPosition);
-        observer.setType(ObserverMethodElementType.LENGTH);
+        observer.setType(type != null ? type : ObserverMethodElementType.NONE);
         observer.setWorkProductConfig(config);
 
         config.getObservers().add(observer);

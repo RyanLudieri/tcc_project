@@ -14,7 +14,6 @@ const NodeDetailForm = ({ node, allNodes, onUpdateNode, onAddChildNode }) => {
   const [modelInfo, setModelInfo] = useState('');
   const [nodeType, setNodeType] = useState('');
   const [predecessors, setPredecessors] = useState([]);
-  const [artifactURL, setArtifactURL] = useState('');
 
   useEffect(() => {
     if (node) {
@@ -22,13 +21,11 @@ const NodeDetailForm = ({ node, allNodes, onUpdateNode, onAddChildNode }) => {
       setModelInfo(node.modelInfo || '');
       setNodeType(node.type || 'None'); 
       setPredecessors(node.predecessors || []);
-      setArtifactURL(node.artifactURL || '');
     } else {
       setPresentationName('');
       setModelInfo('');
       setNodeType('None');
       setPredecessors([]);
-      setArtifactURL('');
     }
   }, [node]);
 
@@ -40,11 +37,6 @@ const NodeDetailForm = ({ node, allNodes, onUpdateNode, onAddChildNode }) => {
         type: nodeType === 'None' ? '' : nodeType, 
         predecessors,
       };
-      if (nodeType === 'Artifact') { 
-        updates.artifactURL = artifactURL;
-      } else if (node.type === 'Artifact' && nodeType !== 'Artifact') {
-        updates.artifactURL = ''; 
-      }
       onUpdateNode(node.id, updates);
     }
   };
@@ -60,7 +52,7 @@ const NodeDetailForm = ({ node, allNodes, onUpdateNode, onAddChildNode }) => {
     if (node.type === 'Process') {
         return initialNodeTypes.some(nt => nt.name === 'Phase');
     }
-    if (node.type === 'TaskDescriptor') {
+    if (node.type === 'Task') {
       return initialNodeTypes.some(nt => (nt.name === 'Role' || nt.name === 'Artifact'));
     }
     if (node.type === 'Artifact' || node.type === 'Role') {
@@ -117,8 +109,7 @@ const NodeDetailForm = ({ node, allNodes, onUpdateNode, onAddChildNode }) => {
               setNodeType(value); 
               if (node) {
                   const newUpdates = { type: value === 'None' ? '' : value };
-                  if (value !== 'Artifact') newUpdates.artifactURL = ''; 
-                  onUpdateNode(node.id, { ...node, ...newUpdates, presentationName, modelInfo, predecessors, artifactURL: value === 'Artifact' ? artifactURL : '' });
+                  onUpdateNode(node.id, { ...node, ...newUpdates, presentationName, modelInfo, predecessors});
               }
             }}
             disabled={node?.type === 'Process'}
@@ -137,20 +128,6 @@ const NodeDetailForm = ({ node, allNodes, onUpdateNode, onAddChildNode }) => {
           {node?.type === 'Process' && <p className="text-xs text-muted-foreground mt-1">The 'Process' node type cannot be changed.</p>}
         </div>
       </div>
-
-      {nodeType === 'Artifact' && ( 
-        <div>
-          <Label htmlFor="node-artifacturl-detail" className="text-sm font-medium">Artifact URL</Label>
-          <Input
-            id="node-artifacturl-detail"
-            value={artifactURL}
-            onChange={(e) => setArtifactURL(e.target.value)}
-            onBlur={handleUpdate}
-            className="mt-1"
-            placeholder="e.g., https://example.com/document.pdf"
-          />
-        </div>
-      )}
 
       <div>
         <Label htmlFor="node-modelinfo-detail" className="text-sm font-medium">Model Info (Description)</Label>
