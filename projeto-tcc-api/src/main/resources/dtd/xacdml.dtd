@@ -1,0 +1,235 @@
+<!-- DTD for XACDML 1.0 -->
+<!-- Authors: Jose Nilton Gil and Celso Massaki Hirata -->
+<!-- Computer Science Department -->
+<!-- Instituto Tecnologico de Aeronautica  -->
+<!-- ITA - CTA - IEC -->
+<!-- Sao Jose dos Campos - SP - Brazil -->
+<!-- xacdml.dtd,v 1.7.1 - 10/29/2002 -->
+
+<!-- Boolean type -->
+<!ENTITY % boolean.type "(0|1)" >
+
+<!-- Positive number type -->
+<!ENTITY % number.type "NMTOKEN">
+
+<!-- ID type -->
+<!ENTITY % id.type "NMTOKEN">
+
+<!-- String type -->
+<!ENTITY % string.type "CDATA">
+
+<!-- Type of Graphics -->
+<!ENTITY % type-graphics-app.type "BOX|CIRCLE|ARC">
+
+<!-- Graphics Type  -->
+<!ENTITY % graphics-type-att "type (%type-graphics-app.type;) #IMPLIED">
+
+<!-- Point Attributes (x,y)  -->
+<!ENTITY % point-atts "x %number.type; #IMPLIED
+                       y %number.type; #IMPLIED">
+<!-- Type of Queues -->
+<!ENTITY % type-queues-app.type "QUEUE|STACK|SET">
+
+<!ENTITY % queues-type-att "struct (%type-queues-app.type;) #REQUIRED
+			          size %number.type; #REQUIRED
+                            init %number.type; #REQUIRED">
+<!ELEMENT type EMPTY>
+<!ATTLIST type
+          %queues-type-att;
+>
+
+<!-- Types of Statistical Distributions  -->
+<!ENTITY % type-stats-app.type "NONE|CONST|UNIFORM|NORMAL|NEGEXP|POISSON |LOGNORMAL">
+
+<!ENTITY % stats-type-att "type (%type-stats-app.type;) #REQUIRED
+                          parm1 %number.type; #REQUIRED
+                          parm2 %number.type; #IMPLIED">
+
+<!ELEMENT stat EMPTY>
+<!ATTLIST stat 
+          %stats-type-att;
+>
+
+<!-- Type of Attributes -->
+<!ENTITY % type-attributes-app.type "INT|FLOAT|CHAR|BOOLEAN">
+
+<!-- Attributes Type  -->
+<!ENTITY % attributes-type-att "type (%type-attributes-app.type;) #REQUIRED">
+
+<!-- Type of Active Observers -->
+<!ENTITY % type-act-observers-app.type "ACTIVE|PROCESSOR|DELAY">
+
+<!-- Active Observers Type -->
+<!ENTITY % act-observers-type-att "type (%type-act-observers-app.type;) #REQUIRED">
+			
+<!-- Type of Queue Observers -->
+<!ENTITY % type-queue-observers-app.type "TIME|LENGTH|STATIONARY">
+
+<!-- Queue Observers Type -->
+<!ENTITY % queue-observers-type-att "type (%type-queue-observers-app.type;) #REQUIRED">
+			
+
+
+<!-- Graphic Element -->
+<!ELEMENT graphic EMPTY>
+<!ATTLIST graphic
+          %graphics-type-att;
+          %point-atts; >
+
+
+
+<!--ACD Element-->
+<!ELEMENT acd (simtime?, class+ ,generate* ,dead+, act+, router*, destroy*, (instance, connect, submodel)* )>
+<!ATTLIST acd
+          id %id.type; #REQUIRED
+>
+
+<!--Class Element -->
+<!ELEMENT class (attribute*)>
+<!ATTLIST class
+          id %id.type; #REQUIRED
+>
+
+<!ELEMENT attribute EMPTY>
+<!ATTLIST attribute 
+          id %id.type; #REQUIRED
+          %attributes-type-att;
+>
+
+<!--SimTime Element-->
+
+<!ELEMENT simtime EMPTY>
+<!ATTLIST simtime
+          time %number.type; #REQUIRED>
+
+
+<!-- Queue Observer Element -->
+<!ELEMENT queue-observer  EMPTY>
+
+<!ATTLIST queue-observer 
+          %queue-observers-type-att;
+          name %id.type; #REQUIRED>
+          
+
+<!-- Active Observer Element -->
+<!ELEMENT act-observer EMPTY>
+
+<!ATTLIST act-observer 
+          %act-observers-type-att;
+          name %id.type; #REQUIRED>
+          
+
+<!--Generate Element-->
+<!ELEMENT generate (graphic?, stat, next+,act-observer*)>
+<!ATTLIST generate
+          id %id.type; #REQUIRED
+          class IDREF #REQUIRED
+>
+
+<!--Destroy Element -->
+<!ELEMENT destroy (graphic?, prev+, act-observer*)>
+<!ATTLIST destroy
+          id %id.type; #REQUIRED
+          class IDREF #REQUIRED
+>
+
+<!--Dead Element -->		
+<!ELEMENT dead (graphic?, type, queue-observer*)>
+<!ATTLIST dead
+          id %id.type; #REQUIRED
+          class IDREF #REQUIRED
+>
+
+<!--Act Element -->
+<!--<!ELEMENT act (graphic?,  stat, entity_class+, whenprev*, act-observer*, interrupting?, interrupted?)> -->
+<!ELEMENT act (graphic?,  stat, entity_class*, whenprev*, act-observer*, interrupting?, interrupted?)>
+
+<!ATTLIST act
+          id %id.type; #REQUIRED
+>         
+
+<!--Entity_Class Element-->
+<!ELEMENT entity_class EMPTY>
+
+<!ATTLIST entity_class
+          prev IDREF #REQUIRED
+          next IDREF #REQUIRED        
+>         
+
+<!--Action Element -->
+<!ELEMENT action (RESTART|RESUME)>
+
+<!--Interrupting Element-->
+<!ELEMENT interrupting EMPTY>
+
+<!ATTLIST interrupting
+          act IDREF #REQUIRED
+>
+
+<!--Interrupted Element-->
+<!ELEMENT interrupted (action)>
+
+<!--Submodel Element -->
+<!ELEMENT submodel (interface+ , graphic?, generate*, dead*, act*, router*, destroy*) >
+
+
+<!--Interface Element -->
+<!ELEMENT interface ( in | out )>
+
+<!--In Element -->
+<!ELEMENT in EMPTY>
+<!ATTLIST in
+          id %id.type; #REQUIRED
+          class IDREF #REQUIRED
+>         
+
+<!--Out Element -->
+<!ELEMENT out (stat?, prev)>
+<!ATTLIST out
+          id %id.type; #REQUIRED
+>
+
+<!--Next Element -->
+<!ELEMENT next EMPTY>
+<!ATTLIST next
+          dead IDREF  #REQUIRED
+>
+
+<!--Prev Element -->
+<!ELEMENT prev EMPTY>
+<!ATTLIST prev
+          dead IDREF #REQUIRED
+>
+
+<!--WhenNext Element -->
+<!ELEMENT whennext (listcond)>
+
+<!ELEMENT listcond ( cond+, default?)>
+
+<!ELEMENT cond (entity_class)>
+<!ATTLIST cond 
+          cond %string.type; #REQUIRED
+>
+          
+
+<!ELEMENT default (entity_class)>
+
+<!--WhenPrev Element -->
+<!ELEMENT whenprev (listcond)>
+
+<!--Connect Element -->
+<!ELEMENT connect (((act|router|generate|submodel.out), submodel.in)|(submodel.out, dead)|(submodel.in, submodel.out))+ >
+
+<!--Element Router -->
+<!ELEMENT router (graphic?, stat, entity_class+, whennext+, act-observer*)>
+
+<!ATTLIST router
+          id %id.type; #REQUIRED
+>         
+
+<!--Element Instance -->
+<!ELEMENT instance (model)>
+
+<!--Element model -->
+<!ELEMENT model (#PCDATA)>
+

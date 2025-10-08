@@ -8,45 +8,49 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.Path;
-
+/**
+ * Controller responsável por gerenciar o artefato XACDML.
+ * Suas funções são gerar, salvar e consultar o conteúdo XML puro.
+ * Ideal para a tela de gerenciamento de XACDML.
+ */
 @RestController
 @RequestMapping("/xacdml")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // permite chamadas do frontend
+@CrossOrigin(origins = "*")
 public class XACDMLController {
 
-    private final XACDMLFileRepository xacdmlRepo;
     private final XACDMLService xacdmlService;
+    private final XACDMLFileRepository xacdmlRepo;
 
+    /**
+     * Endpoint POST para gerar e salvar um novo XACDML.
+     * 1. Chama o serviço para gerar o conteúdo XML.
+     * 2. Salva a entidade XACDMLFile no banco de dados.
+     * 3. Retorna o conteúdo XML gerado para a tela.
+     */
     @PostMapping("/generate/{processId}")
-    public ResponseEntity<String> generate(
-            @PathVariable Long processId, @RequestParam String acdId) {
-        XACDMLFile file = xacdmlService.generateXACDML(processId, acdId);
-        return ResponseEntity.ok(file.getContent());
+    public ResponseEntity<String> generateAndSaveXacdml(
+            @PathVariable Long processId,
+            @RequestParam(defaultValue = "GeneratedXACDML") String acdId) {
+
+        // Este método já gera o conteúdo E salva a entidade no banco
+        XACDMLFile savedFile = xacdmlService.generateXACDML(processId, acdId);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_XML)
+                .body(savedFile.getContent());
     }
 
+    /**
+     * Endpoint GET para buscar um XACDML previamente salvo no banco de dados.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<String> getXacdmlContent(@PathVariable Long id) {
         XACDMLFile file = xacdmlRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("XACDML não encontrado com id: " + id));
 
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_XML) // ou TEXT_XML
+                .contentType(MediaType.APPLICATION_XML)
                 .body(file.getContent());
     }
-
-    @PostMapping("/generate-file/{processId}")
-    public ResponseEntity<String> generateXACDMLFile(
-            @PathVariable Long processId,
-            @RequestParam String acdId) {
-
-        // Gera o arquivo .xacdml escapando caracteres e salvando em xacdml_output
-        Path path = xacdmlService.generateXACDMLFile(processId, acdId);
-
-        return ResponseEntity.ok("Arquivo gerado em: " + path.toAbsolutePath());
-    }
-
-
-
 }
