@@ -13,7 +13,6 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { motion } from 'framer-motion';
-
 import NodeDetailPanel from '@/components/process-editor/NodeDetailPanel';
 import ProcessTreeView from '@/components/process-editor/ProcessTreeView';
 import { SortableNodeItemContent } from '@/components/process-editor/tree/SortableNodeItemContent';
@@ -21,6 +20,8 @@ import AddNodeDialog from '@/components/process-editor/AddNodeDialog';
 import { useToast } from "@/components/ui/use-toast";
 import { useProcessNodes } from '@/hooks/useProcessNodes';
 import { transformNodesForBackend } from '@/lib/nodeUtils';
+import { API_BASE_URL } from "@/config/api";
+
 
 const ProcessEditor = () => {
   const { id: processId } = useParams();
@@ -159,7 +160,7 @@ const ProcessEditor = () => {
       return;
     }
     try {
-      const response = await fetch('http://localhost:8080/process', {
+      const response = await fetch(`${API_BASE_URL}/process`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

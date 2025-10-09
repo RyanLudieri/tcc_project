@@ -8,6 +8,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { PlusCircle, Trash2, Edit3, Save, XCircle, X } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { API_BASE_URL } from "@/config/api";
+
 
 const observerTypes = ['NONE', 'LENGTH', 'TIME'];
 const wpTypes = ['QUEUE', 'SET', 'STACK'];
@@ -26,7 +28,7 @@ const WorkProductsTableTab = ({ processId }) => {
   useEffect(() => {
     const fetchWorkProducts = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/work-product-configs/process/${processId}`);
+        const response = await fetch(`${API_BASE_URL}/work-product-configs/process/${processId}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
 
@@ -93,7 +95,7 @@ const WorkProductsTableTab = ({ processId }) => {
     const wpToSave = workProducts.find(r => r.id === id);
 
     try {
-      const response = await fetch(`http://localhost:8080/work-product-configs/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/work-product-configs/${id}`, {
         method: "PATCH",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -208,7 +210,7 @@ const WorkProductsTableTab = ({ processId }) => {
 
     try {
       const response = await fetch(
-          `http://localhost:8080/work-product-configs/${selectedWorkProductData.id}/observers${query}`,
+          `${API_BASE_URL}/work-product-configs/${selectedWorkProductData.id}/observers${query}`,
           { method: "POST" }
       );
       if (!response.ok) throw new Error("Failed to add observer");
@@ -249,7 +251,7 @@ const WorkProductsTableTab = ({ processId }) => {
     const body = { type: observerToSave.type, queueName: observerToSave.name };
 
     try {
-      const response = await fetch(`http://localhost:8080/work-product-configs/observers/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/work-product-configs/observers/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -279,7 +281,7 @@ const WorkProductsTableTab = ({ processId }) => {
 
     try {
       const response = await fetch(
-          `http://localhost:8080/work-product-configs/${wp.id}/observers/${id}`,
+          `${API_BASE_URL}/work-product-configs/${wp.id}/observers/${id}`,
           {method: "DELETE"}
       );
       if (!response.ok) throw new Error("Failed to delete observer");

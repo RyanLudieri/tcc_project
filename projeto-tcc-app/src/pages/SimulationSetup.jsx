@@ -7,7 +7,6 @@ import RoleQueueMappingTab from '@/components/simulation-setup/RoleQueueMappingT
 import WorkProductsTableTab from '@/components/simulation-setup/WorkProductsTableTab.jsx';
 import XACDMLExportTab from '@/components/simulation-setup/XACDMLExportTab';
 import WorkBreakdownElementsTab from '@/components/simulation-setup/work-breakdown-elements/WorkBreakdownElementsTab.jsx';
-
 import { useToast } from "@/components/ui/use-toast";
 
 const SimulationSetup = () => {

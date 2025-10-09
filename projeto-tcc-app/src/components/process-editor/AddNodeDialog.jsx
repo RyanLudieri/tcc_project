@@ -17,7 +17,7 @@ const AddNodeDialog = ({
                          parentNode,
                          allNodes,
                          hasRootNode,
-                         allowedTypes,  // 👈 agora vem do ProcessEditor
+                         allowedTypes,
                        }) => {
   const [presentationName, setPresentationName] = useState('');
   const [nodeType, setNodeType] = useState('');

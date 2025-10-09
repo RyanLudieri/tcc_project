@@ -9,6 +9,6 @@ public enum BestFitDistribution {
     UNIFORM,
     WEIBULL,
     GAMMA,
-    GEOMETRIC
+    NEGATIVE_EXPONENTIAL
 }
 

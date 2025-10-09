@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Edit3, PlusCircle, Save, Trash2, X } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { API_BASE_URL } from "@/config/api";
+
 
 const RoleQueueMappingTab = ({ processId }) => {
   const { toast } = useToast();
@@ -21,7 +23,7 @@ const RoleQueueMappingTab = ({ processId }) => {
   useEffect(() => {
     const fetchMappings = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/role-configs/process/${processId}`);
+        const response = await fetch(`${API_BASE_URL}/role-configs/process/${processId}`);
         if (!response.ok) throw new Error("Failed to fetch roles");
 
         const data = await response.json();
@@ -79,7 +81,7 @@ const RoleQueueMappingTab = ({ processId }) => {
     const roleToSave = mappings.find(m => m.id === id);
 
     try {
-      const response = await fetch(`http://localhost:8080/role-configs/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/role-configs/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -143,7 +145,7 @@ const RoleQueueMappingTab = ({ processId }) => {
 
     try {
       const response = await fetch(
-          `http://localhost:8080/role-configs/${selectedRoleData.id}/observers${query}`,
+          `${API_BASE_URL}/role-configs/${selectedRoleData.id}/observers${query}`,
           { method: "POST" }
       );
       if (!response.ok) throw new Error("Failed to add observer");
@@ -183,7 +185,7 @@ const RoleQueueMappingTab = ({ processId }) => {
 
     try {
       const response = await fetch(
-          `http://localhost:8080/role-configs/${role.id}/observers/${id}`,
+          `${API_BASE_URL}/role-configs/${role.id}/observers/${id}`,
           { method: "DELETE" }
       );
       if (!response.ok) throw new Error("Failed to delete observer");
@@ -208,7 +210,7 @@ const RoleQueueMappingTab = ({ processId }) => {
     const body = { type: observerToSave.type, queueName: observerToSave.name };
 
     try {
-      const response = await fetch(`http://localhost:8080/role-configs/observers/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/role-configs/observers/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

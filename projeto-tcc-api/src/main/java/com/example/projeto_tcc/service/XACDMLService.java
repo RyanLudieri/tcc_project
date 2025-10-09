@@ -106,13 +106,14 @@ public class XACDMLService {
                 sb.append("        <stat type=\"").append(act.getDistributionType()).append("\" ");
                 switch (act.getDistributionType()) {
                     case CONSTANT -> sb.append("parm1=\"").append(act.getDistributionParameter().getConstant()).append("\" ");
-                    case NORMAL -> sb.append("parm1=\"").append(act.getDistributionParameter().getMean()).append("\" parm2=\"").append(act.getDistributionParameter().getStandardDeviation()).append("\" ");
-                    case UNIFORM -> sb.append("parm1=\"").append(act.getDistributionParameter().getMin()).append("\" parm2=\"").append(act.getDistributionParameter().getMax()).append("\" ");
-                    case LOGNORMAL, GAMMA -> sb.append("parm1=\"").append(act.getDistributionParameter().getScale()).append("\" parm2=\"").append(act.getDistributionParameter().getShape()).append("\" ");
-                    case WEIBULL -> sb.append("parm1=\"").append(act.getDistributionParameter().getBeta()).append("\" parm2=\"").append(act.getDistributionParameter().getAlpha()).append("\" ");
+                    case NORMAL -> sb.append("parm1=\"").append(act.getDistributionParameter().getAverage())
+                            .append("\" parm2=\"").append(act.getDistributionParameter().getStandardDeviation()).append("\" ");
+                    case UNIFORM -> sb.append("parm1=\"").append(act.getDistributionParameter().getLow())
+                            .append("\" parm2=\"").append(act.getDistributionParameter().getHigh()).append("\" ");
+                    case LOGNORMAL, GAMMA, WEIBULL -> sb.append("parm1=\"").append(act.getDistributionParameter().getScale())
+                            .append("\" parm2=\"").append(act.getDistributionParameter().getShape()).append("\" ");
                     case EXPONENTIAL -> sb.append("parm1=\"").append(act.getDistributionParameter().getMean()).append("\" ");
-                    case POISSON -> sb.append("parm1=\"").append(act.getDistributionParameter().getLambda()).append("\" ");
-                    case GEOMETRIC -> sb.append("parm1=\"").append(act.getDistributionParameter().getProbability()).append("\" ");
+                    case POISSON, NEGATIVE_EXPONENTIAL -> sb.append("parm1=\"").append(act.getDistributionParameter().getAverage()).append("\" ");
                     default -> sb.append("parm1=\"0.0\" ");
                 }
                 sb.append("/>\n");

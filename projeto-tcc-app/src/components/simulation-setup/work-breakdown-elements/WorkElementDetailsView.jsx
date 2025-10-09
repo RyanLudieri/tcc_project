@@ -8,6 +8,7 @@ import {Edit3, PlusCircle, Save, Trash2} from 'lucide-react';
 import DistributionField from './DistributionField';
 import {useToast} from "@/components/ui/use-toast.js";
 import { Activity } from "lucide-react";
+import { API_BASE_URL } from "@/config/api";
 
 
 
@@ -23,7 +24,7 @@ const FieldSection = ({ title, children }) => {
 const WorkElementDetailsView = ({ selectedItem }) => {
     const [observers, setObservers] = useState([]);
     const [spemType, setSpemType] = useState('');
-    const [parent, setParent] = useState('');
+    const [parentName, setParentName] = useState('');
     const [dependency, setDependency] = useState('FINISH_TO_START');
     const [timebox, setTimebox] = useState('');
     const [condition, setCondition] = useState('SINGLE_ENTITY_AVAILABLE');
@@ -44,6 +45,37 @@ const WorkElementDetailsView = ({ selectedItem }) => {
     const { toast } = useToast();
 
     /* OBSERVERS */
+    useEffect(() => {
+        if (!selectedItem || !selectedItem.id) return;
+
+        const fetchActivityConfig = async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/activity-configs/${selectedItem.id}`);
+                if (!res.ok) throw new Error('Failed to fetch activity config');
+                const data = await res.json();
+
+                // seta observers
+                setObservers(data.observers || []);
+
+                // seta distribuição
+                if (data.distributionType && data.distributionParameter) {
+                    setDistribution({
+                        type: data.distributionType,
+                        params: data.distributionParameter,
+                    });
+                } else {
+                    setDistribution({ type: 'CONSTANT', params: {} });
+                }
+            } catch (err) {
+                console.error('Failed to fetch activity config:', err);
+                setObservers([]);
+                setDistribution({ type: 'CONSTANT', params: {} });
+            }
+        };
+
+        fetchActivityConfig();
+    }, [selectedItem]);
+
     const addObserver = async () => {
         if (!selectedItem?.id) {
             toast({
@@ -61,7 +93,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:8080/activity-configs/observers/${selectedItem.activityConfigId}`,
+                `${API_BASE_URL}/activity-configs/observers/${selectedItem.activityConfigId}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -100,7 +132,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:8080/activity-configs/observers/${observerId}`,
+                `${API_BASE_URL}/activity-configs/observers/${observerId}`,
                 { method: "DELETE" }
             );
 
@@ -122,7 +154,6 @@ const WorkElementDetailsView = ({ selectedItem }) => {
             });
         }
     };
-
 
     const toggleObserverEdit = (id) => {
         setObservers(
@@ -146,7 +177,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:8080/activity-configs/observers/${id}`,
+                `${API_BASE_URL}/activity-configs/observers/${id}`,
                 {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
@@ -182,8 +213,66 @@ const WorkElementDetailsView = ({ selectedItem }) => {
         }
     };
 
+    /* DISTRIBUTION */
+    const saveDistribution = async (newDistribution) => {
+        if (!selectedItem?.id) {
+            toast({
+                title: "Error",
+                description: "Please select a valid Work Breakdown Element first.",
+                variant: "destructive",
+            });
+            return;
+        }
 
+        const bodyToSend = {
+            distributionType: newDistribution.type,
+            distributionParameter: {
+                id: newDistribution.params?.id || null,
+                constant: newDistribution.params?.constant || null,
+                average: newDistribution.params?.average || null,
+                mean: newDistribution.params?.mean || null,
+                standardDeviation: newDistribution.params?.standardDeviation || null,
+                low: newDistribution.params?.low || null,
+                high: newDistribution.params?.high || null,
+                shape: newDistribution.params?.shape || null,
+                scale: newDistribution.params?.scale || null,
+            },
+        };
 
+        try {
+            const res = await fetch(
+                `${API_BASE_URL}/activity-configs/${selectedItem.id}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(bodyToSend),
+                }
+            );
+
+            if (!res.ok) throw new Error("Failed to update distribution");
+
+            const updated = await res.json();
+
+            setDistribution({
+                type: updated.distributionType,
+                params: updated.distributionParameter,
+            });
+
+            toast({
+                title: "Distribution Updated",
+                description: `Distribution type "${updated.distributionType}" was successfully updated.`,
+            });
+        } catch (err) {
+            console.error("Error updating distribution:", err);
+            toast({
+                title: "Error",
+                description: "Unable to update distribution. Please try again.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    /* XACDML */
     useEffect(() => {
         if (!selectedItem) {
             setSpemType('');
@@ -195,6 +284,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
             setTimebox('N/A');
             return;
         }
+
         if (selectedItem.type === 'ITERATION') {
             setSpemType('ITERATION');
             setDependency('FINISH_TO_START');
@@ -211,22 +301,123 @@ const WorkElementDetailsView = ({ selectedItem }) => {
     }, [selectedItem]);
 
     useEffect(() => {
-        if (!selectedItem || !selectedItem.id) return;
+        if (!selectedItem || !selectedItem.id) {
+            setParentName('N/A');
+            return;
+        }
 
-        const fetchObservers = async () => {
-            try {
-                const res = await fetch(`http://localhost:8080/activity-configs/${selectedItem.id}`);
-                if (!res.ok) throw new Error('Failed to fetch observers');
-                const data = await res.json();
-                setObservers(data.observers || []);
-            } catch (err) {
-                console.error('Failed to fetch observers:', err);
-                setObservers([]);
-            }
+        fetch(`${API_BASE_URL}/activity-configs/${selectedItem.id}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (!data) {
+                    setParentName('N/A');
+                    return;
+                }
+
+                // se não tiver parentId (root), seta direto
+                if (!data.parentId || data.parentId === null) {
+                    setParentName('N/A'); // ou 'Root', se quiser
+                    return;
+                }
+
+                setDependency(data.dependencyType);
+                setTimebox(data.timeBox);
+                setCondition(data.conditionToProcess);
+                setProcessingQuantity(data.processingQuantity);
+                setBehavior(data.iterationBehavior);
+                setQuantity(data.requiredResources);
+
+                // senão, busca o pai pra pegar o nome
+                fetch(`${API_BASE_URL}/activity-configs/${data.parentId}`)
+                    .then((res) => (res.ok ? res.json() : null))
+                    .then((parentData) => {
+                        setParentName(parentData?.name || parentData?.presentationName || 'N/A')
+                    })
+                    .catch((err) => {
+                        console.error('Erro ao buscar pai:', err);
+                        setParentName('N/A');
+                    });
+            })
+            .catch((err) => {
+                console.error('Erro ao buscar item:', err);
+                setParentName('N/A');
+            });
+    }, [selectedItem]);
+
+    const saveXACDML = async (newXACDML, updatedField) => {
+        if (!selectedItem?.id) {
+            toast({
+                title: "Error",
+                description: "Please select a valid Work Breakdown Element first.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        const bodyToSend = {
+            dependencyType: newXACDML.dependencyType,
+            timeBox: newXACDML.timeBox,
+            conditionToProcess: newXACDML.conditionToProcess,
+            processingQuantity: newXACDML.processingQuantity,
+            iterationBehavior: newXACDML.iterationBehavior,
+            requiredResources: newXACDML.requiredResources,
         };
 
-        fetchObservers();
-    }, [selectedItem]);
+        try {
+            const res = await fetch(
+                `${API_BASE_URL}/activity-configs/${selectedItem.id}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(bodyToSend),
+                }
+            );
+
+            if (!res.ok) throw new Error("Failed to update XACDML attributes");
+
+            const updated = await res.json();
+
+            toast({
+                title: "XACDML Attributes Updated",
+                description: `XACDML ${updatedField} for "${updated.name}" was successfully updated.`,
+            });
+        } catch (err) {
+            console.error("Error updating distribution:", err);
+            toast({
+                title: "Error",
+                description: "Unable to update distribution. Please try again.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleXACDMLChange = (field, value) => {
+        const updatedXACDML = {
+            dependencyType: dependency,
+            timeBox: timebox,
+            conditionToProcess: condition,
+            processingQuantity: processingQuantity,
+            iterationBehavior: behavior,
+            requiredResources: quantity,
+            [field]: value,
+        };
+
+        let updatedField;
+
+        // Atualiza o estado local correspondente
+        switch (field) {
+            case "dependencyType": setDependency(value); updatedField = "dependency type"; break;
+            case "timeBox": setTimebox(value); updatedField = "timebox"; break;
+            case "conditionToProcess": setCondition(value);  updatedField = "condition to process"; break;
+            case "processingQuantity": setProcessingQuantity(value);  updatedField = "processing quantity";break;
+            case "iterationBehavior": setBehavior(value);  updatedField = "iteration behavior";break;
+            case "requiredResources": setQuantity(value); updatedField = "required resources"; break;
+        }
+
+        saveXACDML(updatedXACDML, updatedField);
+    };
+
+
 
 
     return (
@@ -255,7 +446,13 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                     {/* Duration / Distribution Field */}
                     <FieldSection title={`Duration for ${selectedItem?.presentationName || '...'}`}>
                         {selectedItem ? (
-                            <DistributionField value={distribution} onChange={setDistribution} />
+                            <DistributionField
+                                value={distribution}
+                                onChange={(updatedDistribution) => {
+                                    setDistribution(updatedDistribution);
+                                    saveDistribution(updatedDistribution);
+                                }}
+                            />
                         ) : (
                             <p className="text-xs text-gray-500">Select an element from the Work Breakdown Elements View</p>
                         )}
@@ -378,16 +575,13 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                                     disabled
                                     className="w-full"
                                 />
-
-
                             </div>
 
                             <div>
                                 <label className="block text-xs font-medium">Parent</label>
                                 <Input
-                                    value={parent}
-                                    disabled={true}
-                                    onChange={(e) => setParent(e.target.value)}
+                                    value={parentName ?? 'N/A'}
+                                    disabled
                                     className="w-full"
                                 />
                             </div>
@@ -398,7 +592,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                                 <label className="block text-xs font-medium">Dependency type</label>
                                 <Select
                                     value={dependency}
-                                    onValueChange={setDependency}
+                                    onValueChange={(v) => handleXACDMLChange("dependencyType", v)}
                                     className="w-full"
                                     disabled={isIteration || !hasPredecessor}
                                 >
@@ -418,7 +612,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                                 <label className="block text-xs font-medium">Timebox</label>
                                 <Input
                                     value={isIteration || isActivity ? timebox : 'N/A'}
-                                    onChange={(e) => setTimebox(e.target.value)}
+                                    onChange={(e) => handleXACDMLChange("timeBox", e.target.value)}
                                     disabled={!isIteration}
                                     className="w-1/4" />
                             </div>
@@ -429,7 +623,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                                 <label className="block text-xs font-medium">Condition to process</label>
                                 <Select
                                     value={condition}
-                                    onValueChange={setCondition}
+                                    onValueChange={(v) => handleXACDMLChange("conditionToProcess", v)}
                                     disabled={isRootProcess || isEmptyItem}
                                     className="w-full">
                                     <SelectTrigger >
@@ -446,7 +640,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                                 <label className="block text-xs font-medium">Processing quantity</label>
                                 <Select
                                     value={processingQuantity}
-                                    onValueChange={setProcessingQuantity}
+                                    onValueChange={(v) => handleXACDMLChange("processingQuantity", v)}
                                     className="w-full"
                                     disabled={isRootProcess || isEmptyItem}>
                                     <SelectTrigger>
@@ -464,7 +658,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                             <label className="block text-xs font-medium">Behavior at the end of an iteration</label>
                             <Select
                                 value={isIteration? behavior : `MOVE_BACK`}
-                                onValueChange={setBehavior}
+                                onValueChange={(v) => handleXACDMLChange("iterationBehavior", v)}
                                 disabled={!isIteration}
                                 className="w-full">
                                 <SelectTrigger>
@@ -483,7 +677,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                             </label>
                             <Input
                                 value={isTask ? quantity: "N/A" }
-                                onChange={(e) => setQuantity(e.target.value)}
+                                onChange={(e) => handleXACDMLChange("requiredResources", e.target.value)}
                                 disabled={!isTask}
                                 className="w-full"
                             />

@@ -24,6 +24,8 @@ import {
   Area,
   Cell
 } from 'recharts';
+import { API_BASE_URL } from "@/config/api";
+
 
 const ChartWrapper = ({ title, icon, children }) => (
   <Card className="h-[400px] flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
@@ -66,7 +68,7 @@ const mockThroughputData = [
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8A2BE2', '#FF69B4'];
 
-const SimulationResultsPage = () => {
+const SimulationResults = () => {
   const { id: processId } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -318,4 +320,4 @@ const SimulationResultsPage = () => {
   );
 };
 
-export default SimulationResultsPage;
+export default SimulationResults;

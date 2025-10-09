@@ -5,47 +5,94 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const DistributionField = ({ value, onChange }) => {
     const distributions = [
         'CONSTANT',
-        'UNIFORM',
-        'NORMAL',
-        'LOGNORMAL',
         'EXPONENTIAL',
+        'GAMMA',
+        'LOGNORMAL',
+        'NEGATIVE_EXPONENTIAL',
+        'NORMAL',
         'POISSON',
-        'NEGATIVE_EXPONENTIAL'
+        'UNIFORM',
+        'WEIBULL'
     ];
 
-    const [distributionType, setDistributionType] = useState('CONSTANT');
+    const [distributionType, setDistributionType] = useState(value?.type || 'CONSTANT');
     const [params, setParams] = useState({
-        value: value || '',
-        low: '',
-        high: '',
-        average: '',
-        mean: '',
-        stdDev: '',
-        scale: '',
-        shape: ''
+        constant: value?.params?.constant || '',
+        low: value?.params?.low || '',
+        high: value?.params?.high || '',
+        average: value?.params?.average || '',
+        mean: value?.params?.mean || '',
+        standardDeviation: value?.params?.standardDeviation || '',
+        scale: value?.params?.scale || '',
+        shape: value?.params?.shape || ''
     });
+
+    React.useEffect(() => {
+        if (!value) return;
+        setDistributionType(value.type || 'CONSTANT');
+        setParams({
+            constant: value?.params?.constant || '',
+            low: value?.params?.low || '',
+            high: value?.params?.high || '',
+            average: value?.params?.average || '',
+            mean: value?.params?.mean || '',
+            standardDeviation: value?.params?.standardDeviation || '',
+            scale: value?.params?.scale || '',
+            shape: value?.params?.shape || ''
+        });
+    }, [value]);
+
+
 
     const handleParamChange = (e) => {
         const { name, value } = e.target;
         let val = value;
         if (Number(val) < 0) val = 0;
-        setParams({ ...params, [name]: val });
-        onChange({ type: distributionType, params: { ...params, [name]: val } });
+
+        const updatedParams = { ...params, [name]: val };
+        setParams(updatedParams);
+
+        onChange({
+            type: distributionType,
+            params: {
+                constant: updatedParams.constant || null,
+                average: updatedParams.average || null,
+                mean: updatedParams.mean || null,
+                standardDeviation: updatedParams.standardDeviation || null,
+                low: updatedParams.low || null,
+                high: updatedParams.high || null,
+                shape: updatedParams.shape || null,
+                scale: updatedParams.scale || null,
+            },
+        });
     };
 
     const handleDistributionChange = (val) => {
         setDistributionType(val);
         setParams({
-            value: '',
+            constant: '',
             low: '',
             high: '',
             average: '',
             mean: '',
-            stdDev: '',
+            standardDeviation: '',
             scale: '',
             shape: ''
         });
-        onChange({ type: val, params: {} });
+        onChange({
+            type: val,
+            params: {
+                constant: null,
+                average: null,
+                mean: null,
+                standardDeviation: null,
+                low: null,
+                high: null,
+                shape: null,
+                scale: null,
+            }
+        });
+
     };
 
     return (
@@ -68,8 +115,8 @@ const DistributionField = ({ value, onChange }) => {
                         <label className="block text-xs font-medium">Value</label>
                         <Input
                             type="number"
-                            name="value"
-                            value={params.value}
+                            name="constant"
+                            value={params.constant}
                             onChange={handleParamChange}
                             className="w-1/1"
                         />
@@ -115,15 +162,15 @@ const DistributionField = ({ value, onChange }) => {
                             <label className="block text-xs font-medium">Standard Deviation</label>
                             <Input
                                 type="number"
-                                name="stdDev"
-                                value={params.stdDev}
+                                name="standardDeviation"
+                                value={params.standardDeviation}
                                 onChange={handleParamChange}
                                 className="w-1/1"
                             />
                         </div>
                     </div>
                 )}
-                {distributionType === 'LOGNORMAL' && (
+                {(distributionType === 'LOGNORMAL' || distributionType === 'WEIBULL'  || distributionType === 'GAMMA') && (
                     <div className="flex gap-2">
                         <div>
                             <label className="block text-xs font-medium">Scale</label>

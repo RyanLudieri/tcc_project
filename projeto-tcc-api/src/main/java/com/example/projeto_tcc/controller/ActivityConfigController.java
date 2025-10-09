@@ -34,11 +34,11 @@ public class ActivityConfigController {
         return configService.getObserversByActivityConfig(activityConfigId);
     }
 
+    // PATCH atualiza parâmetros de ActivityConfig
     @PatchMapping("/{id}")
     public ActivityConfigDTO updateConfig(@PathVariable Long id, @RequestBody ActivityConfigDTO dto) {
         return configService.updateActivityConfig(id, dto);
     }
-
 
     // POST cria um novo observer em um ActivityConfig
     @PostMapping("/observers/{activityConfigId}")
