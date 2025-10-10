@@ -10,7 +10,7 @@ import WorkBreakdownElementsTab from '@/components/simulation-setup/work-breakdo
 import { useToast } from "@/components/ui/use-toast";
 
 const SimulationSetup = () => {
-  const { id: processId } = useParams();
+  const { simulationId, processId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -28,7 +28,7 @@ const SimulationSetup = () => {
       description: "Redirecting to results page...",
       variant: "default",
     });
-    navigate(`/processes/${processId}/results`);
+    navigate(`/simulations/${simulationId}/processes/${processId}/results`);
   };
 
   return (
@@ -36,7 +36,7 @@ const SimulationSetup = () => {
         <header className="mb-6 flex items-center justify-between">
           <div>
             <Link
-                to={`/processes/${lastProcessId}/edit`}
+                to={`/simulations/${simulationId}/processes/${processId}/edit`}
                 className="inline-flex items-center text-primary hover:underline transition-colors"
             >
               <ArrowLeft className="mr-2 h-5 w-5" />
