@@ -65,28 +65,28 @@ const SimulationSetup = () => {
           <TabsList className="flex w-full flex-wrap gap-4 bg-muted p-1 rounded-lg mb-4">
             <TabsTrigger
                 value="roles-mapping"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
+                className="bg-gray-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
             data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5 flex-1 min-w-[120px] text-center"
             >
               <Settings2 className="mr-2 h-5 w-5" /> Roles Mapping
             </TabsTrigger>
             <TabsTrigger
                 value="resource-table"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
+                className="bg-gray-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
             data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5 flex-1 min-w-[120px] text-center"
             >
               <ListChecks className="mr-2 h-5 w-5" /> Work Products Mapping
             </TabsTrigger>
             <TabsTrigger
                 value="work-breakdown-elements-table"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
+                className="bg-gray-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
             data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5 flex-1 min-w-[120px] text-center"
             >
               <Layers className="mr-2 h-5 w-5" /> Work Breakdown Elements Mapping
             </TabsTrigger>
             <TabsTrigger
                 value="xacdml-export"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
+                className="bg-gray-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
             data-[state=inactive]:text-muted-foreground hover:bg-primary/10 transition-colors py-2.5 flex-1 min-w-[120px] text-center"
             >
               <FileText className="mr-2 h-5 w-5" /> XACDML Export

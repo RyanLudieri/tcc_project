@@ -50,7 +50,7 @@ const HomePage = () => {
                   className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg px-8 py-6 rounded-lg shadow-lg"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Create New Process
+                Create New Simulation
               </Button>
             </motion.div>
 
