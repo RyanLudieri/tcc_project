@@ -24,6 +24,10 @@ public class DeliveryProcess extends Process {
     @JsonManagedReference
     private List<ActivityConfig> activityConfigs = new ArrayList<>();
 
+    @OneToMany(mappedBy = "deliveryProcess", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<GeneratorConfig> generatorConfigs = new ArrayList<>();
+
     @OneToOne(mappedBy = "deliveryProcess")
     @JsonBackReference
     private Simulation simulation;

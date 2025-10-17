@@ -19,6 +19,7 @@ public class WorkProductConfigDTO {
     private Integer initial_quantity;
     private Queue policy;
     private boolean generate_activity;
+    private boolean destroy;
     private Long activityId; // apenas o ID da Activity
     private List<MethodElementObserverDTO> observers; // lista de DTOs do observer
 }

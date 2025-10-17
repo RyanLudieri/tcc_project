@@ -36,6 +36,8 @@ public class WorkProductConfig {
 
     private boolean generate_activity;
 
+    private boolean isDestroyer;
+
     @ManyToOne
     private Activity activity;
 

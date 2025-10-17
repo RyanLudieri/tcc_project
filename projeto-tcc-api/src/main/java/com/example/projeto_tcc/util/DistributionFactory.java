@@ -8,7 +8,7 @@ public class DistributionFactory {
 
     public static Object createDistribution(BestFitDistribution type, DistributionParameter param) {
         return switch (type) {
-            case CONSTANT -> param.getConstant(); 
+            case CONST -> param.getConstant();
             case NORMAL -> new NormalDistribution(param.getMean(), param.getStandardDeviation());
             case LOGNORMAL -> new LogNormalDistribution(param.getScale(), param.getShape());
             case POISSON -> new PoissonDistribution(param.getAverage());

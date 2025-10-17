@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.service;
 
+import com.example.projeto_tcc.dto.GeneratorConfigDTO;
 import com.example.projeto_tcc.dto.MethodElementObserverDTO;
 import com.example.projeto_tcc.dto.ObserverUpdateDTO;
 import com.example.projeto_tcc.dto.WorkProductConfigDTO;
@@ -8,9 +9,7 @@ import com.example.projeto_tcc.entity.Observer;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.enums.ProcessType;
 import com.example.projeto_tcc.enums.Queue;
-import com.example.projeto_tcc.repository.MethodElementRepository;
-import com.example.projeto_tcc.repository.MethodElementObserverRepository;
-import com.example.projeto_tcc.repository.WorkProductConfigRepository;
+import com.example.projeto_tcc.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +25,8 @@ public class WorkProductConfigService {
     private final WorkProductConfigRepository configRepository;
     private final MethodElementObserverRepository observerRepository;
     private final MethodElementRepository methodElementRepository;
+    private final DeliveryProcessRepository deliveryProcessRepository;
+    private final GeneratorConfigRepository generatorConfigRepository;
 
     private int queueIndex = 0;
     private final Map<String, WorkProductConfig> queueMap = new LinkedHashMap<>();
@@ -41,45 +42,44 @@ public class WorkProductConfigService {
             traverseAndCreateConfigs(root, deliveryProcess, activeWorkProducts);
         }
 
-        // --- INÍCIO DA LÓGICA DE OUTPUT FINAL ---
+        // --- INÍCIO DA LÓGICA DE OUTPUT FINAL UNIFICADA E CORRETA ---
         if (roots != null && !roots.isEmpty()) {
+            // A lógica é baseada no TIPO da última atividade raiz do processo.
             Activity lastRoot = roots.get(roots.size() - 1);
 
             String finalEventName;
-            if (lastRoot.getType() == ProcessType.TASK_DESCRIPTOR || lastRoot.getType() == ProcessType.MILESTONE) {
+            Set<String> finalOutputWPs;
+
+            if (isTaskLike(lastRoot)) {
+                // CASO 1: Se a última raiz for uma tarefa, o output é específico dela.
+                // (Resolve o caso do "Inquirer")
                 finalEventName = lastRoot.getName();
+                finalOutputWPs = getAssociatedWorkProductNames(lastRoot, "OUTPUT");
+
             } else {
-                finalEventName = "END_" + lastRoot.getName();
+                // CASO 2: Se a última raiz for um Contêiner ou Milestone.
+                // (Resolve os casos da "Iteration A" e "Working software")
+                finalEventName = (lastRoot.getType() == ProcessType.MILESTONE) ? lastRoot.getName() : "END_" + lastRoot.getName();
+                finalOutputWPs = new LinkedHashSet<>(activeWorkProducts);
             }
 
-            // OUTPUT final para apenas o último WorkProduct
-            if (!activeWorkProducts.isEmpty()) {
-                List<String> wpList = new ArrayList<>(activeWorkProducts);
-                Set<String> finalOutputWPs = new LinkedHashSet<>();
-                finalOutputWPs.add(wpList.get(wpList.size() - 1));
-                createConfigsIfAbsent(lastRoot, finalOutputWPs, finalEventName, "OUTPUT", deliveryProcess);
-            }
+            // Cria a configuração de OUTPUT associada à atividade raiz.
+            createConfigsIfAbsent(lastRoot, finalOutputWPs, finalEventName, "OUTPUT", deliveryProcess);
         }
-        // --- FIM DA LÓGICA DE OUTPUT FINAL ---
     }
 
     private void traverseAndCreateConfigs(Activity activity, DeliveryProcess deliveryProcess, Set<String> activeWorkProducts) {
-        ProcessType type = activity.getType();
-        boolean isTask = type == ProcessType.TASK_DESCRIPTOR;
-        boolean isMilestone = type == ProcessType.MILESTONE;
-        boolean isContainer = !isTask && !isMilestone;
-
-        if (isTask) {
+        if (isTaskLike(activity)) {
             Set<String> inputWPs = getAssociatedWorkProductNames(activity, "INPUT");
             createConfigsIfAbsent(activity, inputWPs, activity.getName(), "INPUT", deliveryProcess);
 
             Set<String> outputWPs = getAssociatedWorkProductNames(activity, "OUTPUT");
             activeWorkProducts.addAll(outputWPs);
 
-        } else if (isMilestone) {
+        } else if (activity.getType() == ProcessType.MILESTONE) {
             createConfigsIfAbsent(activity, new LinkedHashSet<>(activeWorkProducts), activity.getName(), "INPUT", deliveryProcess);
 
-        } else if (isContainer) {
+        } else { // É um Container
             Set<String> wpsInThisScope = getAllWorkProductsInScope(activity);
             createConfigsIfAbsent(activity, wpsInThisScope, "BEGIN_" + activity.getName(), "INPUT", deliveryProcess);
 
@@ -91,23 +91,38 @@ public class WorkProductConfigService {
                     }
                 }
             }
-
             activeWorkProducts.addAll(activeWPsForChildren);
 
             createConfigsIfAbsent(activity, wpsInThisScope, "END_" + activity.getName(), "INPUT", deliveryProcess);
         }
     }
 
+    private boolean isTaskLike(Activity activity) {
+        ProcessType type = activity.getType();
+        return type == ProcessType.TASK_DESCRIPTOR ||
+                (type == ProcessType.ACTIVITY && (activity.getChildren() == null || activity.getChildren().isEmpty()));
+    }
+
     private Activity findLastTask(Activity activity) {
-        if (activity.getChildren() == null || activity.getChildren().isEmpty() || activity.getType() == ProcessType.TASK_DESCRIPTOR) {
+        if (activity.getChildren() == null || activity.getChildren().isEmpty()) {
             return activity;
         }
-        List<Activity> children = activity.getChildren();
+
+        List<Activity> children = new ArrayList<>();
+        for (Object childObj : activity.getChildren()) {
+            if (childObj instanceof Activity) {
+                children.add((Activity) childObj);
+            }
+        }
+
+        if (children.isEmpty()) {
+            return activity;
+        }
         return findLastTask(children.get(children.size() - 1));
     }
 
     private Set<String> getAssociatedWorkProductNames(Activity activity, String type) {
-        if(activity == null) return Collections.emptySet();
+        if (activity == null) return Collections.emptySet();
         String modelInfoToFind = type.equals("INPUT") ? "MANDATORY_INPUT" : "OUTPUT";
         List<MethodElement> associatedElements = methodElementRepository.findByParentActivity(activity);
 
@@ -119,9 +134,7 @@ public class WorkProductConfigService {
 
     private Set<String> getAllWorkProductsInScope(Activity container) {
         Set<String> workProducts = new LinkedHashSet<>();
-        if (container == null) {
-            return workProducts;
-        }
+        if (container == null) return workProducts;
         collectWorkProductsRecursively(container, workProducts);
         return workProducts;
     }
@@ -140,23 +153,11 @@ public class WorkProductConfigService {
     }
 
     private void createConfigsIfAbsent(Activity activity, Set<String> wpNames, String taskName, String inputOutput, DeliveryProcess deliveryProcess) {
-        if (wpNames == null || wpNames.isEmpty()) {
-            return;
-        }
+        if (wpNames == null || wpNames.isEmpty()) return;
 
-        // Se for OUTPUT e houver mais de um WorkProduct, pega apenas o último
-        Set<String> workProductsToCreate = new LinkedHashSet<>(wpNames);
-        if ("OUTPUT".equals(inputOutput) && wpNames.size() > 1) {
-            List<String> wpList = new ArrayList<>(wpNames);
-            workProductsToCreate.clear();
-            workProductsToCreate.add(wpList.get(wpList.size() - 1));
-        }
-
-        for (String wpName : workProductsToCreate) {
+        for (String wpName : wpNames) {
             String key = wpName + "|" + taskName + "|" + inputOutput;
-            if (queueMap.containsKey(key)) {
-                continue;
-            }
+            if (queueMap.containsKey(key)) continue;
 
             WorkProductConfig config = new WorkProductConfig();
             config.setActivity(activity);
@@ -167,6 +168,7 @@ public class WorkProductConfigService {
             config.setInitial_quantity(0);
             config.setPolicy(Queue.FIFO);
             config.setGenerate_activity(false);
+            config.setDestroyer(false);
             config.setInput_output(inputOutput);
             config.setTask_name(taskName);
             config.setDeliveryProcess(deliveryProcess);
@@ -185,14 +187,12 @@ public class WorkProductConfigService {
         observer.setQueue_name(config.getQueue_name());
         observer.setType(ObserverMethodElementType.LENGTH);
         observer.setWorkProductConfig(config);
-
         observerRepository.save(observer);
     }
 
     @Transactional
     public List<WorkProductConfigDTO> getWorkProductsByDeliveryProcess(Long deliveryProcessId) {
         List<WorkProductConfig> workProducts = configRepository.findByDeliveryProcessId(deliveryProcessId);
-
         workProducts.forEach(wp -> wp.getObservers().size());
 
         return workProducts.stream()
@@ -208,6 +208,7 @@ public class WorkProductConfigService {
                         wp.getInitial_quantity(),
                         wp.getPolicy(),
                         wp.isGenerate_activity(),
+                        wp.isDestroyer(),
                         wp.getActivity() != null ? wp.getActivity().getId() : null,
                         wp.getObservers().stream()
                                 .map(obs -> new MethodElementObserverDTO(
@@ -264,12 +265,8 @@ public class WorkProductConfigService {
         MethodElementObserver observer = observerRepository.findById(observerId)
                 .orElseThrow(() -> new IllegalArgumentException("Observer não encontrado com id: " + observerId));
 
-        if (dto.getType() != null) {
-            observer.setType(dto.getType());
-        }
-        if (dto.getQueueName() != null) {
-            observer.setQueue_name(dto.getQueueName());
-        }
+        if (dto.getType() != null) observer.setType(dto.getType());
+        if (dto.getQueueName() != null) observer.setQueue_name(dto.getQueueName());
 
         return observerRepository.save(observer);
     }
@@ -285,6 +282,7 @@ public class WorkProductConfigService {
         if (dto.getInitial_quantity() != null) config.setInitial_quantity(dto.getInitial_quantity());
         if (dto.getPolicy() != null) config.setPolicy(dto.getPolicy());
         config.setGenerate_activity(dto.isGenerate_activity());
+        config.setDestroyer(dto.isDestroy());
 
         WorkProductConfig saved = configRepository.save(config);
 
@@ -299,6 +297,7 @@ public class WorkProductConfigService {
                 saved.getInitial_quantity(),
                 saved.getPolicy(),
                 saved.isGenerate_activity(),
+                saved.isDestroyer(),
                 saved.getActivity() != null ? saved.getActivity().getId() : null,
                 saved.getObservers().stream()
                         .map(obs -> new MethodElementObserverDTO(
@@ -312,4 +311,65 @@ public class WorkProductConfigService {
                         .toList()
         );
     }
+
+
+    @Transactional
+    public GeneratorConfig addGeneratorToProcess(Long processId, GeneratorConfigDTO dto) {
+        DeliveryProcess process = deliveryProcessRepository.findById(processId)
+                .orElseThrow(() -> new EntityNotFoundException("Processo não encontrado com ID: " + processId));
+        WorkProductConfig targetQueue = configRepository.findById(dto.getWorkProductConfigId())
+                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig de destino não encontrado com ID: " + dto.getWorkProductConfigId()));
+
+        DistributionParameter dist = new DistributionParameter();
+        dist.setConstant(dto.getConstant());
+        dist.setMean(dto.getMean());
+        dist.setAverage(dto.getAverage());
+        dist.setStandardDeviation(dto.getStandardDeviation());
+        dist.setLow(dto.getLow());
+        dist.setHigh(dto.getHigh());
+        dist.setScale(dto.getScale());
+        dist.setShape(dto.getShape());
+
+        GeneratorConfig newGenerator = new GeneratorConfig();
+        newGenerator.setDistributionType(dto.getDistributionType());
+        newGenerator.setDistribution(dist);
+        newGenerator.setTargetWorkProduct(targetQueue);
+
+        process.getGeneratorConfigs().add(newGenerator);
+        newGenerator.setDeliveryProcess(process);
+
+        targetQueue.setGenerate_activity(true);
+        configRepository.save(targetQueue);
+
+        return generatorConfigRepository.save(newGenerator);
+    }
+
+    @Transactional
+    public void removeGenerator(Long generatorId) {
+        GeneratorConfig generator = generatorConfigRepository.findById(generatorId)
+                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado com ID: " + generatorId));
+
+        WorkProductConfig target = generator.getTargetWorkProduct();
+        if (target != null) {
+            target.setGenerate_activity(false);
+            configRepository.save(target);
+        }
+
+        DeliveryProcess process = generator.getDeliveryProcess();
+        if (process != null) {
+            process.getGeneratorConfigs().remove(generator);
+            deliveryProcessRepository.save(process);
+        } else {
+            generatorConfigRepository.delete(generator);
+        }
+    }
+
+    @Transactional
+    public void setDestroyer(Long workProductConfigId, boolean isDestroyer) {
+        WorkProductConfig selectedQueue = configRepository.findById(workProductConfigId)
+                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig não encontrado"));
+        selectedQueue.setDestroyer(isDestroyer);
+        configRepository.save(selectedQueue);
+    }
+
 }

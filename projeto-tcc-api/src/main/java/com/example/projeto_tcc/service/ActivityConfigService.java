@@ -55,7 +55,7 @@ public class ActivityConfigService {
 
 
         // 🔹 Parâmetros de distribuição
-        config.setDistributionType(BestFitDistribution.CONSTANT);
+        config.setDistributionType(BestFitDistribution.CONST);
         DistributionParameter param = new DistributionParameter();
         param.setConstant(defaultValue);
         parameterRepository.save(param);
@@ -64,7 +64,7 @@ public class ActivityConfigService {
         // 🔹 Cria Sample (mesmo que vazio)
         Sample sample = new Sample();
         sample.setName("Sample for " + activity.getName());
-        sample.setDistribution(BestFitDistribution.CONSTANT);
+        sample.setDistribution(BestFitDistribution.CONST);
         sample.setParameter(param);
         sample.setSize(sampleSize);
         sampleRepository.save(sample);
