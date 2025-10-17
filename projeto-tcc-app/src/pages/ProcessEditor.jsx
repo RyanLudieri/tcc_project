@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Rocket } from 'lucide-react';
 import {
@@ -22,10 +22,11 @@ import { useProcessNodes } from '@/hooks/useProcessNodes';
 import { transformNodesForBackend } from '@/lib/nodeUtils';
 import { API_BASE_URL } from "@/config/api";
 
-
 const ProcessEditor = () => {
-  const { id: processId } = useParams();
+  const { simulationId, processId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
+
   const {
     nodes,
     addNode,
@@ -46,15 +47,10 @@ const ProcessEditor = () => {
   const [isAddNodeDialogOpen, setIsAddNodeDialogOpen] = useState(false);
   const [parentNodeForDialog, setParentNodeForDialog] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
 
   const sensors = useSensors(
-      useSensor(PointerSensor, {
-        activationConstraint: { distance: 8 },
-      }),
-      useSensor(KeyboardSensor, {
-        coordinateGetter: sortableKeyboardCoordinates,
-      })
+      useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+      useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const hasRootNode = nodes.some(node => !node.parentId && node.type === 'Process');
@@ -65,6 +61,7 @@ const ProcessEditor = () => {
       if (!nodeExists) setSelectedNodeId(null);
     }
   }, [nodes, selectedNodeId]);
+
   const handleUINodeAdd = (nodeData, parentId = null) => {
     const result = addNode(nodeData, parentId);
     if (result.success && result.newNode) {
@@ -150,41 +147,46 @@ const ProcessEditor = () => {
   const handleSaveAndSimulate = async () => {
     setIsSaving(true);
     const payload = transformNodesForBackend(nodes);
+
     if (!payload) {
       toast({
         title: "Error Preparing Data",
-        description: "Could not prepare data for saving. Ensure a 'Process' root node exists.",
+        description: "Ensure a 'Process' root node exists.",
         variant: "destructive",
       });
       setIsSaving(false);
       return;
     }
+
     try {
       const response = await fetch(`${API_BASE_URL}/process`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (response.ok) {
-        const savedProcess = await response.json();
-        toast({
-          title: "Process Saved!",
-          description: "Your process model has been successfully saved.",
-        });
-        navigate(`/processes/${savedProcess.id}/simulate`);
-      } else {
-        const errorData = await response.text();
-        toast({
-          title: "Save Failed",
-          description: `Server responded with ${response.status}: ${errorData || 'Unknown error'}`,
-          variant: "destructive",
+
+      if (!response.ok) throw new Error(await response.text());
+
+      const savedProcess = await response.json();
+
+      if (simulationId) {
+        await fetch(`${API_BASE_URL}/simulations/${simulationId}/delivery-process/${savedProcess.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
         });
       }
-    } catch (error) {
-      console.error("Error saving process:", error);
+
       toast({
-        title: "Network Error",
-        description: `Could not connect to the server: ${error.message}`,
+        title: "Process Saved!",
+        description: "Your process model has been successfully saved.",
+      });
+
+      navigate(`/simulations/${simulationId}/processes/${savedProcess.id}/simulate`);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Save Failed",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -211,31 +213,29 @@ const ProcessEditor = () => {
               transition={{ duration: 0.4, delay: 0.1, ease: "circOut" }}
               className="h-[calc(100vh-10rem)] shadow-xl rounded-xl overflow-y-auto"
           >
-              {/* Árvore de Processos */}
-              <ProcessTreeView
-                  nodes={nodes}
-                  onNodeClick={handleNodeClick}
-                  selectedNodeId={selectedNodeId}
-                  onAddRootNode={() => {
-                    if (hasRootNode) {
-                      toast({
-                        title: "Action Denied",
-                        description: "A root 'Process' node already exists.",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                    setParentNodeForDialog(null);
-                    setIsAddNodeDialogOpen(true);
-                  }}
-                  hasRootNode={hasRootNode}
-                  getChildNodes={getChildNodes}
-                  dropTargetInfo={dropTargetInfo}
-                  onDeleteAllNodes={handleUIDeleteAllNodes}
-              />
+            <ProcessTreeView
+                nodes={nodes}
+                onNodeClick={handleNodeClick}
+                selectedNodeId={selectedNodeId}
+                onAddRootNode={() => {
+                  if (hasRootNode) {
+                    toast({
+                      title: "Action Denied",
+                      description: "A root 'Process' node already exists.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  setParentNodeForDialog(null);
+                  setIsAddNodeDialogOpen(true);
+                }}
+                hasRootNode={hasRootNode}
+                getChildNodes={getChildNodes}
+                dropTargetInfo={dropTargetInfo}
+                onDeleteAllNodes={handleUIDeleteAllNodes}
+            />
           </motion.div>
 
-          {/* Coluna da direita: painel + botão */}
           <motion.div
               initial={{ x: 100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -262,13 +262,12 @@ const ProcessEditor = () => {
                          disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <Rocket className={`mr-2 h-5 w-5 ${isSaving ? 'animate-spin' : ''}`} />
-                {isSaving ? 'Saving...' : 'Save & Simulate'}
+                {isSaving ? 'Saving...' : 'Save & Continue'}
               </Button>
             </div>
           </motion.div>
         </div>
 
-        {/* Dialog & DragOverlay */}
         <AddNodeDialog
             isOpen={isAddNodeDialogOpen}
             onClose={() => setIsAddNodeDialogOpen(false)}

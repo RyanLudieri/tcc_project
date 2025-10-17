@@ -22,19 +22,17 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/library" element={<ProcessLibraryPage />} />
-              <Route 
-                path="/processes/:id/edit" 
-                element={<ProcessEditor />} 
-              />
-              <Route 
-                path="/processes/:id/simulate" 
-                element={<SimulationSetup />}
-              />
-              <Route 
-                path="/processes/:id/results" 
-                element={<SimulationResults />}
-              /> 
+
+              {/* Editor */}
+              <Route path="/simulations/:simulationId/processes/:processId/edit" element={<ProcessEditor />} />
+
+              {/* Simulation Setup */}
+              <Route path="/simulations/:simulationId/processes/:processId/simulate" element={<SimulationSetup />} />
+
+              {/* Simulation Results */}
+              <Route path="/simulations/:simulationId/processes/:processId/results" element={<SimulationResults />} />
             </Routes>
+
           </main>
           <Toaster />
         </div>

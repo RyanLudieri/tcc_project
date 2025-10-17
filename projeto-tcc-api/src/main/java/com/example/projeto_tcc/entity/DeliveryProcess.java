@@ -1,9 +1,8 @@
 package com.example.projeto_tcc.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -12,6 +11,7 @@ import java.util.List;
 @Entity
 @Data
 public class DeliveryProcess extends Process {
+
     @OneToMany(mappedBy = "deliveryProcess", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<RoleConfig> roleConfigs = new ArrayList<>();
@@ -28,6 +28,9 @@ public class DeliveryProcess extends Process {
     @JsonManagedReference
     private List<GeneratorConfig> generatorConfigs = new ArrayList<>();
 
+    @OneToOne(mappedBy = "deliveryProcess")
+    @JsonBackReference
+    private Simulation simulation;
 }
 
 

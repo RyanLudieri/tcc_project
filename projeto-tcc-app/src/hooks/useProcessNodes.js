@@ -1,20 +1,20 @@
 import { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  arrayMove, 
-  insertNode, 
-  removeNode, 
-  updateNode, 
-  findNode, 
-  getParentId, 
-  getFlatNodes, 
-  getDragDepth, 
-  getMaxDepth, 
-  getMinDepth, 
-  getNodeIndex, 
-  countChildren, 
-  getPredecessorIdsForNode, 
-  transformNodesForBackend as originalTransformNodesForBackend 
+import {
+  arrayMove,
+  insertNode,
+  removeNode,
+  updateNode,
+  findNode,
+  getParentId,
+  getFlatNodes,
+  getDragDepth,
+  getMaxDepth,
+  getMinDepth,
+  getNodeIndex,
+  countChildren,
+  getPredecessorIdsForNode,
+  transformNodesForBackend as originalTransformNodesForBackend
 } from '@/lib/nodeUtils';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -64,7 +64,7 @@ const initialNodesData = [
             presentationName: 'Reunião de Kick-off',
             type: 'Activity',
             index: "2",
-            parentId: null, 
+            parentId: null,
             predecessors: [],
             description: 'Alinhamento inicial com stakeholders.',
             modelInfo: '',
@@ -117,7 +117,7 @@ const initialNodesData = [
         type: 'Phase',
         index: "4",
         parentId: 'root-process',
-        predecessors: [], 
+        predecessors: [],
         description: 'Construção do software em sprints.',
         modelInfo: 'Iterativo',
         children: [
@@ -191,7 +191,7 @@ const initialNodesData = [
             type: 'Milestone',
             index: "8",
             parentId: null,
-            predecessors: [], 
+            predecessors: [],
             description: 'Ponto de verificação da qualidade do código.',
             modelInfo: 'Critico',
             children: []
@@ -349,7 +349,7 @@ export const useProcessNodes = (processId) => {
     const initialOpenStates = {};
     flattenedInitialNodes.forEach(node => {
       if (node.children && node.children.length > 0) {
-        initialOpenStates[node.id] = true; 
+        initialOpenStates[node.id] = true;
       }
     });
     return initialOpenStates;
@@ -369,6 +369,7 @@ export const useProcessNodes = (processId) => {
         title: "Erro ao Salvar",
         description: "Não foi possível salvar as alterações no armazenamento local. Verifique o espaço disponível.",
         variant: "destructive",
+        duration: 1000,
       });
     }
   }, [nodes, processId, toast]);
@@ -389,53 +390,24 @@ export const useProcessNodes = (processId) => {
       return { success: false, error: `Not allowed to insert "${nodeData.type}" inside "${parentNode?.type || 'Root'}".` };
     }
 
-    let newIndex = null;
-    if (nodeData.type !== 'Artifact' && nodeData.type !== 'Role') {
-        const siblings = parentNode ? nodes.filter(n => n.parentId === actualParentId && n.type !== 'Artifact' && n.type !== 'Role') : nodes.filter(n => !n.parentId && n.type !== 'Artifact' && n.type !== 'Role');
-        const lastSiblingWithIndex = [...siblings].sort((a, b) => {
-            if (a.index === null) return 1;
-            if (b.index === null) return -1;
-            const aParts = String(a.index).split('.').map(Number);
-            const bParts = String(b.index).split('.').map(Number);
-            for (let i = 0; i < Math.min(aParts.length, bParts.length); i++) {
-                if (aParts[i] !== bParts[i]) return aParts[i] - bParts[i];
-            }
-            return aParts.length - bParts.length;
-        }).pop();
-
-        if (parentNode && parentNode.index !== null) {
-            const parentIndexParts = String(parentNode.index).split('.');
-            let lastSiblingPart = 0;
-            if(lastSiblingWithIndex && lastSiblingWithIndex.index) {
-                const lastSiblingIndexParts = String(lastSiblingWithIndex.index).split('.');
-                lastSiblingPart = parseInt(lastSiblingIndexParts[lastSiblingIndexParts.length -1], 10);
-            }
-            newIndex = `${parentNode.index}.${lastSiblingPart + 1}`;
-
-        } else if (parentNode && parentNode.index === null && parentNode.type === 'Process') {
-             const topLevelSiblings = nodes.filter(n => n.parentId === actualParentId && n.type !== 'Artifact' && n.type !== 'Role');
-             newIndex = topLevelSiblings.length > 0 ? Math.max(...topLevelSiblings.map(s => parseInt(String(s.index).split('.')[0], 10))) + 1 : 1;
-        } else {
-            newIndex = lastSiblingWithIndex ? parseFloat(String(lastSiblingWithIndex.index).split('.').pop()) + 1 : (siblings.length + 1);
-        }
-        newIndex = String(newIndex);
-    }
-
     const newNode = {
       id: uuidv4(),
       ...nodeData,
       parentId: actualParentId,
-      index: newIndex,
+      index: null, // será recalculado globalmente
       children: [],
       predecessors: nodeData.predecessors || [],
       optional: false
     };
-    
-    setNodes(prevNodes => insertNode(prevNodes, newNode));
-    if (actualParentId) {
-      setOpenStates(prev => ({ ...prev, [actualParentId]: true }));
-    }
+
+    setNodes(prevNodes => {
+      const insertedNodes = insertNode(prevNodes, newNode);
+      return reorderAndReindexNodes([...insertedNodes]);
+    });
+
+    if (actualParentId) setOpenStates(prev => ({ ...prev, [actualParentId]: true }));
     setSelectedNodeId(newNode.id);
+
     return { success: true, newNode };
   }, [selectedNodeId, nodes]);
 
@@ -452,7 +424,7 @@ export const useProcessNodes = (processId) => {
         return newNodes;
     });
   }, []);
-  
+
   const deleteNodeInternal = useCallback((nodeId) => {
     const nodeToDelete = findNode(nodes, nodeId);
     if (!nodeToDelete) return { success: false, error: "Node not found." };
@@ -460,7 +432,7 @@ export const useProcessNodes = (processId) => {
     if (nodeToDelete.type === 'Process') {
       return { success: false, error: "The root 'Process' node cannot be deleted." };
     }
-    
+
     setNodes(prevNodes => removeNode(prevNodes, nodeId));
     if (selectedNodeId === nodeId) {
       setSelectedNodeId(nodeToDelete.parentId || null);
@@ -473,7 +445,7 @@ export const useProcessNodes = (processId) => {
     if (processNode) {
       const newNodes = [{ ...processNode, children: [], predecessors: [] }];
       setNodes(getFlatNodes(assignParentIds(newNodes)));
-      setSelectedNodeId(processNode.id); 
+      setSelectedNodeId(processNode.id);
       setOpenStates({ [processNode.id]: true });
     } else {
        setNodes([]);
@@ -482,31 +454,27 @@ export const useProcessNodes = (processId) => {
     }
   }, [nodes]);
 
+// substitua a função reorderAndReindexNodes existente por esta:
   const reorderAndReindexNodes = (newOrderedNodes) => {
     let counter = 1;
 
-    const assignFlatIndices = (nodesList, parentId = null) => {
-      // pega nós filhos de parentId na ordem em que aparecem
+    const assignGlobalIndices = (nodesList, parentId = null) => {
       nodesList
           .filter(n => n.parentId === parentId)
           .forEach(node => {
-            // só indexa se não for Artifact nem Role
             if (node.type !== 'Artifact' && node.type !== 'Role') {
               node.index = String(counter++);
             } else {
               node.index = null;
             }
-
-            // continua recursivamente nos filhos
-            assignFlatIndices(nodesList, node.id);
+            assignGlobalIndices(nodesList, node.id);
           });
     };
 
-    // começa a partir do root Process
     const rootProcessNode = newOrderedNodes.find(n => n.type === 'Process');
     const rootParentId = rootProcessNode ? rootProcessNode.id : null;
 
-    assignFlatIndices(newOrderedNodes, rootParentId);
+    assignGlobalIndices(newOrderedNodes, rootParentId);
 
     return newOrderedNodes;
   };
@@ -521,14 +489,14 @@ export const useProcessNodes = (processId) => {
       setDropTargetInfo(null);
       return;
     }
-  
+
     const activeNode = findNode(nodes, activeId);
     const overNode = findNode(nodes, overId);
     if (!activeNode || !overNode) return;
-  
+
     const overNodeDepth = getDragDepth(overNode.id, nodes);
-    
-    let position = 'child'; 
+
+    let position = 'child';
     if (overRect && activeRect) {
         const hoverOffsetY = activeRect.top + activeRect.height / 2 - overRect.top;
         if (hoverOffsetY < overRect.height * 0.25) {
@@ -537,7 +505,7 @@ export const useProcessNodes = (processId) => {
           position = 'after';
         }
     }
-    
+
     const isSameParent = activeNode.parentId === overNode.parentId;
     const isDirectChildAttempt = activeNode.parentId === overNode.id;
 
@@ -633,7 +601,7 @@ export const useProcessNodes = (processId) => {
 
     return { success: true, message: `"${activeNode.presentationName}" was reorganized.` };
   };
-  
+
   const transformNodesForBackend = useCallback(() => {
     return originalTransformNodesForBackend(nodes);
   }, [nodes]);
@@ -672,6 +640,6 @@ export const useProcessNodes = (processId) => {
     findNode: (nodeId) => findNode(nodes, nodeId),
     getChildNodes,
     getAllowedChildTypes,
-    flattenedNodes: getFlatNodes(assignParentIds(nodes)), 
+    flattenedNodes: getFlatNodes(assignParentIds(nodes)),
   };
 };
