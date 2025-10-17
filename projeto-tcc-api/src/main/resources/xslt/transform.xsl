@@ -108,13 +108,13 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   //generate the model
 
   if (man.GenerateModel())
-  //   System.out.println("\nModel successfuly generated!\n");
-  //else
-  //{
-  //   System.out.println("\nThere was an errors during the model generation!\n");
-  //   System.out.println("Exiting...\n");
-  //   return;
-  //}
+     System.out.println("\nModel successfuly generated!\n");
+  else
+  {
+     System.out.println("\nThere was an errors during the model generation!\n");
+     System.out.println("Exiting...\n");
+     return;
+  }
 
   //start the simulation
 
@@ -160,7 +160,7 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   <!-- Iteration e Release -->
   <xsl:when test="/acd/act[@id='Iteration'] and /acd/act[@id='Release']">
     // iteration e release
-    man.ExecuteSimulation(simulationDuration,
+    man.ExecuteSimulation(simulationTime,
       (float)<xsl:value-of select="/acd/act[@id='Iteration']/stat/@parm1"/>,
       (float)<xsl:value-of select="/acd/act[@id='Release']/stat/@parm1"/>);
   </xsl:when>
@@ -168,21 +168,21 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   <!-- Só Iteration -->
   <xsl:when test="/acd/act[@id='Iteration'] and not(/acd/act[@id='Release'])">
     // só iteration
-    man.ExecuteSimulation(simulationDuration,
+    man.ExecuteSimulation(simulationTime,
       (float)<xsl:value-of select="/acd/act[@id='Iteration']/stat/@parm1"/>, 0);
   </xsl:when>
 
   <!-- Só Release -->
   <xsl:when test="not(/acd/act[@id='Iteration']) and /acd/act[@id='Release']">
     // só release
-    man.ExecuteSimulation(simulationDuration,
+    man.ExecuteSimulation(simulationTime,
       0, (float)<xsl:value-of select="/acd/act[@id='Release']/stat/@parm1"/>);
   </xsl:when>
 
   <!-- Nenhum -->
   <xsl:when test="not(/acd/act[@id='Iteration']) and not(/acd/act[@id='Release'])">
     // nenhum nem outro
-    man.ExecuteSimulation(simulationDuration);
+    man.ExecuteSimulation(simulationTime);
   </xsl:when>
 </xsl:choose>
 
@@ -200,7 +200,7 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   //System.out.println("Simulation Stopped!\n");
 
   //finally, output the results
-  //man.OutputSimulationResults (" <xsl:value-of select="@id"/><xsl:text>.out");</xsl:text>
+  man.OutputSimulationResults ("<xsl:value-of select="@id"/><xsl:text>.out");</xsl:text>
 
 </xsl:template>
 
@@ -460,13 +460,13 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   <xsl:text>
   iae.setDistP1(</xsl:text>
   <xsl:value-of select="@parm1"/>
-  <xsl:text>);// mapped by parm1</xsl:text>
+  <xsl:text>f);// mapped by parm1</xsl:text>
   </xsl:if>
   <xsl:if test="@parm2">
   <xsl:text>
   iae.setDistP2(</xsl:text>
   <xsl:value-of select="@parm2"/>
-  <xsl:text>); //mapped by parm2</xsl:text>
+  <xsl:text>f); //mapped by parm2</xsl:text>
   </xsl:if>
 </xsl:template>
 
@@ -477,13 +477,13 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   <xsl:text>
   eae.setDistP1(</xsl:text>
   <xsl:value-of select="@parm1"/>
-  <xsl:text>);// mapped by parm1</xsl:text>
+  <xsl:text>f);// mapped by parm1</xsl:text>
   </xsl:if>
   <xsl:if test="@parm2">
   <xsl:text>
   eae.setDistP2(</xsl:text>
   <xsl:value-of select="@parm2"/>
-  <xsl:text>); //mapped by parm2</xsl:text>
+  <xsl:text>f); //mapped by parm2</xsl:text>
   </xsl:if>
 </xsl:template>
 

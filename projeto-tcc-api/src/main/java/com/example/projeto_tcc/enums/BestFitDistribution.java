@@ -1,7 +1,7 @@
 package com.example.projeto_tcc.enums;
 
 public enum BestFitDistribution {
-    CONSTANT,
+    CONST,
     NORMAL,
     LOGNORMAL,
     POISSON,

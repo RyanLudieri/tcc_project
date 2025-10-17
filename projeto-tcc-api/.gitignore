@@ -41,3 +41,5 @@ build/
 # =======================================================
 *.jar
 !/libs/simulation-manager-1.0-SNAPSHOT.jar
+
+./output

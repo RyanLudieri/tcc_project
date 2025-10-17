@@ -25,7 +25,7 @@ public class SimulationGenerationService {
 
             // --- PASSO 3: EXECUÇÃO ---
             // Chama o novo serviço para compilar e executar o código que acabamos de gerar.
-            executionService.compileAndExecute(generatedJavaCode, "adaptme.DynamicExperimentationProgramProxy");
+            executionService.compileAndExecute(generatedJavaCode, "DynamicExperimentationProgramProxy");
 
             return Paths.get(javaOutputPath);
 

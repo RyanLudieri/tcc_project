@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.service;
 
+import com.example.projeto_tcc.dto.GeneratorConfigDTO;
 import com.example.projeto_tcc.dto.MethodElementObserverDTO;
 import com.example.projeto_tcc.dto.ObserverUpdateDTO;
 import com.example.projeto_tcc.dto.WorkProductConfigDTO;
@@ -8,9 +9,7 @@ import com.example.projeto_tcc.entity.Observer;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.enums.ProcessType;
 import com.example.projeto_tcc.enums.Queue;
-import com.example.projeto_tcc.repository.MethodElementRepository;
-import com.example.projeto_tcc.repository.MethodElementObserverRepository;
-import com.example.projeto_tcc.repository.WorkProductConfigRepository;
+import com.example.projeto_tcc.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +25,8 @@ public class WorkProductConfigService {
     private final WorkProductConfigRepository configRepository;
     private final MethodElementObserverRepository observerRepository;
     private final MethodElementRepository methodElementRepository;
+    private final DeliveryProcessRepository deliveryProcessRepository;
+    private final GeneratorConfigRepository generatorConfigRepository;
 
     private int queueIndex = 0;
     private final Map<String, WorkProductConfig> queueMap = new LinkedHashMap<>();
@@ -167,6 +168,7 @@ public class WorkProductConfigService {
             config.setInitial_quantity(0);
             config.setPolicy(Queue.FIFO);
             config.setGenerate_activity(false);
+            config.setDestroyer(false);
             config.setInput_output(inputOutput);
             config.setTask_name(taskName);
             config.setDeliveryProcess(deliveryProcess);
@@ -206,6 +208,7 @@ public class WorkProductConfigService {
                         wp.getInitial_quantity(),
                         wp.getPolicy(),
                         wp.isGenerate_activity(),
+                        wp.isDestroyer(),
                         wp.getActivity() != null ? wp.getActivity().getId() : null,
                         wp.getObservers().stream()
                                 .map(obs -> new MethodElementObserverDTO(
@@ -279,6 +282,7 @@ public class WorkProductConfigService {
         if (dto.getInitial_quantity() != null) config.setInitial_quantity(dto.getInitial_quantity());
         if (dto.getPolicy() != null) config.setPolicy(dto.getPolicy());
         config.setGenerate_activity(dto.isGenerate_activity());
+        config.setDestroyer(dto.isDestroy());
 
         WorkProductConfig saved = configRepository.save(config);
 
@@ -293,6 +297,7 @@ public class WorkProductConfigService {
                 saved.getInitial_quantity(),
                 saved.getPolicy(),
                 saved.isGenerate_activity(),
+                saved.isDestroyer(),
                 saved.getActivity() != null ? saved.getActivity().getId() : null,
                 saved.getObservers().stream()
                         .map(obs -> new MethodElementObserverDTO(
@@ -306,4 +311,65 @@ public class WorkProductConfigService {
                         .toList()
         );
     }
+
+
+    @Transactional
+    public GeneratorConfig addGeneratorToProcess(Long processId, GeneratorConfigDTO dto) {
+        DeliveryProcess process = deliveryProcessRepository.findById(processId)
+                .orElseThrow(() -> new EntityNotFoundException("Processo não encontrado com ID: " + processId));
+        WorkProductConfig targetQueue = configRepository.findById(dto.getWorkProductConfigId())
+                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig de destino não encontrado com ID: " + dto.getWorkProductConfigId()));
+
+        DistributionParameter dist = new DistributionParameter();
+        dist.setConstant(dto.getConstant());
+        dist.setMean(dto.getMean());
+        dist.setAverage(dto.getAverage());
+        dist.setStandardDeviation(dto.getStandardDeviation());
+        dist.setLow(dto.getLow());
+        dist.setHigh(dto.getHigh());
+        dist.setScale(dto.getScale());
+        dist.setShape(dto.getShape());
+
+        GeneratorConfig newGenerator = new GeneratorConfig();
+        newGenerator.setDistributionType(dto.getDistributionType());
+        newGenerator.setDistribution(dist);
+        newGenerator.setTargetWorkProduct(targetQueue);
+
+        process.getGeneratorConfigs().add(newGenerator);
+        newGenerator.setDeliveryProcess(process);
+
+        targetQueue.setGenerate_activity(true);
+        configRepository.save(targetQueue);
+
+        return generatorConfigRepository.save(newGenerator);
+    }
+
+    @Transactional
+    public void removeGenerator(Long generatorId) {
+        GeneratorConfig generator = generatorConfigRepository.findById(generatorId)
+                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado com ID: " + generatorId));
+
+        WorkProductConfig target = generator.getTargetWorkProduct();
+        if (target != null) {
+            target.setGenerate_activity(false);
+            configRepository.save(target);
+        }
+
+        DeliveryProcess process = generator.getDeliveryProcess();
+        if (process != null) {
+            process.getGeneratorConfigs().remove(generator);
+            deliveryProcessRepository.save(process);
+        } else {
+            generatorConfigRepository.delete(generator);
+        }
+    }
+
+    @Transactional
+    public void setDestroyer(Long workProductConfigId, boolean isDestroyer) {
+        WorkProductConfig selectedQueue = configRepository.findById(workProductConfigId)
+                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig não encontrado"));
+        selectedQueue.setDestroyer(isDestroyer);
+        configRepository.save(selectedQueue);
+    }
+
 }

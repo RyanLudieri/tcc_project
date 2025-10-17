@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -44,7 +45,7 @@ public class XACDMLService {
      */
     @Transactional(readOnly = true)
     public String generateXACDMLContent(Long processId, String acdId) {
-        DeliveryProcess process = deliveryProcessRepository.findById(processId)
+        DeliveryProcess process = deliveryProcessRepository.findProcessWithAllConfigsById(processId)
                 .orElseThrow(() -> new RuntimeException("Process not found with id: " + processId));
         String processName = process.getName();
 
@@ -57,6 +58,10 @@ public class XACDMLService {
         Set<String> classes = new TreeSet<>();
         List<RoleConfig> roles = roleRepo.findByDeliveryProcessId(processId);
         List<WorkProductConfig> wps = wpRepo.findByDeliveryProcessId(processId);
+        wps.sort(Comparator.comparingInt(wp ->
+                Integer.parseInt(wp.getQueue_name().substring(1))
+        ));
+
         roles.forEach(role -> classes.add(role.getName()));
         wps.forEach(wp -> classes.add(wp.getWorkProductName()));
         classes.forEach(clazz -> {
@@ -85,6 +90,44 @@ public class XACDMLService {
             sb.append("    </dead>\n");
         }
 
+        // 1. Geração dos Geradores (Generators)
+        for (GeneratorConfig generator : process.getGeneratorConfigs()) {
+            DistributionParameter dist = generator.getDistribution();
+            WorkProductConfig targetWp = generator.getTargetWorkProduct();
+
+            if (dist == null || targetWp == null) continue;
+
+            sb.append("    <generate id=\"Gerador_Para_").append(escapeXml(targetWp.getQueue_name())).append("\">\n");
+            sb.append("        <next dead=\"").append(escapeXml(targetWp.getQueue_name())).append("\"/>\n");
+
+            if (generator.getDistributionType() != null) {
+                sb.append("        <stat type=\"").append(generator.getDistributionType()).append("\" ");
+                switch (generator.getDistributionType()) {
+                    case "CONST" -> sb.append("parm1=\"").append(dist.getConstant()).append("\" ");
+                    case "NORMAL" -> sb.append("parm1=\"").append(dist.getAverage())
+                            .append("\" parm2=\"").append(dist.getStandardDeviation()).append("\" ");
+                    case "UNIFORM" -> sb.append("parm1=\"").append(dist.getLow())
+                            .append("\" parm2=\"").append(dist.getHigh()).append("\" ");
+                    case "LOGNORMAL", "GAMMA", "WEIBULL" -> sb.append("parm1=\"").append(dist.getScale())
+                            .append("\" parm2=\"").append(dist.getShape()).append("\" ");
+                    case "EXPONENTIAL" -> sb.append("parm1=\"").append(dist.getMean()).append("\" ");
+                    case "POISSON", "NEGATIVE_EXPONENTIAL" -> sb.append("parm1=\"").append(dist.getAverage()).append("\" ");
+                    default -> sb.append("parm1=\"0.001\" ");
+                }
+                sb.append("/>\n");
+            }
+            sb.append("    </generate>\n");
+        }
+
+        // 2. Geração dos Destruidores (Destroyers)
+        for (WorkProductConfig wp : wps) {
+            if (wp.isDestroyer()) {
+                sb.append("    <destroy id=\"Destruidor_Para_").append(escapeXml(wp.getQueue_name())).append("\">\n");
+                sb.append("        <prev dead=\"").append(escapeXml(wp.getQueue_name())).append("\"/>\n");
+                sb.append("    </destroy>\n");
+            }
+        }
+
         // Activities
         for (WorkProductConfig wp : wps) {
             if ("OUTPUT".equalsIgnoreCase(wp.getInput_output())) continue;
@@ -105,16 +148,32 @@ public class XACDMLService {
             if (act.getDistributionType() != null && act.getDistributionParameter() != null) {
                 sb.append("        <stat type=\"").append(act.getDistributionType()).append("\" ");
                 switch (act.getDistributionType()) {
-                    case CONSTANT -> sb.append("parm1=\"").append(act.getDistributionParameter().getConstant()).append("\" ");
-                    case NORMAL -> sb.append("parm1=\"").append(act.getDistributionParameter().getAverage())
+                    case CONST :
+                            Double constantValue = act.getDistributionParameter().getConstant();
+                            double safeValue = (constantValue == null || constantValue == 0.0) ? 0.001 : constantValue;
+                            sb.append("parm1=\"").append(safeValue).append("\" ");
+                            break;
+                    case NORMAL:
+                        sb.append("parm1=\"").append(act.getDistributionParameter().getAverage())
                             .append("\" parm2=\"").append(act.getDistributionParameter().getStandardDeviation()).append("\" ");
-                    case UNIFORM -> sb.append("parm1=\"").append(act.getDistributionParameter().getLow())
+                        break;
+                    case UNIFORM :
+                        sb.append("parm1=\"").append(act.getDistributionParameter().getLow())
                             .append("\" parm2=\"").append(act.getDistributionParameter().getHigh()).append("\" ");
-                    case LOGNORMAL, GAMMA, WEIBULL -> sb.append("parm1=\"").append(act.getDistributionParameter().getScale())
+                        break;
+                    case LOGNORMAL, GAMMA, WEIBULL :
+                        sb.append("parm1=\"").append(act.getDistributionParameter().getScale())
                             .append("\" parm2=\"").append(act.getDistributionParameter().getShape()).append("\" ");
-                    case EXPONENTIAL -> sb.append("parm1=\"").append(act.getDistributionParameter().getMean()).append("\" ");
-                    case POISSON, NEGATIVE_EXPONENTIAL -> sb.append("parm1=\"").append(act.getDistributionParameter().getAverage()).append("\" ");
-                    default -> sb.append("parm1=\"0.0\" ");
+                        break;
+                    case EXPONENTIAL :
+                        sb.append("parm1=\"").append(act.getDistributionParameter().getMean()).append("\" ");
+                        break;
+                    case POISSON, NEGATIVE_EXPONENTIAL :
+                        sb.append("parm1=\"").append(act.getDistributionParameter().getAverage()).append("\" ");
+                        break;
+                    default:
+                        sb.append("parm1=\"0.0\" ");
+                        break;
                 }
                 sb.append("/>\n");
             }

@@ -3,6 +3,12 @@ package com.example.projeto_tcc.service;
 import org.codehaus.janino.SimpleCompiler;
 import org.springframework.stereotype.Service;
 import java.lang.reflect.Method;
+import java.io.StringReader;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 
 @Service
 public class ExecutionService {
@@ -10,16 +16,18 @@ public class ExecutionService {
     public void compileAndExecute(String javaCode, String fullClassName) throws Exception {
         System.out.println("Iniciando compilação dinâmica com Janino...");
 
-        // 1. Obtém o ClassLoader da thread atual. Este ClassLoader "conhece"
-        //    todas as classes da sua aplicação Spring Boot.
+        Path outputDir = Paths.get("output");
+
+        if (!Files.exists(outputDir)) {
+            Files.createDirectories(outputDir);
+            System.out.println("Diretório 'output' criado com sucesso.");
+        }
+
         ClassLoader parentClassLoader = ExecutionService.class.getClassLoader();
 
-        // 2. Cria o compilador Janino, passando o nosso ClassLoader como "pai".
-        //    Agora, o compilador herdará todo o conhecimento do nosso app.
         SimpleCompiler compiler = new SimpleCompiler();
         compiler.setParentClassLoader(parentClassLoader);
 
-        // O resto do código permanece o mesmo.
         compiler.cook(javaCode);
 
         Class<?> compiledClass = compiler.getClassLoader().loadClass(fullClassName);
