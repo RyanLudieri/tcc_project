@@ -7,11 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GeneratorConfigDTO {
-
+public class WorkProductConfigSummaryDTO {
     private Long id;
-    private String distributionType;
-
-    private DistributionParameterDTO distribution;
-    private WorkProductConfigSummaryDTO targetWorkProduct;
+    private String workProductName;
+    private String queue_name;
+    private boolean generate_activity;
 }

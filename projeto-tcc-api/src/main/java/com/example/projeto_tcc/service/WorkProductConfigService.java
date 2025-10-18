@@ -1,9 +1,6 @@
 package com.example.projeto_tcc.service;
 
-import com.example.projeto_tcc.dto.GeneratorConfigDTO;
-import com.example.projeto_tcc.dto.MethodElementObserverDTO;
-import com.example.projeto_tcc.dto.ObserverUpdateDTO;
-import com.example.projeto_tcc.dto.WorkProductConfigDTO;
+import com.example.projeto_tcc.dto.*;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Observer;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
@@ -314,13 +311,50 @@ public class WorkProductConfigService {
 
 
     @Transactional
-    public GeneratorConfig addGeneratorToProcess(Long processId, GeneratorConfigDTO dto) {
+    public GeneratorConfigDTO addGeneratorToProcess(Long processId, GeneratorConfigRequestDTO requestDto) {
         DeliveryProcess process = deliveryProcessRepository.findById(processId)
                 .orElseThrow(() -> new EntityNotFoundException("Processo não encontrado com ID: " + processId));
-        WorkProductConfig targetQueue = configRepository.findById(dto.getWorkProductConfigId())
-                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig de destino não encontrado com ID: " + dto.getWorkProductConfigId()));
+        WorkProductConfig targetQueue = configRepository.findById(requestDto.getWorkProductConfigId())
+                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig de destino não encontrado com ID: " + requestDto.getWorkProductConfigId()));
 
         DistributionParameter dist = new DistributionParameter();
+        dist.setConstant(requestDto.getConstant());
+        dist.setMean(requestDto.getMean());
+        dist.setAverage(requestDto.getAverage());
+        dist.setStandardDeviation(requestDto.getStandardDeviation());
+        dist.setLow(requestDto.getLow());
+        dist.setHigh(requestDto.getHigh());
+        dist.setScale(requestDto.getScale());
+        dist.setShape(requestDto.getShape());
+
+        GeneratorConfig newGenerator = new GeneratorConfig();
+        newGenerator.setDistributionType(requestDto.getDistributionType());
+        newGenerator.setDistribution(dist);
+        newGenerator.setTargetWorkProduct(targetQueue);
+        newGenerator.setDeliveryProcess(process);
+        process.getGeneratorConfigs().add(newGenerator);
+
+        targetQueue.setGenerate_activity(true);
+        configRepository.save(targetQueue);
+
+        GeneratorConfig savedGeneratorEntity = generatorConfigRepository.save(newGenerator);
+
+        return toResponseDTO(savedGeneratorEntity);
+    }
+
+    @Transactional
+    public GeneratorConfigDTO updateGenerator(Long generatorId, GeneratorConfigRequestDTO dto) {
+        GeneratorConfig existingGenerator = generatorConfigRepository.findById(generatorId)
+                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado com ID: " + generatorId));
+
+        existingGenerator.setDistributionType(dto.getDistributionType());
+
+        DistributionParameter dist = existingGenerator.getDistribution();
+        if (dist == null) {
+            dist = new DistributionParameter();
+            existingGenerator.setDistribution(dist);
+        }
+
         dist.setConstant(dto.getConstant());
         dist.setMean(dto.getMean());
         dist.setAverage(dto.getAverage());
@@ -330,18 +364,9 @@ public class WorkProductConfigService {
         dist.setScale(dto.getScale());
         dist.setShape(dto.getShape());
 
-        GeneratorConfig newGenerator = new GeneratorConfig();
-        newGenerator.setDistributionType(dto.getDistributionType());
-        newGenerator.setDistribution(dist);
-        newGenerator.setTargetWorkProduct(targetQueue);
+        GeneratorConfig savedGenerator = generatorConfigRepository.save(existingGenerator);
 
-        process.getGeneratorConfigs().add(newGenerator);
-        newGenerator.setDeliveryProcess(process);
-
-        targetQueue.setGenerate_activity(true);
-        configRepository.save(targetQueue);
-
-        return generatorConfigRepository.save(newGenerator);
+        return toResponseDTO(savedGenerator);
     }
 
     @Transactional
@@ -371,5 +396,48 @@ public class WorkProductConfigService {
         selectedQueue.setDestroyer(isDestroyer);
         configRepository.save(selectedQueue);
     }
+
+    private GeneratorConfigDTO toResponseDTO(GeneratorConfig entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        // 1. Mapear DistributionParameter para seu DTO
+        DistributionParameter distEntity = entity.getDistribution();
+        DistributionParameterDTO distDto = null;
+        if (distEntity != null) {
+            distDto = new DistributionParameterDTO();
+            distDto.setId(distEntity.getId());
+            distDto.setConstant(distEntity.getConstant());
+            distDto.setMean(distEntity.getMean());
+            distDto.setAverage(distEntity.getAverage());
+            distDto.setStandardDeviation(distEntity.getStandardDeviation());
+            distDto.setLow(distEntity.getLow());
+            distDto.setHigh(distEntity.getHigh());
+            distDto.setScale(distEntity.getScale());
+            distDto.setShape(distEntity.getShape());
+        }
+
+        // 2. Mapear WorkProductConfig para seu DTO resumido (SEM activity agora)
+        WorkProductConfig wpEntity = entity.getTargetWorkProduct();
+        WorkProductConfigSummaryDTO wpDto = null;
+        if (wpEntity != null) {
+            wpDto = new WorkProductConfigSummaryDTO(
+                    wpEntity.getId(),
+                    wpEntity.getWorkProductName(),
+                    wpEntity.getQueue_name(),
+                    wpEntity.isGenerate_activity()
+            );
+        }
+
+        // 3. Montar o DTO de resposta final (o SEU GeneratorConfigDTO)
+        return new GeneratorConfigDTO(
+                entity.getId(),
+                entity.getDistributionType(),
+                distDto,
+                wpDto
+        );
+    }
+
 
 }
