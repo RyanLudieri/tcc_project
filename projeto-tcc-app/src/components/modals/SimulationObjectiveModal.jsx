@@ -27,7 +27,7 @@ const SimulationObjectiveModal = ({ open, setOpen }) => {
             const simulation = await response.json();
 
             setOpen(false);
-            navigate(`simulations/${simulation.id}/processes/new/edit`);
+            navigate(`/simulations/${simulation.id}/processes/new/edit`);
         } catch (error) {
             console.error(error);
             alert("Failed to create simulation. Try again.");
