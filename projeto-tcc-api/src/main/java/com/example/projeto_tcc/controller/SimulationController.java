@@ -1,5 +1,6 @@
 package com.example.projeto_tcc.controller;
 
+import com.example.projeto_tcc.dto.SimulationResponseDTO;
 import com.example.projeto_tcc.service.DeliveryProcessService;
 import com.example.projeto_tcc.service.SimulationGenerationService;
 import com.example.projeto_tcc.service.SimulationService;
@@ -62,9 +63,10 @@ public class SimulationController {
 
 
     @GetMapping
-    public ResponseEntity<List<Simulation>> getAllSimulations() {
-        return ResponseEntity.ok(simulationService.getAllSimulations());
+    public List<SimulationResponseDTO> getAllSimulations() {
+        return simulationService.getAllSimulations();
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Simulation> getSimulation(@PathVariable Long id) {
