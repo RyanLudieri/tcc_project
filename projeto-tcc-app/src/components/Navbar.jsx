@@ -60,7 +60,7 @@ const Navbar = () => {
             </Button>
             
             <Button variant="ghost" asChild className="text-gray-300 hover:text-white hover:bg-gray-800">
-              <Link to="/library">
+              <Link to="/simulations">
                 <Library className="h-4 w-4 mr-2" />
                 Library
               </Link>
