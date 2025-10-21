@@ -65,7 +65,7 @@ const SimulationCard = ({ simulation, onView, onEditObjective, onDelete }) => {
                       {simulation.objective || "Untitled Simulation"}
                     </CardTitle>
                     <CardDescription className="text-xs text-muted-foreground mt-1">
-                      The objective of this simulation
+                      <span>Simulation ID: {simulation.id}</span>
                     </CardDescription>
                     {simulation.status && (
                         <div className="mt-2.5">

@@ -13,7 +13,7 @@ import {
     Activity, PlusCircle
 } from 'lucide-react';
 import SimulationCard from '@/components/library/SimulationCard.jsx';
-// import SimulationListItem from '@/components/library/SimulationListItem.jsx';
+import SimulationListItem from '@/components/library/SimulationListItem.jsx';
 // import SimulationPreview from '@/components/library/SimulationPreview.jsx';
 import SimulationObjectiveModal from '@/components/modals/SimulationObjectiveModal.jsx';
 import { API_BASE_URL } from "@/config/api";
@@ -108,9 +108,9 @@ const SimulationLibraryPage = () => {
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-primary">Simulation Library</h1>
+                        <h1 className="text-3xl font-bold text-primary">Simulations Library</h1>
                         <p className="text-muted-foreground mt-1">
-                            Manage and organize your simulation definitions
+                            Manage and organize your simulations
                         </p>
                     </div>
                 </div>
@@ -198,16 +198,16 @@ const SimulationLibraryPage = () => {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {/*{filteredSimulations.map((simulation) => (*/}
-                                    {/*    <SimulationListItem*/}
-                                    {/*        key={simulation.id}*/}
-                                    {/*        simulation={simulation}*/}
-                                    {/*        onView={handleViewSimulation}*/}
-                                    {/*        onEdit={handleEditSimulation}*/}
-                                    {/*        onDelete={handleDeleteSimulation}*/}
-                                    {/*        formatDate={formatDate}*/}
-                                    {/*    />*/}
-                                    {/*))}*/}
+                                    {filteredSimulations.map((simulation) => (
+                                        <SimulationListItem
+                                            key={simulation.id}
+                                            simulation={simulation}
+                                            onView={handleViewSimulation}
+                                            onEdit={handleEditSimulation}
+                                            onDelete={handleDeleteSimulation}
+                                            formatDate={formatDate}
+                                        />
+                                    ))}
                                 </div>
                             )}
                         </motion.div>
