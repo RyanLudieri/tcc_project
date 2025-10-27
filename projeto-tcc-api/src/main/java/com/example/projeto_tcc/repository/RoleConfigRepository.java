@@ -13,4 +13,6 @@ public interface RoleConfigRepository extends JpaRepository<RoleConfig, Long> {
 
     List<RoleConfig> findByActivities_Id(Long activityId);
 
+    void deleteByDeliveryProcessId(Long deliveryProcessId);
+
 }

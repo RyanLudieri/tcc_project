@@ -9,6 +9,7 @@ import lombok.Setter;
 @Setter
 public class Process extends Activity {
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL,
+              orphanRemoval = true)
     private WorkBreakdownStructure wbs;
 }

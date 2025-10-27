@@ -2,8 +2,12 @@
 package com.example.projeto_tcc.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Entity
@@ -25,6 +29,10 @@ public class GeneratorConfig {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "delivery_process_id")
-    @JsonBackReference // Evita loops infinitos ao converter para JSON
+    @JsonBackReference
     private DeliveryProcess deliveryProcess;
+
+    @OneToMany(mappedBy = "generatorConfig", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private Set<GeneratorObserver> observers = new HashSet<>();
 }
