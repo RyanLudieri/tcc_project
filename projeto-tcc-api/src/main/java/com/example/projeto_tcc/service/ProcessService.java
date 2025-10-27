@@ -4,9 +4,8 @@ import com.example.projeto_tcc.dto.*;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Process;
 import com.example.projeto_tcc.enums.ProcessType;
-import com.example.projeto_tcc.repository.MethodElementRepository;
-import com.example.projeto_tcc.repository.ActivityRepository;
-import com.example.projeto_tcc.repository.RoleConfigRepository;
+import com.example.projeto_tcc.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ProcessService {
@@ -27,14 +27,27 @@ public class ProcessService {
     private final RoleConfigService roleConfigService;
 
     private final ActivityConfigService activityConfigService;
+    private final WorkProductConfigRepository workProductConfigRepository;
+    private final RoleConfigRepository roleConfigRepository;
+    private final ActivityConfigRepository activityConfigRepository;
+
+    private final GeneratorConfigRepository generatorConfigRepository;
 
     // Construtor com injeção de dependência dos repositórios
-    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository, WorkProductConfigService workProductConfigService, RoleConfigService roleConfigService, ActivityConfigService activityConfigService) {
+    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository,
+                          WorkProductConfigService workProductConfigService, RoleConfigService roleConfigService,
+                          ActivityConfigService activityConfigService, WorkProductConfigRepository workProductConfigRepository,
+                          RoleConfigRepository roleConfigRepository, GeneratorConfigRepository generatorConfigRepository,
+                          ActivityConfigRepository activityConfigRepository) {
         this.repository = repository;
         this.methodElementRepository = methodElementRepository;
         this.workProductConfigService = workProductConfigService;
         this.roleConfigService =roleConfigService;
         this.activityConfigService = activityConfigService;
+        this.workProductConfigRepository = workProductConfigRepository;
+        this.roleConfigRepository = roleConfigRepository;
+        this.generatorConfigRepository = generatorConfigRepository;
+        this.activityConfigRepository = activityConfigRepository;
     }
 
     // Índice utilizado para manter ordem e referenciar elementos
@@ -59,11 +72,13 @@ public class ProcessService {
         // Criação da raiz do processo (DeliveryProcess)
         DeliveryProcess deliveryProcess = new DeliveryProcess();
         deliveryProcess.setName(dto.getName());
-        deliveryProcess.setPredecessors(dto.getPredecessors());
+        //deliveryProcess.setPredecessors(dto.getPredecessors());
         deliveryProcess.setType(ProcessType.DELIVERY_PROCESS);
         deliveryProcess.setIndex(currentIndex++);
         deliveryProcess.setOptional(dto.isOptional());
 //        deliveryProcess.setSimulationObjective(dto.getSimulationObjective());
+
+        indexToActivity.put(deliveryProcess.getIndex(), deliveryProcess);
 
         deliveryProcess = repository.save(deliveryProcess);
 
@@ -84,6 +99,19 @@ public class ProcessService {
             resolvePredecessors(elementDTOs.get(i), elements.get(i));
         }
 
+        if (dto.getPredecessors() != null) {
+            List<Activity> resolvedPredecessors = new ArrayList<>();
+            for (Integer predIndex : dto.getPredecessors()) { // Itera sobre os ÍNDICES
+                Activity pred = indexToActivity.get(predIndex); // Busca a ENTIDADE no mapa
+                if (pred != null) {
+                    resolvedPredecessors.add(pred);
+                } else {
+                    System.err.println("AVISO: Predecessor do PROCESSO (save) com índice " + predIndex + " não encontrado.");
+                }
+            }
+            deliveryProcess.setPredecessors(resolvedPredecessors); // Seta a List<Activity> resolvida
+        }
+
         // ⚠️ Salva as atividades no banco antes de usá-las em outra entidade
         elements = repository.saveAll(elements);
 
@@ -92,8 +120,6 @@ public class ProcessService {
         for (Activity activity : elements) {
             activityConfigService.createDefaultConfigsRecursively(activity, deliveryProcess);
         }
-
-
 
         wbs.setProcessElements(elements);
 
@@ -117,6 +143,160 @@ public class ProcessService {
         roleConfigService.generateConfigurations(methodElements, deliveryProcess);
 
         return repository.save(deliveryProcess);
+    }
+
+
+    /**
+     * Atualiza um processo existente (DeliveryProcess) substituindo sua estrutura e configurações.
+     * Limpa WBS e Configs antigas, e recria tudo baseado no DTO.
+     */
+    @Transactional
+    public Process updateProcess(Long processId, ProcessDTO dto) { // Retorna 'Process' como o save
+
+        // 1. Carregar o Processo Existente
+        DeliveryProcess existingProcess = (DeliveryProcess) repository.findById(processId)
+                .filter(p -> p instanceof DeliveryProcess)
+                .orElseThrow(() -> new EntityNotFoundException("DeliveryProcess não encontrado com ID: " + processId));
+
+        // 2. Atualizar Campos Diretos
+        existingProcess.setName(dto.getName());
+        existingProcess.setOptional(dto.isOptional());
+        System.out.println("Atualizando processo ID " + processId + ": " + existingProcess.getName());
+
+        // --- Limpeza Profunda ---
+        System.out.println("Iniciando limpeza das estruturas antigas...");
+
+        // 3. Remover Configurações (WP, Role, Generator)
+        System.out.println("Removendo configs antigas (WP, Role, Generator)...");
+        workProductConfigRepository.deleteByDeliveryProcessId(processId);
+        roleConfigRepository.deleteByDeliveryProcessId(processId);
+        generatorConfigRepository.deleteByDeliveryProcessId(processId);
+        // ActivityConfig será removida manualmente (passo 4c) ou em cascata
+
+        // 4. Remover Estrutura WBS Antiga
+        WorkBreakdownStructure oldWbs = existingProcess.getWbs();
+        if (oldWbs != null) {
+            System.out.println("Limpando WBS antiga...");
+
+            // 4a. Coleta todas as atividades (raízes e filhas)
+            List<Activity> oldRootActivities = oldWbs.getProcessElements() != null ? new ArrayList<>(oldWbs.getProcessElements()) : new ArrayList<>();
+            List<Activity> allOldActivities = new ArrayList<>();
+            collectAllActivities(oldRootActivities, allOldActivities);
+
+            // 4b. [CORREÇÃO FK] Quebrar links @ManyToMany (Predecessores)
+            System.out.println("Quebrando " + allOldActivities.size() + " links de predecessores antigos...");
+            if (!allOldActivities.isEmpty()) {
+                for (Activity act : allOldActivities) {
+                    act.setPredecessors(new ArrayList<>());
+                }
+                repository.saveAllAndFlush(allOldActivities);
+            }
+
+            // 4c. [CORREÇÃO DUPLICATE KEY] Deletar ActivityConfigs manualmente
+            // Isso deve ser feito ANTES do orphanRemoval deletar as Activities
+            if (!allOldActivities.isEmpty()) {
+                List<Long> allOldActivityIds = allOldActivities.stream()
+                        .map(Activity::getId)
+                        .collect(Collectors.toList());
+                System.out.println("Deletando " + allOldActivityIds.size() + " ActivityConfigs antigas manualmente...");
+                activityConfigRepository.deleteByActivityIdIn(allOldActivityIds); // <<< USA O NOVO MÉTODO
+                activityConfigRepository.flush();
+            }
+
+            // 4d. Acionar Cascade de OrphanRemoval (para WBS, Activities e MethodElements)
+            // (Assumindo que WBS tem orphanRemoval=true para MethodElements também)
+            System.out.println("Desassociando WBS para acionar remoção em cascata (orphanRemoval)...");
+            existingProcess.setWbs(null);
+
+        } else {
+            System.out.println("Nenhuma WBS antiga encontrada para remover.");
+        }
+
+        repository.saveAndFlush(existingProcess); // O Hibernate executa toda a limpeza em cascata aqui
+        System.out.println("Limpeza concluída.");
+
+        // --- Recriação (Idêntica à lógica do saveProcess) ---
+        System.out.println("Iniciando recriação da estrutura...");
+
+        // 5. Reiniciar estado dos helpers
+        currentIndex = 0;
+        indexToActivity.clear();
+        existingProcess.setIndex(currentIndex++); // Raiz é índice 0
+        indexToActivity.put(existingProcess.getIndex(), existingProcess);
+
+        // 6. Criar Nova WBS e Elementos Filhos
+        WorkBreakdownStructure newWbs = new WorkBreakdownStructure();
+        List<Activity> newRootElements = new ArrayList<>();
+        List<ProcessElementDTO> elementDTOs = dto.getProcessElements();
+
+        if (elementDTOs != null) {
+            for (ProcessElementDTO elemDto : elementDTOs) {
+                Activity element = toEntityWithoutPredecessors(elemDto);
+                //element.setSuperActivity(existingProcess);
+                newRootElements.add(element);
+            }
+        }
+
+        // 7. Resolver Predecessores (dos filhos e da raiz)
+        if (elementDTOs != null) {
+            for (int i = 0; i < elementDTOs.size(); i++) {
+                resolvePredecessors(elementDTOs.get(i), newRootElements.get(i));
+            }
+        }
+        if (dto.getPredecessors() != null) { // Lógica de resolução da raiz
+            List<Activity> resolvedPredecessors = new ArrayList<>();
+            for (Integer predIndex : dto.getPredecessors()) {
+                Activity pred = indexToActivity.get(predIndex);
+                if (pred != null) { resolvedPredecessors.add(pred); }
+                else { System.err.println("AVISO: Predecessor (update)... " + predIndex + " não encontrado."); }
+            }
+            existingProcess.setPredecessors(resolvedPredecessors);
+        } else {
+            existingProcess.setPredecessors(new ArrayList<>());
+        }
+
+        // 8. Criar Novos MethodElements
+        List<MethodElement> newMethodElements = new ArrayList<>();
+        if (dto.getMethodElements() != null) {
+            for (MethodElementDTO methodDto : dto.getMethodElements()) {
+                MethodElement method = toMethodEntity(methodDto);
+                newMethodElements.add(method);
+            }
+        }
+        newMethodElements = methodElementRepository.saveAll(newMethodElements);
+
+        // 9. Associar Novos Elementos à WBS e ao Processo
+        newWbs.setProcessElements(newRootElements);
+        newWbs.setMethodElements(newMethodElements);
+        existingProcess.setWbs(newWbs);
+
+        // 10. Recriar Configurações Padrão (ActivityConfig)
+        List<Activity> allNewActivities = new ArrayList<>();
+        collectAllActivities(newRootElements, allNewActivities);
+        for (Activity activity : allNewActivities) {
+            activityConfigService.createDefaultConfigsRecursively(activity, existingProcess);
+        }
+
+        // 11. Regenerar Configurações (WorkProduct e Role)
+        workProductConfigService.generateConfigurations(newMethodElements, newRootElements, existingProcess);
+        roleConfigService.generateConfigurations(newMethodElements, existingProcess);
+
+        // 12. Salvar o Processo Atualizado
+        System.out.println("Salvando processo atualizado...");
+        Process updatedProcess = repository.save(existingProcess);
+        System.out.println("Processo ID " + updatedProcess.getId() + " atualizado com sucesso.");
+
+        return updatedProcess;
+    }
+
+    private void collectAllActivities(List<Activity> roots, List<Activity> result) {
+        if (roots == null) return;
+        for (Activity activity : roots) {
+            if (activity != null) {
+                result.add(activity);
+                collectAllActivities(activity.getChildren(), result);
+            }
+        }
     }
 
 

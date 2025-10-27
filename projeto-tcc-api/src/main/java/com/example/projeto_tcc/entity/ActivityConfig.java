@@ -1,9 +1,11 @@
 package com.example.projeto_tcc.entity;
 
 import com.example.projeto_tcc.enums.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,8 @@ public class ActivityConfig {
     private Long id;
 
     @OneToOne
+    @JsonBackReference("activity-config")
+    @EqualsAndHashCode.Exclude
     private Activity activity;
 
     @OneToMany(mappedBy = "activityConfig", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -51,6 +55,8 @@ public class ActivityConfig {
 
     @ManyToOne
     @JoinColumn(name = "delivery_process_id")
+    @JsonBackReference
+    @EqualsAndHashCode.Exclude
     private DeliveryProcess deliveryProcess;
 
 

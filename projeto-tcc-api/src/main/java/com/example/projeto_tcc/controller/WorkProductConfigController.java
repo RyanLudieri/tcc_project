@@ -25,9 +25,6 @@ public class WorkProductConfigController {
         return workProductConfigService.getWorkProductsByDeliveryProcess(deliveryProcessId);
     }
 
-
-
-
     @PatchMapping("/{id}")
     public ResponseEntity<WorkProductConfigDTO> updateWorkProductConfig(
             @PathVariable Long id,

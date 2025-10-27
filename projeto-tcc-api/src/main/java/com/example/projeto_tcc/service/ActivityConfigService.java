@@ -29,6 +29,7 @@ public class ActivityConfigService {
     public ActivityConfig createDefaultConfig(Activity activity) {
         ActivityConfig config = new ActivityConfig();
         config.setActivity(activity);
+        activity.setActivityConfig(config);
 
         // Chama função auxiliar para setar atributos padrões específicos por tipo
         setDefaultAttributesByActivityType(activity, config);
@@ -58,7 +59,7 @@ public class ActivityConfigService {
         config.setDistributionType(BestFitDistribution.CONST);
         DistributionParameter param = new DistributionParameter();
         param.setConstant(defaultValue);
-        parameterRepository.save(param);
+        //parameterRepository.save(param);
         config.setDistributionParameter(param);
 
         // 🔹 Cria Sample (mesmo que vazio)
@@ -67,7 +68,7 @@ public class ActivityConfigService {
         sample.setDistribution(BestFitDistribution.CONST);
         sample.setParameter(param);
         sample.setSize(sampleSize);
-        sampleRepository.save(sample);
+        //sampleRepository.save(sample);
         config.setSample(sample);
 
         // 🔹 Medições (só se houver sample > 0)
@@ -79,13 +80,13 @@ public class ActivityConfigService {
                 m.setActivity(activity);
                 m.setSample(sample);
             }
-            measurementRepository.saveAll(measurements);
+            //measurementRepository.saveAll(measurements);
         }
         sample.setMeasurements(measurements);
 
         // 🔹 Persistir tudo
-        configRepository.save(config);
-        activityRepository.save(activity);
+        //configRepository.save(config);
+        //activityRepository.save(activity);
 
         return config;
     }
@@ -96,7 +97,7 @@ public class ActivityConfigService {
         ActivityConfig config = createDefaultConfig(activity);
         config.setDeliveryProcess(deliveryProcess);
 
-        configRepository.save(config);
+        //configRepository.save(config);
 
         if (activity.getChildren() != null) {
             for (Activity child : activity.getChildren()) {

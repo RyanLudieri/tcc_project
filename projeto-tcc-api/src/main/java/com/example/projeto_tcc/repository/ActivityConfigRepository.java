@@ -15,11 +15,15 @@ public interface ActivityConfigRepository extends JpaRepository<ActivityConfig, 
 
     ActivityConfig findByActivity(Activity activity);
 
+    void deleteByActivityIdIn(List<Long> activityIds);
+
 
     @Query("SELECT ac FROM ActivityConfig ac WHERE ac.activity.index > :currentIndex ORDER BY ac.activity.index ASC")
     ActivityConfig findNextActivityConfig(@Param("currentIndex") Long currentIndex);
 
     List<ActivityConfig> findByDeliveryProcessId(Long deliveryProcessId);
+
+    void deleteByDeliveryProcessId(Long deliveryProcessId);
 
 }
 

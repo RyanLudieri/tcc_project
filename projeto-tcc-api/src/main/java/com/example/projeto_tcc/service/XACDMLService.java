@@ -116,6 +116,13 @@ public class XACDMLService {
                 }
                 sb.append("/>\n");
             }
+
+            for (GeneratorObserver obs : generator.getObservers()) {
+                sb.append("        <observer type=\"").append(obs.getType())
+                        .append("\" name=\"").append(escapeXml(obs.getName()))
+                        .append("\"/>\n");
+            }
+
             sb.append("    </generate>\n");
         }
 
