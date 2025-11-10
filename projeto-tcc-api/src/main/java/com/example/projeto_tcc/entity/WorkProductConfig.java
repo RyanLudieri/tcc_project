@@ -1,6 +1,7 @@
 package com.example.projeto_tcc.entity;
 
 import com.example.projeto_tcc.enums.Queue;
+import com.example.projeto_tcc.enums.VariableType;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -49,5 +50,8 @@ public class WorkProductConfig {
     @JoinColumn(name = "delivery_process_id")
     @JsonBackReference
     private DeliveryProcess deliveryProcess;
+
+    @Enumerated(EnumType.STRING)
+    private VariableType  variableType;
 
 }

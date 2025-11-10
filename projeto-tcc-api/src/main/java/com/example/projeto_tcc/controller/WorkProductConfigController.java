@@ -2,6 +2,8 @@ package com.example.projeto_tcc.controller;
 
 import com.example.projeto_tcc.dto.ObserverUpdateDTO;
 import com.example.projeto_tcc.dto.WorkProductConfigDTO;
+import com.example.projeto_tcc.dto.WorkProductConfigGetDTO;
+import com.example.projeto_tcc.dto.WorkProductConfigUpdateDTO;
 import com.example.projeto_tcc.entity.MethodElementObserver;
 import com.example.projeto_tcc.entity.WorkProductConfig;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
@@ -25,10 +27,20 @@ public class WorkProductConfigController {
         return workProductConfigService.getWorkProductsByDeliveryProcess(deliveryProcessId);
     }
 
+    @GetMapping("/process/{deliveryProcessId}/variables")
+    public ResponseEntity<List<WorkProductConfigGetDTO>> getWorkProductVariables(
+            @PathVariable("deliveryProcessId") Long processId) {
+
+        List<WorkProductConfigGetDTO> dtoList =
+                workProductConfigService.findAllWorkProductConfigs(processId);
+
+        return ResponseEntity.ok(dtoList);
+    }
+
     @PatchMapping("/{id}")
-    public ResponseEntity<WorkProductConfigDTO> updateWorkProductConfig(
+    public ResponseEntity<WorkProductConfigUpdateDTO> updateWorkProductConfig(
             @PathVariable Long id,
-            @RequestBody WorkProductConfigDTO dto) {
+            @RequestBody WorkProductConfigUpdateDTO dto) {
         return ResponseEntity.ok(workProductConfigService.updateWorkProductConfig(id, dto));
     }
 

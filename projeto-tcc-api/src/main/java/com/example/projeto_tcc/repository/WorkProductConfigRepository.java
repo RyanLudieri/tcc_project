@@ -19,5 +19,9 @@ public interface WorkProductConfigRepository extends JpaRepository<WorkProductCo
 
     void deleteByDeliveryProcessId(Long deliveryProcessId);
 
+    List<WorkProductConfig> findAllByDeliveryProcessId(Long processId);
+
+    List<WorkProductConfig> findAllByDeliveryProcessIdOrderByIdAsc(Long processId);
+
 }
 

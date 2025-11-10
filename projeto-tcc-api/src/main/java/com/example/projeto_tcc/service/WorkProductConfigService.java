@@ -26,6 +26,7 @@ public class WorkProductConfigService {
     private final DeliveryProcessRepository deliveryProcessRepository;
     private final GeneratorConfigRepository generatorConfigRepository;
     private final GeneratorObserverRepository generatorObserverRepository;
+    private final WorkProductConfigRepository workProductConfigRepository;
 
     private int queueIndex = 0;
     private final Map<String, WorkProductConfig> queueMap = new LinkedHashMap<>();
@@ -223,6 +224,25 @@ public class WorkProductConfigService {
                 .toList();
     }
 
+    public List<WorkProductConfigGetDTO> findAllWorkProductConfigs(Long processId) {
+        List<WorkProductConfig> entities = configRepository.findAllByDeliveryProcessIdOrderByIdAsc(processId);
+
+        return entities.stream()
+                .map(this::convertToGetDTO)
+                .collect(Collectors.toList());
+    }
+
+    private WorkProductConfigGetDTO convertToGetDTO(WorkProductConfig entity) {
+        return new WorkProductConfigGetDTO(
+                entity.getId(),
+                entity.getWorkProductName(),
+                entity.getInput_output(),
+                entity.getTask_name(),
+                entity.getQueue_name(),
+                entity.getVariableType()
+        );
+    }
+
     @Transactional
     public MethodElementObserver addObserverToWorkProductConfig(Long workProductConfigId, ObserverMethodElementType type) {
         WorkProductConfig config = configRepository.findById(workProductConfigId)
@@ -271,7 +291,7 @@ public class WorkProductConfigService {
     }
 
     @Transactional
-    public WorkProductConfigDTO updateWorkProductConfig(Long workProductConfigId, WorkProductConfigDTO dto) {
+    public WorkProductConfigUpdateDTO updateWorkProductConfig(Long workProductConfigId, WorkProductConfigUpdateDTO dto) {
         WorkProductConfig config = configRepository.findById(workProductConfigId)
                 .orElseThrow(() -> new IllegalArgumentException("WorkProductConfig não encontrado"));
 
@@ -280,12 +300,13 @@ public class WorkProductConfigService {
         if (dto.getQueue_size() != null) config.setQueue_size(dto.getQueue_size());
         if (dto.getInitial_quantity() != null) config.setInitial_quantity(dto.getInitial_quantity());
         if (dto.getPolicy() != null) config.setPolicy(dto.getPolicy());
+        if(dto.getVariableType() != null) config.setVariableType(dto.getVariableType());
         config.setGenerate_activity(dto.isGenerate_activity());
         config.setDestroyer(dto.isDestroy());
 
         WorkProductConfig saved = configRepository.save(config);
 
-        return new WorkProductConfigDTO(
+        return new WorkProductConfigUpdateDTO(
                 saved.getId(),
                 saved.getWorkProductName(),
                 saved.getInput_output(),
@@ -297,6 +318,7 @@ public class WorkProductConfigService {
                 saved.getPolicy(),
                 saved.isGenerate_activity(),
                 saved.isDestroyer(),
+                saved.getVariableType(),
                 saved.getActivity() != null ? saved.getActivity().getId() : null,
                 saved.getObservers().stream()
                         .map(obs -> new MethodElementObserverDTO(
@@ -543,5 +565,8 @@ public class WorkProductConfigService {
         generatorObserverRepository.delete(observer);
     }
 
+    public List<WorkProductConfig> findAllByDeliveryProcessId(Long processId) {
+        return workProductConfigRepository.findAllByDeliveryProcessIdOrderByIdAsc(processId);
+    }
 
 }

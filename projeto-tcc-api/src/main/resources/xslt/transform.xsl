@@ -656,24 +656,27 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
 
 
 <xsl:template name="act_obs">
-  <xsl:for-each select="act|router">
-  <xsl:if test="observer/@name">
-  <xsl:text>
-  oe= new ObserverEntry(ObserverEntry.</xsl:text>
-  <xsl:value-of select="observer/@type"/>
-  <xsl:text>,"</xsl:text>
-  <xsl:value-of select="@id"/>
-  <xsl:text>");
-  oe.SetId("</xsl:text>
-  <xsl:value-of select="observer/@name"/>
-  <xsl:text>");
-  man.AddObserver(oe);
-  
-  </xsl:text>
-  <!--Interrupts-->
-  <xsl:choose>
-  <xsl:when test="interrupt/@act">
-  <xsl:text>
+   <xsl:for-each select="act|router">
+   <xsl:if test="observer/@name">
+       <xsl:if test="not(starts-with(@id, 'END_'))">
+        <xsl:text>
+   oe= new ObserverEntry(ObserverEntry.</xsl:text>
+   <xsl:value-of select="observer/@type"/>
+   <xsl:text>,"</xsl:text>
+   <xsl:value-of select="@id"/>
+   <xsl:text>");
+   oe.SetId("</xsl:text>
+   <xsl:value-of select="observer/@name"/>
+   <xsl:text>");
+   man.AddObserver(oe);
+        </xsl:text>
+     </xsl:if>
+     <xsl:text>
+
+     </xsl:text>
+     <xsl:choose>
+     <xsl:when test="interrupt/@act">
+   <xsl:text>
 
   intae = (InterruptActiveEntry)man.GetActiveState("</xsl:text>
   <xsl:value-of select="@id"/>
@@ -682,47 +685,46 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   <xsl:value-of select="observer/@name"/>
   <xsl:text>");
   </xsl:text>
- </xsl:when>
+  </xsl:when>
 
- <xsl:otherwise>
+  <xsl:otherwise>
 
-  <xsl:variable name="actint">
-  <xsl:variable name="intact" select="@id"/>
-  <xsl:for-each select="../act">
-  <xsl:if test="interrupt/@act = $intact">
-  <xsl:value-of select="interrupt/@act"/>
-  </xsl:if>
-  </xsl:for-each>
-  </xsl:variable>
-  <xsl:if test="$actint!=''">
-  <xsl:text>
+    <xsl:variable name="actint">
+    <xsl:variable name="intact" select="@id"/>
+    <xsl:for-each select="../act">
+    <xsl:if test="interrupt/@act = $intact">
+    <xsl:value-of select="interrupt/@act"/>
+    </xsl:if>
+    </xsl:for-each>
+    </xsl:variable>
+    <xsl:if test="$actint!=''">
+    <xsl:text>
 
-  intae = (InterruptActiveEntry)man.GetActiveState("</xsl:text>
-  <xsl:value-of select="@id"/>
-  <xsl:text>");
-  intae.setObsid("</xsl:text>
-  <xsl:value-of select="observer/@name"/>
-  <xsl:text>");
-  </xsl:text>
+    intae = (InterruptActiveEntry)man.GetActiveState("</xsl:text>
+    <xsl:value-of select="@id"/>
+    <xsl:text>");
+    intae.setObsid("</xsl:text>
+    <xsl:value-of select="observer/@name"/>
+    <xsl:text>");
+    </xsl:text>
 
 
-  </xsl:if>
-  <xsl:if test="$actint=''">
-  <!--Activities and Routers Observers-->
-  <xsl:text>
+    </xsl:if>
+    <xsl:if test="$actint=''">
+    <xsl:text>
 
-  iae = (InternalActiveEntry)man.GetActiveState("</xsl:text>
-  <xsl:value-of select="@id"/>
-  <xsl:text>");
-  iae.setObsid("</xsl:text>
-  <xsl:value-of select="observer/@name"/>
-  <xsl:text>");
-  </xsl:text>
-  </xsl:if>
-  </xsl:otherwise>
-  </xsl:choose>
-  </xsl:if>
-  </xsl:for-each>
+    iae = (InternalActiveEntry)man.GetActiveState("</xsl:text>
+    <xsl:value-of select="@id"/>
+    <xsl:text>");
+    iae.setObsid("</xsl:text>
+    <xsl:value-of select="observer/@name"/>
+    <xsl:text>");
+    </xsl:text>
+    </xsl:if>
+    </xsl:otherwise>
+    </xsl:choose>
+    </xsl:if>
+    </xsl:for-each>
 </xsl:template>
 
 
