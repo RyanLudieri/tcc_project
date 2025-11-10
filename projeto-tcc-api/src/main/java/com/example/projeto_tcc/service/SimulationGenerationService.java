@@ -15,17 +15,13 @@ public class SimulationGenerationService {
 
     public Path generateSimulation(Long processId, String acdId) {
         try {
-            // Passo 1: Gera o conteúdo XACDML (nenhuma mudança aqui)
             String xacdmlContent = xacdmlService.generateXACDMLContent(processId, acdId);
 
-            // Passo 2: Transforma o XACDML em código Java (nenhuma mudança aqui)
             String xsltPath = "/xslt/transform.xsl";
             String javaOutputPath = "target/generated-sources/DynamicExperimentationProgramProxy.java";
             String generatedJavaCode = xsltTransformationService.transform(xacdmlContent, xsltPath, javaOutputPath);
 
-            // --- PASSO 3: EXECUÇÃO ---
-            // Chama o novo serviço para compilar e executar o código que acabamos de gerar.
-            executionService.compileAndExecute(generatedJavaCode, "DynamicExperimentationProgramProxy");
+            executionService.compile(generatedJavaCode, "DynamicExperimentationProgramProxy", processId);
 
             return Paths.get(javaOutputPath);
 

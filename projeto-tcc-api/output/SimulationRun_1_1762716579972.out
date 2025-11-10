@@ -1,8 +1,8 @@
 
                     Simulation Report
 
-Simulation ended at time 4842.0674
-Statistics collected from instant 0.0 during 4842.0674 time units.
+Simulation ended at time 5019.537
+Statistics collected from instant 0.0 during 5019.537 time units.
 
           Observers' report
 ----------------------------------------------------------------------
@@ -11,31 +11,31 @@ Report from observer q9 Observer 10
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 25
+ Minimum: 0.0 Maximum: 0.0 Observations: 29
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
 Report from observer Release planning Observer 1
 Statistics summary:
 Active state idle time (or inter-arrival time for Generate states):
-Average: 154.768 StdDev: 0.0 Variance: 0.0
- Minimum: 3.4028235E38 Maximum: 154.768 Observations: 1
+Average: 188.216 StdDev: 0.0 Variance: 0.0
+ Minimum: 3.4028235E38 Maximum: 188.216 Observations: 1
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
 Report from observer Working software Observer 1
 Statistics summary:
 Active state idle time (or inter-arrival time for Generate states):
-Average: 191.02701 StdDev: 194.91568 Variance: 37992.12
- Minimum: 100.18201 Maximum: 1114.769 Observations: 25
+Average: 169.53049 StdDev: 189.86784 Variance: 36049.8
+ Minimum: 101.586914 Maximum: 1148.217 Observations: 29
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
 Report from observer q0 Observer 1
 Statistics summary:
 Queue length:
-Average: 0.031963207 StdDev: 0.1779636 Variance: 0.031671043
- Minimum: 0.0 Maximum: 1.0 Observations: 31
+Average: 0.037496686 StdDev: 0.22183341 Variance: 0.049210057
+ Minimum: 0.0 Maximum: 1.0 Observations: 35
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ Report from observer q10 Observer 11
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 25
+ Minimum: 0.0 Maximum: 0.0 Observations: 29
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -51,7 +51,7 @@ Report from observer q2 Observer 3
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 31
+ Minimum: 0.0 Maximum: 0.0 Observations: 35
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -59,7 +59,7 @@ Report from observer q5 Observer 6
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 28
+ Minimum: 0.0 Maximum: 0.0 Observations: 32
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -83,15 +83,15 @@ Report from observer q7 Observer 8
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 25
+ Minimum: 0.0 Maximum: 0.0 Observations: 29
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
 Report from observer Pair programming with test driven development Observer 1
 Statistics summary:
 Active state idle time (or inter-arrival time for Generate states):
-Average: 634.767 StdDev: 0.0 Variance: 0.0
- Minimum: 3.4028235E38 Maximum: 634.767 Observations: 1
+Average: 668.215 StdDev: 0.0 Variance: 0.0
+ Minimum: 3.4028235E38 Maximum: 668.215 Observations: 1
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -99,7 +99,7 @@ Report from observer q8 Observer 9
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 25
+ Minimum: 0.0 Maximum: 0.0 Observations: 29
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -114,8 +114,8 @@ Average: NaN StdDev: 0.0 Variance: 0.0
 Report from observer Customer queue Observer 1
 Statistics summary:
 Number of resources permanencing in queue:
-Average: 12.71738 StdDev: 7.687992 Variance: 59.10522
- Minimum: 3.4028235E38 Maximum: 28.0 Observations: 28
+Average: 14.638677 StdDev: 8.829291 Variance: 77.9564
+ Minimum: 3.4028235E38 Maximum: 32.0 Observations: 32
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -123,7 +123,7 @@ Report from observer q1 Observer 2
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 31
+ Minimum: 0.0 Maximum: 0.0 Observations: 35
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -131,7 +131,7 @@ Report from observer q3 Observer 4
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 31
+ Minimum: 0.0 Maximum: 0.0 Observations: 35
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -139,7 +139,7 @@ Report from observer q4 Observer 5
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 28
+ Minimum: 0.0 Maximum: 0.0 Observations: 32
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -155,15 +155,15 @@ Report from observer q6 Observer 7
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 25
+ Minimum: 0.0 Maximum: 0.0 Observations: 29
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
 Report from observer Developer queue Observer 1
 Statistics summary:
 Number of resources permanencing in queue:
-Average: 22.049059 StdDev: 20.236713 Variance: 409.52457
- Minimum: 3.4028235E38 Maximum: 53.0 Observations: 53
+Average: 25.594862 StdDev: 21.258198 Variance: 451.91095
+ Minimum: 3.4028235E38 Maximum: 61.0 Observations: 61
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -171,7 +171,7 @@ Report from observer q11 Observer 12
 Statistics summary:
 Queue length:
 Average: 0.0 StdDev: 0.0 Variance: 0.0
- Minimum: 0.0 Maximum: 0.0 Observations: 25
+ Minimum: 0.0 Maximum: 0.0 Observations: 29
 ----------------------------------------------------------------------
 
           Histograms' report
