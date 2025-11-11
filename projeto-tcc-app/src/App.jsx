@@ -3,7 +3,6 @@ import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster.jsx";
 import Navbar from "@/components/Navbar.jsx";
 import HomePage from "@/pages/HomePage.jsx";
-import ProcessLibraryPage from "@/pages/ProcessLibraryPage.jsx";
 import ProcessEditor from "@/pages/ProcessEditor.jsx";
 import SimulationSetup from "@/pages/SimulationSetup.jsx";
 import SimulationResults from "@/pages/SimulationResults.jsx";
@@ -23,10 +22,8 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/library" element={<ProcessLibraryPage />} />
 
               <Route path="/simulations" element={<SimulationLibraryPage />} />
-              <Route path="/simulations/:simulationId/library" element={<ProcessLibraryPage />} />
               <Route path="/simulations/:simulationId" element={<SimulationProcessesPage />} />
 
               {/* Editor */}
