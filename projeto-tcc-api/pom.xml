@@ -84,10 +84,10 @@
         </dependency>
 
 		<dependency>
-			<groupId>simula</groupId>
-			<artifactId>simulation-manager</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-hibernate5</artifactId>
 		</dependency>
+
 
 		<dependency>
 			<groupId>org.jfree</groupId>

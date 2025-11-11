@@ -4,21 +4,15 @@ import com.example.projeto_tcc.dto.SimulationCreateDTO;
 import com.example.projeto_tcc.dto.SimulationResponseDTO;
 import com.example.projeto_tcc.entity.DeliveryProcess;
 import com.example.projeto_tcc.entity.Simulation;
-import com.example.projeto_tcc.entity.WorkProductConfig;
 import com.example.projeto_tcc.service.DeliveryProcessService;
-import com.example.projeto_tcc.service.ExecutionService;
-import com.example.projeto_tcc.service.SimulationGenerationService;
+//import com.example.projeto_tcc.service.SimulationGenerationService;
 import com.example.projeto_tcc.service.SimulationService;
 import com.example.projeto_tcc.service.WorkProductConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 @RestController
@@ -29,73 +23,73 @@ public class SimulationController {
 
     private final SimulationService simulationService;
     private final DeliveryProcessService deliveryProcessService;
-    private final SimulationGenerationService simulationGenerationService;
+//    private final SimulationGenerationService simulationGenerationService;
 
-    @Autowired
-    private ExecutionService executionService;
+//    @Autowired
+//    private ExecutionService executionService;
 
     @Autowired
     private WorkProductConfigService workProductConfigService;
 
-    @PostMapping("/generate_and_compile/{processId}")
-    public ResponseEntity<String> generateAndCompileSimulation(
-            @PathVariable Long processId,
-            @RequestParam(defaultValue = "SimulationRun") String acdId) {
+//    @PostMapping("/generate_and_compile/{processId}")
+//    public ResponseEntity<String> generateAndCompileSimulation(
+//            @PathVariable Long processId,
+//            @RequestParam(defaultValue = "SimulationRun") String acdId) {
+//
+//        try {
+//            String uniqueAcdId = acdId + "_" + processId + "_" + System.currentTimeMillis();
+//            Path generatedFilePath = simulationGenerationService.generateSimulation(processId, uniqueAcdId);
+//            String javaCode = new String(Files.readAllBytes(generatedFilePath));
+//            String fullClassName = "DynamicExperimentationProgramProxy";
+//            executionService.compile(javaCode, fullClassName, processId);
+//            String message = "Simulação gerada e compilada com sucesso. Pronta para executar.";
+//            return ResponseEntity.ok(message);
+//        } catch (Exception e) {
+//            String errorMessage = "Falha ao gerar ou compilar a simulação: " + e.getMessage();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
+//        }
+//    }
 
-        try {
-            String uniqueAcdId = acdId + "_" + processId + "_" + System.currentTimeMillis();
-            Path generatedFilePath = simulationGenerationService.generateSimulation(processId, uniqueAcdId);
-            String javaCode = new String(Files.readAllBytes(generatedFilePath));
-            String fullClassName = "DynamicExperimentationProgramProxy";
-            executionService.compile(javaCode, fullClassName, processId);
-            String message = "Simulação gerada e compilada com sucesso. Pronta para executar.";
-            return ResponseEntity.ok(message);
-        } catch (Exception e) {
-            String errorMessage = "Falha ao gerar ou compilar a simulação: " + e.getMessage();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
-        }
-    }
+//    @PostMapping("/execute")
+//    public ResponseEntity<String> executeSimulation(@RequestParam float simulationDuration) {
+//        try {
+//            executionService.execute(simulationDuration);
+//            String message = "Execução com duração " + simulationDuration + " concluída com sucesso.";
+//            return ResponseEntity.ok(message);
+//        } catch (Exception e) {
+//            String errorMessage = "Falha na execução: " + e.getMessage();
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+//        }
+//    }
 
-    @PostMapping("/execute")
-    public ResponseEntity<String> executeSimulation(@RequestParam float simulationDuration) {
-        try {
-            executionService.execute(simulationDuration);
-            String message = "Execução com duração " + simulationDuration + " concluída com sucesso.";
-            return ResponseEntity.ok(message);
-        } catch (Exception e) {
-            String errorMessage = "Falha na execução: " + e.getMessage();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
-        }
-    }
-
-    @GetMapping("/get_generated_code")
-    public ResponseEntity<String> getGeneratedCode() {
-        String javaCode = executionService.getGeneratedJavaCode();
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, "text/plain; charset=utf-8")
-                .body(javaCode);
-    }
-
-    @PostMapping("/get_results")
-    public ResponseEntity<String> getResults() {
-        try {
-            Long processId = executionService.getActiveProcessId();
-            if (processId == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Erro: Nenhuma simulação foi compilada nesta sessão.");
-            }
-
-            List<WorkProductConfig> configList = workProductConfigService.findAllByDeliveryProcessId(processId);
-            String results = executionService.getFilteredResults(configList);
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_TYPE, "text/plain; charset=utf-8")
-                    .body(results);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao buscar ou filtrar resultados: " + e.getMessage());
-        }
-    }
+//    @GetMapping("/get_generated_code")
+//    public ResponseEntity<String> getGeneratedCode() {
+//        String javaCode = executionService.getGeneratedJavaCode();
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_TYPE, "text/plain; charset=utf-8")
+//                .body(javaCode);
+//    }
+//
+//    @PostMapping("/get_results")
+//    public ResponseEntity<String> getResults() {
+//        try {
+//            Long processId = executionService.getActiveProcessId();
+//            if (processId == null) {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                        .body("Erro: Nenhuma simulação foi compilada nesta sessão.");
+//            }
+//
+//            List<WorkProductConfig> configList = workProductConfigService.findAllByDeliveryProcessId(processId);
+//            String results = executionService.getFilteredResults(configList);
+//
+//            return ResponseEntity.ok()
+//                    .header(HttpHeaders.CONTENT_TYPE, "text/plain; charset=utf-8")
+//                    .body(results);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("Erro ao buscar ou filtrar resultados: " + e.getMessage());
+//        }
+//    }
 
     @PostMapping
     public ResponseEntity<Simulation> createSimulation(@RequestBody SimulationCreateDTO dto) {

@@ -36,8 +36,14 @@ public class DeliveryProcess extends Process {
     @OneToMany(mappedBy = "deliveryProcess", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<PhaseConfig> phaseConfigs = new ArrayList<>();
+
     @Transient
     private List<ProcessElement> processElements = new ArrayList<>();
+
+    @OneToMany(mappedBy = "deliveryProcess", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<IterationConfig> iterationConfigs = new ArrayList<>();
+
 
 
     @ManyToOne

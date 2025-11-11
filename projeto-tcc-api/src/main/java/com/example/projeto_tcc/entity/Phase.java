@@ -1,13 +1,11 @@
 package com.example.projeto_tcc.entity;
 
-import com.example.projeto_tcc.dto.ActivityResponseDTO;
-import com.example.projeto_tcc.dto.SimulationParamsDTO;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Entity;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Getter
 @Setter
