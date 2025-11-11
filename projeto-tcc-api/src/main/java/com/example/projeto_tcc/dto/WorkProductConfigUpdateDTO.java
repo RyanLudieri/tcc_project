@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class WorkProductConfigDTO {
+public class WorkProductConfigUpdateDTO {
     private Long id;
     private String workProductName;
     private String input_output;
@@ -21,6 +21,7 @@ public class WorkProductConfigDTO {
     private Queue policy;
     private boolean generate_activity;
     private boolean destroy;
+    private VariableType variableType;
     private Long activityId; // apenas o ID da Activity
     private List<MethodElementObserverDTO> observers; // lista de DTOs do observer
 }

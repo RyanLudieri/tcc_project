@@ -1,11 +1,9 @@
 package com.example.projeto_tcc.service;
 
-import com.example.projeto_tcc.dto.GeneratorConfigDTO;
-import com.example.projeto_tcc.dto.MethodElementObserverDTO;
-import com.example.projeto_tcc.dto.ObserverUpdateDTO;
-import com.example.projeto_tcc.dto.WorkProductConfigDTO;
+import com.example.projeto_tcc.dto.*;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Observer;
+import com.example.projeto_tcc.enums.ObserverActivityType;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.enums.ProcessType;
 import com.example.projeto_tcc.enums.Queue;
@@ -27,6 +25,8 @@ public class WorkProductConfigService {
     private final MethodElementRepository methodElementRepository;
     private final DeliveryProcessRepository deliveryProcessRepository;
     private final GeneratorConfigRepository generatorConfigRepository;
+    private final GeneratorObserverRepository generatorObserverRepository;
+    private final WorkProductConfigRepository workProductConfigRepository;
 
     private int queueIndex = 0;
     private final Map<String, WorkProductConfig> queueMap = new LinkedHashMap<>();
@@ -224,6 +224,25 @@ public class WorkProductConfigService {
                 .toList();
     }
 
+    public List<WorkProductConfigGetDTO> findAllWorkProductConfigs(Long processId) {
+        List<WorkProductConfig> entities = configRepository.findAllByDeliveryProcessIdOrderByIdAsc(processId);
+
+        return entities.stream()
+                .map(this::convertToGetDTO)
+                .collect(Collectors.toList());
+    }
+
+    private WorkProductConfigGetDTO convertToGetDTO(WorkProductConfig entity) {
+        return new WorkProductConfigGetDTO(
+                entity.getId(),
+                entity.getWorkProductName(),
+                entity.getInput_output(),
+                entity.getTask_name(),
+                entity.getQueue_name(),
+                entity.getVariableType()
+        );
+    }
+
     @Transactional
     public MethodElementObserver addObserverToWorkProductConfig(Long workProductConfigId, ObserverMethodElementType type) {
         WorkProductConfig config = configRepository.findById(workProductConfigId)
@@ -272,7 +291,7 @@ public class WorkProductConfigService {
     }
 
     @Transactional
-    public WorkProductConfigDTO updateWorkProductConfig(Long workProductConfigId, WorkProductConfigDTO dto) {
+    public WorkProductConfigUpdateDTO updateWorkProductConfig(Long workProductConfigId, WorkProductConfigUpdateDTO dto) {
         WorkProductConfig config = configRepository.findById(workProductConfigId)
                 .orElseThrow(() -> new IllegalArgumentException("WorkProductConfig não encontrado"));
 
@@ -281,12 +300,13 @@ public class WorkProductConfigService {
         if (dto.getQueue_size() != null) config.setQueue_size(dto.getQueue_size());
         if (dto.getInitial_quantity() != null) config.setInitial_quantity(dto.getInitial_quantity());
         if (dto.getPolicy() != null) config.setPolicy(dto.getPolicy());
+        if(dto.getVariableType() != null) config.setVariableType(dto.getVariableType());
         config.setGenerate_activity(dto.isGenerate_activity());
         config.setDestroyer(dto.isDestroy());
 
         WorkProductConfig saved = configRepository.save(config);
 
-        return new WorkProductConfigDTO(
+        return new WorkProductConfigUpdateDTO(
                 saved.getId(),
                 saved.getWorkProductName(),
                 saved.getInput_output(),
@@ -298,6 +318,7 @@ public class WorkProductConfigService {
                 saved.getPolicy(),
                 saved.isGenerate_activity(),
                 saved.isDestroyer(),
+                saved.getVariableType(),
                 saved.getActivity() != null ? saved.getActivity().getId() : null,
                 saved.getObservers().stream()
                         .map(obs -> new MethodElementObserverDTO(
@@ -314,13 +335,50 @@ public class WorkProductConfigService {
 
 
     @Transactional
-    public GeneratorConfig addGeneratorToProcess(Long processId, GeneratorConfigDTO dto) {
+    public GeneratorConfigDTO addGeneratorToProcess(Long processId, GeneratorConfigRequestDTO requestDto) {
         DeliveryProcess process = deliveryProcessRepository.findById(processId)
                 .orElseThrow(() -> new EntityNotFoundException("Processo não encontrado com ID: " + processId));
-        WorkProductConfig targetQueue = configRepository.findById(dto.getWorkProductConfigId())
-                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig de destino não encontrado com ID: " + dto.getWorkProductConfigId()));
+        WorkProductConfig targetQueue = configRepository.findById(requestDto.getWorkProductConfigId())
+                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig de destino não encontrado com ID: " + requestDto.getWorkProductConfigId()));
 
         DistributionParameter dist = new DistributionParameter();
+        dist.setConstant(requestDto.getConstant());
+        dist.setMean(requestDto.getMean());
+        dist.setAverage(requestDto.getAverage());
+        dist.setStandardDeviation(requestDto.getStandardDeviation());
+        dist.setLow(requestDto.getLow());
+        dist.setHigh(requestDto.getHigh());
+        dist.setScale(requestDto.getScale());
+        dist.setShape(requestDto.getShape());
+
+        GeneratorConfig newGenerator = new GeneratorConfig();
+        newGenerator.setDistributionType(requestDto.getDistributionType());
+        newGenerator.setDistribution(dist);
+        newGenerator.setTargetWorkProduct(targetQueue);
+        newGenerator.setDeliveryProcess(process);
+        process.getGeneratorConfigs().add(newGenerator);
+
+        targetQueue.setGenerate_activity(true);
+        configRepository.save(targetQueue);
+
+        GeneratorConfig savedGeneratorEntity = generatorConfigRepository.save(newGenerator);
+
+        return toResponseDTO(savedGeneratorEntity);
+    }
+
+    @Transactional
+    public GeneratorConfigDTO updateGenerator(Long generatorId, GeneratorConfigRequestDTO dto) {
+        GeneratorConfig existingGenerator = generatorConfigRepository.findById(generatorId)
+                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado com ID: " + generatorId));
+
+        existingGenerator.setDistributionType(dto.getDistributionType());
+
+        DistributionParameter dist = existingGenerator.getDistribution();
+        if (dist == null) {
+            dist = new DistributionParameter();
+            existingGenerator.setDistribution(dist);
+        }
+
         dist.setConstant(dto.getConstant());
         dist.setMean(dto.getMean());
         dist.setAverage(dto.getAverage());
@@ -330,18 +388,9 @@ public class WorkProductConfigService {
         dist.setScale(dto.getScale());
         dist.setShape(dto.getShape());
 
-        GeneratorConfig newGenerator = new GeneratorConfig();
-        newGenerator.setDistributionType(dto.getDistributionType());
-        newGenerator.setDistribution(dist);
-        newGenerator.setTargetWorkProduct(targetQueue);
+        GeneratorConfig savedGenerator = generatorConfigRepository.save(existingGenerator);
 
-        process.getGeneratorConfigs().add(newGenerator);
-        newGenerator.setDeliveryProcess(process);
-
-        targetQueue.setGenerate_activity(true);
-        configRepository.save(targetQueue);
-
-        return generatorConfigRepository.save(newGenerator);
+        return toResponseDTO(savedGenerator);
     }
 
     @Transactional
@@ -370,6 +419,154 @@ public class WorkProductConfigService {
                 .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig não encontrado"));
         selectedQueue.setDestroyer(isDestroyer);
         configRepository.save(selectedQueue);
+    }
+
+    private GeneratorConfigDTO toResponseDTO(GeneratorConfig entity) {
+        if (entity == null) return null;
+
+        DistributionParameterDTO distDto = null;
+        if (entity.getDistribution() != null) {
+            DistributionParameter dist = entity.getDistribution();
+            distDto = new DistributionParameterDTO();
+            distDto.setId(dist.getId());
+            distDto.setConstant(dist.getConstant());
+            distDto.setMean(dist.getMean());
+            distDto.setAverage(dist.getAverage());
+            distDto.setStandardDeviation(dist.getStandardDeviation());
+            distDto.setLow(dist.getLow());
+            distDto.setHigh(dist.getHigh());
+            distDto.setScale(dist.getScale());
+            distDto.setShape(dist.getShape());
+        }
+
+        WorkProductConfigSummaryDTO wpDto = null;
+        if (entity.getTargetWorkProduct() != null) {
+            WorkProductConfig wp = entity.getTargetWorkProduct();
+            wpDto = new WorkProductConfigSummaryDTO(
+                    wp.getId(),
+                    wp.getWorkProductName(),
+                    wp.getQueue_name(),
+                    wp.isGenerate_activity()
+            );
+        }
+
+        List<GenerateObserverDTO> observerDtos = entity.getObservers().stream()
+                .map(this::mapObserverToDTO)
+                .collect(Collectors.toList());
+
+        return new GeneratorConfigDTO(
+                entity.getId(),
+                entity.getDistributionType(),
+                distDto,
+                wpDto,
+                observerDtos
+        );
+    }
+
+    private GenerateObserverDTO mapObserverToDTO(GeneratorObserver entity) {
+        if (entity == null) return null;
+        return new GenerateObserverDTO(
+                entity.getId(),
+                entity.getName(),
+                entity.getQueue_name(),
+                entity.getPosition(),
+                entity.getType()
+        );
+    }
+
+    @Transactional
+    public List<GeneratorConfigDTO> getGeneratorsByProcess(Long processId) {
+        // Validação se o processo existe pode ser adicionada aqui
+        // deliveryProcessRepository.findById(processId).orElseThrow(...)
+
+        List<GeneratorConfig> generators = generatorConfigRepository.findByDeliveryProcessId(processId);
+        return generators.stream()
+                .map(this::toResponseDTO) // Reutiliza seu mapeador
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public GeneratorConfigDTO getGeneratorById(Long generatorId) {
+        GeneratorConfig generator = generatorConfigRepository.findById(generatorId)
+                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado com ID: " + generatorId));
+
+        return toResponseDTO(generator);
+    }
+
+    /**
+     * GET: Lista todos os observers de um gerador específico.
+     */
+    @Transactional
+    public List<GenerateObserverDTO> getObserversByGenerator(Long generatorId) {
+        GeneratorConfig generator = generatorConfigRepository.findById(generatorId)
+                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado: " + generatorId));
+
+        return generator.getObservers().stream()
+                .map(this::mapObserverToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * POST: Adiciona um novo observer padrão a um gerador existente.
+     */
+    @Transactional
+    public GenerateObserverDTO addGeneratorObserver(Long generatorId) {
+        GeneratorConfig generator = generatorConfigRepository.findById(generatorId)
+                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado: " + generatorId));
+
+        GeneratorObserver observer = new GeneratorObserver();
+
+        int position = generator.getObservers().size() + 1;
+
+        String queueName = generator.getTargetWorkProduct().getQueue_name();
+        String defaultName = generator.getTargetWorkProduct().getQueue_name() + " generate activity observer " + position;
+
+        observer.setGeneratorConfig(generator);
+        observer.setPosition(position);
+        observer.setQueue_name(queueName);
+        observer.setName(defaultName);
+        observer.setType(ObserverActivityType.ACTIVE);
+
+        GeneratorObserver savedObserver = generatorObserverRepository.save(observer);
+
+        return mapObserverToDTO(savedObserver);
+    }
+
+    /**
+     * PATCH: Atualiza campos específicos de um observer.
+     */
+    @Transactional
+    public GenerateObserverDTO updateGeneratorObserver(Long observerId, GenerateObserverDTO dto) {
+        GeneratorObserver observer = generatorObserverRepository.findById(observerId)
+                .orElseThrow(() -> new EntityNotFoundException("Generator Observer não encontrado: " + observerId));
+
+        if (dto.getName() != null) {
+            observer.setName(dto.getName());
+        }
+        if (dto.getType() != null) {
+            observer.setType(dto.getType());
+        }
+        if (dto.getQueueName() != null) {
+            observer.setQueue_name(dto.getQueueName());
+        }
+
+        GeneratorObserver savedObserver = generatorObserverRepository.save(observer);
+        return mapObserverToDTO(savedObserver);
+    }
+
+    /**
+     * DELETE: Remove um observer específico.
+     */
+    @Transactional
+    public void deleteGeneratorObserver(Long observerId) {
+        GeneratorObserver observer = generatorObserverRepository.findById(observerId)
+                .orElseThrow(() -> new EntityNotFoundException("Generate Observer não encontrado: " + observerId));
+
+        generatorObserverRepository.delete(observer);
+    }
+
+    public List<WorkProductConfig> findAllByDeliveryProcessId(Long processId) {
+        return workProductConfigRepository.findAllByDeliveryProcessIdOrderByIdAsc(processId);
     }
 
 }

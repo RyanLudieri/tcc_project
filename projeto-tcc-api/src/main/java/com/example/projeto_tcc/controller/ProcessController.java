@@ -5,8 +5,11 @@ import com.example.projeto_tcc.dto.ProcessDTO;
 import com.example.projeto_tcc.dto.ProcessElementDTO;
 import com.example.projeto_tcc.dto.ProcessGetDTO;
 import com.example.projeto_tcc.entity.Activity;
+import com.example.projeto_tcc.entity.Process;
 import com.example.projeto_tcc.repository.ActivityRepository;
 import com.example.projeto_tcc.service.ProcessService;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,5 +58,21 @@ public class ProcessController {
     public ResponseEntity<?> deleteElement(@PathVariable Long id) {
         service.deleteElementById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{processId}")
+    public ResponseEntity<Process> updateProcess(
+            @PathVariable Long processId,
+            @RequestBody ProcessDTO dto) {
+        try {
+            Process updatedProcess = service.updateProcess(processId, dto);
+            return ResponseEntity.ok(updatedProcess);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar processo: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // Retorna 500
+        }
     }
 }

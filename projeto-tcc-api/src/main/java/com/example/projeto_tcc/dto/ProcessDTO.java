@@ -14,6 +14,6 @@ public class ProcessDTO {
     private ProcessType type;
     private List<ProcessElementDTO> processElements;
     private List<MethodElementDTO> methodElements;
-    private List<Activity> predecessors;
+    private List<Integer> predecessors;
     private boolean optional;
 }

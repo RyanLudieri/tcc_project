@@ -4,9 +4,8 @@ import com.example.projeto_tcc.dto.*;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Process;
 import com.example.projeto_tcc.enums.ProcessType;
-import com.example.projeto_tcc.repository.MethodElementRepository;
-import com.example.projeto_tcc.repository.ActivityRepository;
-import com.example.projeto_tcc.repository.RoleConfigRepository;
+import com.example.projeto_tcc.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -14,81 +13,79 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ProcessService {
 
-    // Repositórios para acessar e persistir entidades do modelo
     private final ActivityRepository repository;
     private final MethodElementRepository methodElementRepository;
-
     private final WorkProductConfigService workProductConfigService;
-
     private final RoleConfigService roleConfigService;
-
     private final ActivityConfigService activityConfigService;
+    private final WorkProductConfigRepository workProductConfigRepository;
+    private final RoleConfigRepository roleConfigRepository;
+    private final ActivityConfigRepository activityConfigRepository;
+    private final GeneratorConfigRepository generatorConfigRepository;
 
-    // Construtor com injeção de dependência dos repositórios
-    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository, WorkProductConfigService workProductConfigService, RoleConfigService roleConfigService, ActivityConfigService activityConfigService) {
+    public ProcessService(ActivityRepository repository, MethodElementRepository methodElementRepository,
+                          WorkProductConfigService workProductConfigService, RoleConfigService roleConfigService,
+                          ActivityConfigService activityConfigService, WorkProductConfigRepository workProductConfigRepository,
+                          RoleConfigRepository roleConfigRepository, GeneratorConfigRepository generatorConfigRepository,
+                          ActivityConfigRepository activityConfigRepository) {
         this.repository = repository;
         this.methodElementRepository = methodElementRepository;
         this.workProductConfigService = workProductConfigService;
-        this.roleConfigService =roleConfigService;
+        this.roleConfigService = roleConfigService;
         this.activityConfigService = activityConfigService;
+        this.workProductConfigRepository = workProductConfigRepository;
+        this.roleConfigRepository = roleConfigRepository;
+        this.generatorConfigRepository = generatorConfigRepository;
+        this.activityConfigRepository = activityConfigRepository;
     }
 
-    // Índice utilizado para manter ordem e referenciar elementos
     private int currentIndex = 0;
-
-    // Mapa auxiliar que armazena os elementos de processo indexados
     private Map<Integer, Activity> indexToActivity = new HashMap<>();
 
-    /**
-     * Salva um novo processo completo (DeliveryProcess) com seus elementos hierárquicos.
-     * - Cria os elementos do processo (atividades) e resolve relações de predecessores e filhos.
-     * - Associa elementos do método (MethodElements).
-     * - Gera uma estrutura WBS e associa ao processo.
-     *
-     * @param dto Objeto com os dados do processo completo.
-     * @return Entidade DeliveryProcess salva no banco de dados.
-     */
     public Process saveProcess(ProcessDTO dto) {
         currentIndex = 0;
         indexToActivity.clear();
 
-        // Criação da raiz do processo (DeliveryProcess)
         DeliveryProcess deliveryProcess = new DeliveryProcess();
         deliveryProcess.setName(dto.getName());
-        deliveryProcess.setPredecessors(dto.getPredecessors());
         deliveryProcess.setType(ProcessType.DELIVERY_PROCESS);
         deliveryProcess.setIndex(currentIndex++);
         deliveryProcess.setOptional(dto.isOptional());
-//        deliveryProcess.setSimulationObjective(dto.getSimulationObjective());
-
+        indexToActivity.put(deliveryProcess.getIndex(), deliveryProcess);
         deliveryProcess = repository.save(deliveryProcess);
 
-
-        // Criação da estrutura de decomposição (WBS)
         WorkBreakdownStructure wbs = new WorkBreakdownStructure();
         List<Activity> elements = new ArrayList<>();
         List<ProcessElementDTO> elementDTOs = dto.getProcessElements();
 
-        // Etapa 1: cria os elementos do processo (sem setar predecessores ainda)
         for (ProcessElementDTO elemDto : elementDTOs) {
             Activity element = toEntityWithoutPredecessors(elemDto);
             elements.add(element);
         }
 
-        // Etapa 2: resolve as relações de predecessores entre os elementos
         for (int i = 0; i < elementDTOs.size(); i++) {
             resolvePredecessors(elementDTOs.get(i), elements.get(i));
         }
 
-        // ⚠️ Salva as atividades no banco antes de usá-las em outra entidade
+        if (dto.getPredecessors() != null) {
+            List<Activity> resolvedPredecessors = new ArrayList<>();
+            for (Integer predIndex : dto.getPredecessors()) {
+                Activity pred = indexToActivity.get(predIndex);
+                if (pred != null) {
+                    resolvedPredecessors.add(pred);
+                } else {
+                    System.err.println("AVISO: Predecessor do PROCESSO (save) com índice " + predIndex + " não encontrado.");
+                }
+            }
+            deliveryProcess.setPredecessors(resolvedPredecessors);
+        }
+
         elements = repository.saveAll(elements);
-
-
-        // ⬇️ Cria configurações padrão (Sample, Observer, DurationMeasurement) para cada Activity
         for (Activity activity : elements) {
             activityConfigService.createDefaultConfigsRecursively(activity, deliveryProcess);
         }
@@ -109,14 +106,8 @@ public class ProcessService {
             }
         }
 
-
-
-
-
-
         wbs.setProcessElements(elements);
 
-        // Associa os elementos do método à estrutura
         List<MethodElement> methodElements = new ArrayList<>();
         if (dto.getMethodElements() != null) {
             for (MethodElementDTO methodDto : dto.getMethodElements()) {
@@ -126,24 +117,116 @@ public class ProcessService {
         }
 
         wbs.setMethodElements(methodElements);
-
-        // Associa a WBS ao processo
         deliveryProcess.setWbs(wbs);
-//        deliveryProcess = repository.save(deliveryProcess);
 
-        // Passa a lista raiz (elements) em vez da lista achatada para gerar configurações
         workProductConfigService.generateConfigurations(methodElements, elements, deliveryProcess);
         roleConfigService.generateConfigurations(methodElements, deliveryProcess);
 
         return repository.save(deliveryProcess);
     }
 
+    @Transactional
+    public Process updateProcess(Long processId, ProcessDTO dto) {
+        DeliveryProcess existingProcess = (DeliveryProcess) repository.findById(processId)
+                .filter(p -> p instanceof DeliveryProcess)
+                .orElseThrow(() -> new EntityNotFoundException("DeliveryProcess não encontrado com ID: " + processId));
 
+        existingProcess.setName(dto.getName());
+        existingProcess.setOptional(dto.isOptional());
 
-    /**
-     * Constrói recursivamente os elementos do processo (Activity) a partir dos DTOs,
-     * sem ainda tratar os predecessores. Também constrói a hierarquia de filhos.
-     */
+        workProductConfigRepository.deleteByDeliveryProcessId(processId);
+        roleConfigRepository.deleteByDeliveryProcessId(processId);
+        generatorConfigRepository.deleteByDeliveryProcessId(processId);
+
+        WorkBreakdownStructure oldWbs = existingProcess.getWbs();
+        if (oldWbs != null) {
+            List<Activity> oldRootActivities = oldWbs.getProcessElements() != null ? new ArrayList<>(oldWbs.getProcessElements()) : new ArrayList<>();
+            List<Activity> allOldActivities = new ArrayList<>();
+            collectAllActivities(oldRootActivities, allOldActivities);
+
+            for (Activity act : allOldActivities) {
+                act.setPredecessors(new ArrayList<>());
+            }
+            repository.saveAllAndFlush(allOldActivities);
+
+            List<Long> allOldActivityIds = allOldActivities.stream().map(Activity::getId).toList();
+            activityConfigRepository.deleteByActivityIdIn(allOldActivityIds);
+            activityConfigRepository.flush();
+
+            existingProcess.setWbs(null);
+        }
+
+        repository.saveAndFlush(existingProcess);
+
+        currentIndex = 0;
+        indexToActivity.clear();
+        existingProcess.setIndex(currentIndex++);
+        indexToActivity.put(existingProcess.getIndex(), existingProcess);
+
+        WorkBreakdownStructure newWbs = new WorkBreakdownStructure();
+        List<Activity> newRootElements = new ArrayList<>();
+        List<ProcessElementDTO> elementDTOs = dto.getProcessElements();
+
+        if (elementDTOs != null) {
+            for (ProcessElementDTO elemDto : elementDTOs) {
+                Activity element = toEntityWithoutPredecessors(elemDto);
+                newRootElements.add(element);
+            }
+        }
+
+        if (elementDTOs != null) {
+            for (int i = 0; i < elementDTOs.size(); i++) {
+                resolvePredecessors(elementDTOs.get(i), newRootElements.get(i));
+            }
+        }
+
+        if (dto.getPredecessors() != null) {
+            List<Activity> resolvedPredecessors = new ArrayList<>();
+            for (Integer predIndex : dto.getPredecessors()) {
+                Activity pred = indexToActivity.get(predIndex);
+                if (pred != null) resolvedPredecessors.add(pred);
+                else System.err.println("AVISO: Predecessor (update)... " + predIndex + " não encontrado.");
+            }
+            existingProcess.setPredecessors(resolvedPredecessors);
+        } else {
+            existingProcess.setPredecessors(new ArrayList<>());
+        }
+
+        List<MethodElement> newMethodElements = new ArrayList<>();
+        if (dto.getMethodElements() != null) {
+            for (MethodElementDTO methodDto : dto.getMethodElements()) {
+                MethodElement method = toMethodEntity(methodDto);
+                newMethodElements.add(method);
+            }
+        }
+        newMethodElements = methodElementRepository.saveAll(newMethodElements);
+
+        newWbs.setProcessElements(newRootElements);
+        newWbs.setMethodElements(newMethodElements);
+        existingProcess.setWbs(newWbs);
+
+        List<Activity> allNewActivities = new ArrayList<>();
+        collectAllActivities(newRootElements, allNewActivities);
+        for (Activity activity : allNewActivities) {
+            activityConfigService.createDefaultConfigsRecursively(activity, existingProcess);
+        }
+
+        workProductConfigService.generateConfigurations(newMethodElements, newRootElements, existingProcess);
+        roleConfigService.generateConfigurations(newMethodElements, existingProcess);
+
+        return repository.save(existingProcess);
+    }
+
+    private void collectAllActivities(List<Activity> roots, List<Activity> result) {
+        if (roots == null) return;
+        for (Activity activity : roots) {
+            if (activity != null) {
+                result.add(activity);
+                collectAllActivities(activity.getChildren(), result);
+            }
+        }
+    }
+
     private Activity toEntityWithoutPredecessors(ProcessElementDTO dto) {
         Activity entity = createProcessElementByType(dto.getType());
         entity.setName(dto.getName());
@@ -151,12 +234,11 @@ public class ProcessService {
 
         indexToActivity.put(entity.getIndex(), entity);
 
-        // Cria e associa os filhos recursivamente
         if (dto.getChildren() != null) {
             List<Activity> children = new ArrayList<>();
             for (ProcessElementDTO childDto : dto.getChildren()) {
                 Activity child = toEntityWithoutPredecessors(childDto);
-                child.setSuperActivity(entity); // Define o pai (superActivity)
+                child.setSuperActivity(entity);
                 children.add(child);
             }
             entity.setChildren(children);
@@ -164,9 +246,6 @@ public class ProcessService {
         return entity;
     }
 
-    /**
-     * Após os elementos estarem criados, este método resolve e associa os predecessores corretamente.
-     */
     private void resolvePredecessors(ProcessElementDTO dto, Activity entity) {
         if (dto.getPredecessors() != null) {
             List<Activity> resolvedPredecessors = new ArrayList<>();
@@ -181,7 +260,6 @@ public class ProcessService {
             entity.setPredecessors(resolvedPredecessors);
         }
 
-        // Resolve os predecessores também nos filhos recursivamente
         if (dto.getChildren() != null && entity.getChildren() != null) {
             for (int i = 0; i < dto.getChildren().size(); i++) {
                 resolvePredecessors(dto.getChildren().get(i), entity.getChildren().get(i));
@@ -189,21 +267,13 @@ public class ProcessService {
         }
     }
 
-    /**
-     * Cria uma instância de Activity baseada no tipo (Task, Role, Phase, etc.)
-     * e configura seu índice e tipo.
-     */
     private Activity createProcessElementByType(ProcessType type) {
-        Activity element = type.createInstance(); // Polimorfismo na criação
+        Activity element = type.createInstance();
         element.setIndex(currentIndex++);
         element.setType(type);
         return element;
     }
 
-    /**
-     * Converte um DTO de MethodElement para a entidade correspondente.
-     * Também associa à atividade pai, se o índice for fornecido.
-     */
     private MethodElement toMethodEntity(MethodElementDTO dto) {
         MethodElement element = dto.getType().createInstance();
         element.setName(dto.getName());
@@ -213,17 +283,12 @@ public class ProcessService {
 
         if (dto.getParentIndex() != null) {
             Activity parent = indexToActivity.get(dto.getParentIndex());
-            if (parent != null) {
-                element.setParentActivity(parent);
-            }
+            if (parent != null) element.setParentActivity(parent);
         }
 
         return element;
     }
 
-    /**
-     * Atualiza campos genéricos de uma atividade (Activity), como nome.
-     */
     @Transactional
     public Activity updateGenericActivity(Long id, ProcessElementDTO dto) {
         Activity activity = repository.findById(id)
@@ -235,9 +300,6 @@ public class ProcessService {
         return repository.save(activity);
     }
 
-    /**
-     * Atualiza campos de um elemento do método (MethodElement), como nome e modelInfo.
-     */
     @Transactional
     public MethodElement updateGenericMethod(Long id, MethodElementDTO dto) {
         MethodElement element = methodElementRepository.findById(id)
@@ -250,10 +312,6 @@ public class ProcessService {
         return methodElementRepository.save(element);
     }
 
-    /**
-     * Deleta um elemento do processo ou método baseado no ID.
-     * Verifica em ambos os repositórios.
-     */
     public void deleteElementById(Long id) {
         if (repository.existsById(id)) {
             repository.deleteById(id);
@@ -264,10 +322,6 @@ public class ProcessService {
         }
     }
 
-    /**
-     * Converte uma Activity (ou DeliveryProcess) para o DTO de retorno (ProcessGetDTO),
-     * incluindo seus elementos e estrutura interna, se houver.
-     */
     public ProcessGetDTO convertToGetDTO(Activity entity) {
         ProcessGetDTO dto = new ProcessGetDTO();
         dto.setName(entity.getName());
@@ -280,7 +334,6 @@ public class ProcessService {
         if (entity instanceof DeliveryProcess dp) {
             WorkBreakdownStructure wbs = dp.getWbs();
             if (wbs != null) {
-                // Process Elements (Activities)
                 if (wbs.getProcessElements() != null) {
                     List<ProcessElementDTO> elementDTOs = wbs.getProcessElements().stream()
                             .map(this::convertToProcessElementDTO)
@@ -288,7 +341,6 @@ public class ProcessService {
                     dto.setProcessElements(elementDTOs);
                 }
 
-                // Method Elements (como Role, WorkProduct etc.)
                 if (wbs.getMethodElements() != null) {
                     List<GetMethodElementDTO> methodDTOs = wbs.getMethodElements().stream()
                             .map(this::convertToGetMethodDTO)
@@ -301,23 +353,15 @@ public class ProcessService {
         return dto;
     }
 
-
     public GetMethodElementDTO convertToGetMethodDTO(MethodElement method) {
         GetMethodElementDTO dto = new GetMethodElementDTO();
         dto.setName(method.getName());
         dto.setModelInfo(method.getModelInfo());
         dto.setParentIndex(method.getParentActivity() != null ? method.getParentActivity().getIndex() : null);
         dto.setOptional(method.isOptional());
-        // outros campos, se houver
         return dto;
     }
 
-
-
-
-    /**
-     * Converte recursivamente uma Activity para o DTO correspondente, incluindo filhos.
-     */
     private ProcessElementDTO convertToProcessElementDTO(Activity entity) {
         ProcessElementDTO dto = new ProcessElementDTO();
         dto.setName(entity.getName());
@@ -327,7 +371,6 @@ public class ProcessService {
         dto.setPredecessors(entity.getPredecessors() == null ? null :
                 entity.getPredecessors().stream().map(Activity::getIndex).toList());
 
-        // Converte filhos recursivamente
         if (entity.getChildren() != null) {
             List<ProcessElementDTO> childrenDto = entity.getChildren().stream()
                     .map(this::convertToProcessElementDTO)
@@ -336,12 +379,6 @@ public class ProcessService {
         }
 
         dto.setOptional(entity.isOptional());
-
         return dto;
     }
-
-
 }
-
-
-

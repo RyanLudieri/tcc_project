@@ -5,10 +5,12 @@ import com.example.projeto_tcc.dto.SimulationParamsDTO;
 import com.example.projeto_tcc.enums.*;
 import com.example.projeto_tcc.serializer.CustomElementSerializer;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,15 +27,16 @@ public class Activity extends AbstractElement {
     @Enumerated(EnumType.STRING)
     protected ProcessType type;
 
-    @ManyToOne
-    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference("activity-parent")
+    @EqualsAndHashCode.Exclude
     private Activity superActivity;
 
-    @OneToMany(mappedBy = "superActivity", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @OneToMany(mappedBy = "superActivity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("activity-parent")
     private List<Activity> children;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "activity_predecessors",
             joinColumns = @JoinColumn(name = "activity_id"),
@@ -44,6 +47,14 @@ public class Activity extends AbstractElement {
 
     @Getter
     private TimeScale timeScale;
+
+    @OneToOne(mappedBy = "activity",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    @JsonManagedReference("activity-config")
+    @JsonIgnore
+    private ActivityConfig activityConfig;
 
 
 

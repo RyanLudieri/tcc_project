@@ -1,0 +1,24 @@
+// No pacote dto: Crie ou confirme que você tem este DTO para a REQUISIÇÃO
+package com.example.projeto_tcc.dto;
+
+import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
+public class GeneratorConfigRequestDTO {
+
+    private Long workProductConfigId;
+
+    private String distributionType;
+
+    private Double constant;
+    private Double mean;
+    private Double average;
+    private Double standardDeviation;
+    private Double low;
+    private Double high;
+    private Double scale;
+    private Double shape;
+}
