@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -13,10 +15,9 @@ public class Simulation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "delivery_process_id")
+    @OneToMany(mappedBy = "simulation", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private DeliveryProcess deliveryProcess;
+    private List<DeliveryProcess> processes = new ArrayList<>();
 
     @Column(columnDefinition = "TEXT")
     private String objective;

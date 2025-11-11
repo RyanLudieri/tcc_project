@@ -1,16 +1,22 @@
 package com.example.projeto_tcc.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProcessSummaryDTO {
     private Long id;
     private String name;
 
-    public ProcessSummaryDTO(Long id, String name) {
-        this.id = id;
-        this.name = name;
-    }
+    private int phases;
+    private int iterations;
+    private int roles;
+    private int activities;
+    private int tasks;
+    private int artifacts;
 
-    public Long getId() { return id; }
-    public String getName() { return name; }
-    public void setId(Long id) { this.id = id; }
-    public void setName(String name) { this.name = name; }
+    private String lastModified;
 }

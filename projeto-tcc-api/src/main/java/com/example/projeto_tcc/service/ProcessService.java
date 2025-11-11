@@ -93,6 +93,25 @@ public class ProcessService {
             activityConfigService.createDefaultConfigsRecursively(activity, deliveryProcess);
         }
 
+        for (Activity activity : elements) {
+            if (activity.getType() == ProcessType.PHASE) {
+                PhaseConfig phaseConfig = new PhaseConfig();
+                phaseConfig.setDeliveryProcess(deliveryProcess);
+                deliveryProcess.getPhaseConfigs().add(phaseConfig);
+            } else if (activity.getType() == ProcessType.ITERATION) {
+                GeneratorConfig genConfig = new GeneratorConfig();
+                genConfig.setDeliveryProcess(deliveryProcess);
+                deliveryProcess.getGeneratorConfigs().add(genConfig);
+            } else if (activity.getType() == ProcessType.ACTIVITY) {
+                ActivityConfig activityConfig = new ActivityConfig();
+                activityConfig.setDeliveryProcess(deliveryProcess);
+                deliveryProcess.getActivityConfigs().add(activityConfig);
+            }
+        }
+
+
+
+
 
 
         wbs.setProcessElements(elements);

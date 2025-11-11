@@ -11,7 +11,7 @@ import LoginPage from "@/components/auth/LoginPage.jsx";
 import { TooltipProvider } from "@/components/ui/tooltip.jsx";
 import { AuthProvider } from "@/contexts/SupabaseAuthContext.jsx";
 import SimulationLibraryPage from "@/pages/SimulationLibraryPage.jsx";
-import SimulationDetailPage from '@/pages/SimulationDetailPage.jsx';
+import SimulationProcessesPage from '@/pages/SimulationProcessesPage.jsx';
 
 function App() {
   return (
@@ -27,7 +27,7 @@ function App() {
 
               <Route path="/simulations" element={<SimulationLibraryPage />} />
               <Route path="/simulations/:simulationId/library" element={<ProcessLibraryPage />} />
-              <Route path="/simulations/:simulationId" element={<SimulationDetailPage />} />
+              <Route path="/simulations/:simulationId" element={<SimulationProcessesPage />} />
 
               {/* Editor */}
               <Route path="/simulations/:simulationId/processes/:processId/edit" element={<ProcessEditor />} />

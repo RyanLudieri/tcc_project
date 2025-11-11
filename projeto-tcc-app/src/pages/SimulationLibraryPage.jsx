@@ -118,10 +118,10 @@ const SimulationLibraryPage = () => {
                 <Button
                     onClick={handleCreateNew}
                     variant="outline"
-                    className="flex items-center gap-2 border border-foreground text-foreground hover:bg-accent hover:border-transparent hover:text-accent-foreground transition-all"
+                    className="flex items-center gap-2 border text-primary hover:bg-primary hover:border-transparent hover:text-secondary transition-all"
                 >
                     <Plus className="h-4 w-4" />
-                    New Simulation
+                    Add New Simulation
                 </Button>
 
 

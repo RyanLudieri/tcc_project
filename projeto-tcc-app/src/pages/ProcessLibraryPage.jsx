@@ -18,6 +18,8 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import SimulationObjectiveModal from '@/components/modals/SimulationObjectiveModal.jsx';
 import { API_BASE_URL } from "@/config/api";
+import { useParams } from 'react-router-dom';
+
 
 
 const ProcessLibraryPage = () => {
@@ -28,6 +30,8 @@ const ProcessLibraryPage = () => {
   const [open, setOpen] = useState(false); // controla o modal
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { simulationId } = useParams();
+
 
   useEffect(() => {
     loadProcesses();
@@ -85,7 +89,7 @@ const ProcessLibraryPage = () => {
   );
 
   const handleCreateNew = () => {
-    setOpen(true); // abre o modal
+    setOpen(true);
   };
 
   const handleEditProcess = (processId) => {
@@ -270,8 +274,6 @@ const ProcessLibraryPage = () => {
             </div>
         )}
 
-        {/* Modal de definição do objetivo */}
-        <SimulationObjectiveModal open={open} setOpen={setOpen} />
       </div>
   );
 };

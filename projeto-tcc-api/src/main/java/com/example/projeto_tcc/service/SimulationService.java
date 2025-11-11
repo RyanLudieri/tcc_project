@@ -3,11 +3,10 @@ package com.example.projeto_tcc.service;
 import com.example.projeto_tcc.dto.ProcessSummaryDTO;
 import com.example.projeto_tcc.dto.SimulationResponseDTO;
 import com.example.projeto_tcc.entity.*;
-import com.example.projeto_tcc.repository.*;
+import com.example.projeto_tcc.repository.SimulationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -25,7 +24,6 @@ public class SimulationService {
         return simulationRepository.save(simulation);
     }
 
-
     public List<SimulationResponseDTO> getAllSimulations() {
         List<Simulation> simulations = simulationRepository.findAll();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a");
@@ -34,24 +32,70 @@ public class SimulationService {
             int processCount = 0;
             List<ProcessSummaryDTO> processes = List.of();
 
-            if (sim.getDeliveryProcess() != null && sim.getDeliveryProcess().getWbs() != null
-                    && sim.getDeliveryProcess().getWbs().getProcessElements() != null) {
-                processCount++;
+            if (sim.getProcesses() != null && !sim.getProcesses().isEmpty()) {
+                processCount = sim.getProcesses().size();
 
-                processes = sim.getDeliveryProcess().getWbs().getProcessElements().stream()
-                        .map(p -> new ProcessSummaryDTO(p.getId(), p.getName()))
-                        .toList();
+                processes = sim.getProcesses().stream().map(p -> {
+                    int phases = 0;
+                    int iterations = 0;
+                    int roles = 0;
+                    int activities = 0;
+                    int tasks = 0;
+                    int artifacts = 0;
+
+                    if (p instanceof DeliveryProcess) {
+                        DeliveryProcess dp = (DeliveryProcess) p;
+
+                        // CONTAGEM SIMPLES USANDO processElements do JSON
+                        if (dp.getProcessElements() != null) {
+                            phases = (int) dp.getProcessElements().stream()
+                                    .filter(e -> "PHASE".equals(e.getType()))
+                                    .count();
+
+                            iterations = (int) dp.getProcessElements().stream()
+                                    .filter(e -> "ITERATION".equals(e.getType()))
+                                    .count();
+
+                            activities = (int) dp.getProcessElements().stream()
+                                    .filter(e -> "ACTIVITY".equals(e.getType()))
+                                    .count();
+
+                            tasks = dp.getProcessElements().stream()
+                                    .filter(e -> "ACTIVITY".equals(e.getType()) && e.getChildren() != null)
+                                    .mapToInt(e -> e.getChildren().size())
+                                    .sum();
+                        }
+
+                        if (dp.getRoleConfigs() != null) roles = dp.getRoleConfigs().size();
+                        if (dp.getWorkProductConfigs() != null) artifacts = dp.getWorkProductConfigs().size();
+                    }
+
+                    String lastModified = sim.getLastModified() != null
+                            ? sim.getLastModified().format(formatter)
+                            : null;
+
+                    return new ProcessSummaryDTO(
+                            p.getId(),
+                            p.getName(),
+                            phases,
+                            iterations,
+                            roles,
+                            activities,
+                            tasks,
+                            artifacts,
+                            lastModified
+                    );
+                }).toList();
             }
 
             String status;
             if (sim.getStatus() != null) {
                 status = sim.getStatus();
-            } else if (sim.getDeliveryProcess() == null) {
+            } else if (sim.getProcesses() == null || sim.getProcesses().isEmpty()) {
                 status = "Empty";
             } else {
                 status = "Setup";
             }
-
 
             String lastModified = sim.getLastModified() != null
                     ? sim.getLastModified().format(formatter)
@@ -69,10 +113,93 @@ public class SimulationService {
     }
 
 
-
-    public Simulation getSimulation(Long id) {
-        return simulationRepository.findById(id)
+    public SimulationResponseDTO getSimulation(Long id) {
+        Simulation sim = simulationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Simulação não encontrada"));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a");
+
+        int processCount = 0;
+        List<ProcessSummaryDTO> processes = List.of();
+
+        if (sim.getProcesses() != null && !sim.getProcesses().isEmpty()) {
+            processCount = sim.getProcesses().size();
+
+            processes = sim.getProcesses().stream().map(p -> {
+                int phases = 0;
+                int iterations = 0;
+                int roles = 0;
+                int activities = 0;
+                int tasks = 0;
+                int artifacts = 0;
+
+                if (p instanceof DeliveryProcess) {
+                    DeliveryProcess dp = (DeliveryProcess) p;
+
+
+                    if (dp.getActivityConfigs() != null) {
+                        activities = dp.getActivityConfigs().size();
+                        tasks = dp.getActivityConfigs().stream()
+                                .mapToInt(ac ->
+                                        ac.getActivity() != null && ac.getActivity().getChildren() != null
+                                                ? ac.getActivity().getChildren().size()
+                                                : 0
+                                ).sum();
+                    }
+
+                    if (dp.getRoleConfigs() != null)
+                        roles = dp.getRoleConfigs().size();
+
+                    if (dp.getWorkProductConfigs() != null)
+                        artifacts = dp.getWorkProductConfigs().size();
+
+                    if (dp.getPhaseConfigs() != null)
+                        phases = dp.getPhaseConfigs().size();
+
+                    // Contagem de iterações novamente
+                    if (dp.getGeneratorConfigs() != null)
+                        iterations = dp.getGeneratorConfigs().size();
+                }
+
+                String lastModified = sim.getLastModified() != null
+                        ? sim.getLastModified().format(formatter)
+                        : null;
+
+                return new ProcessSummaryDTO(
+                        p.getId(),
+                        p.getName(),
+                        phases,
+                        iterations,
+                        roles,
+                        activities,
+                        tasks,
+                        artifacts,
+                        lastModified
+                );
+            }).toList();
+        }
+
+        String status;
+        if (sim.getStatus() != null) {
+            status = sim.getStatus();
+        } else if (sim.getProcesses() == null || sim.getProcesses().isEmpty()) {
+            status = "Empty";
+        } else {
+            status = "Setup";
+        }
+
+        String lastModified = sim.getLastModified() != null
+                ? sim.getLastModified().format(formatter)
+                : null;
+
+        return new SimulationResponseDTO(
+                sim.getId(),
+                sim.getObjective(),
+                processes,
+                processCount,
+                status,
+                lastModified
+        );
     }
 
     public void deleteSimulation(Long id) {
@@ -83,9 +210,9 @@ public class SimulationService {
         Simulation simulation = simulationRepository.findById(simulationId)
                 .orElseThrow(() -> new RuntimeException("Simulação não encontrada"));
 
-        simulation.setDeliveryProcess(process);
+        process.setSimulation(simulation);
+        simulation.getProcesses().add(process);
+
         return simulationRepository.save(simulation);
     }
-
-
 }

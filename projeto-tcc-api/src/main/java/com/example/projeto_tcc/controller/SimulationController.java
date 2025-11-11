@@ -69,9 +69,11 @@ public class SimulationController {
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<Simulation> getSimulation(@PathVariable Long id) {
-        return ResponseEntity.ok(simulationService.getSimulation(id));
+    public ResponseEntity<SimulationResponseDTO> getSimulation(@PathVariable Long id) {
+        SimulationResponseDTO simulationDto = simulationService.getSimulation(id);
+        return ResponseEntity.ok(simulationDto);
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSimulation(@PathVariable Long id) {

@@ -1,91 +1,88 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Eye, Edit, Trash2, Calendar, Users, Activity } from 'lucide-react';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
+import { Calendar, Activity, Repeat, Flag, Users, FileText } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 
-const ProcessCard = ({ process, onView, onEdit, onDelete, formatDate }) => (
-  <motion.div
-    layout
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    whileHover={{ y: -5 }}
-    transition={{ duration: 0.2 }}
-  >
-    <Card className="h-full hover:shadow-lg transition-shadow duration-200 border-2 hover:border-primary/20">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg font-bold truncate">{process.name}</CardTitle>
-            <CardDescription className="text-sm mt-1 line-clamp-2">
-              {process.description}
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="pt-0 pb-3">
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="flex items-center gap-1">
-            <Activity className="h-3 w-3 text-muted-foreground" />
-            <span className="text-muted-foreground">Phases:</span>
-            <Badge variant="secondary" className="text-xs">{process.phases}</Badge>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="h-3 w-3 text-muted-foreground" />
-            <span className="text-muted-foreground">Roles:</span>
-            <Badge variant="secondary" className="text-xs">{process.roles}</Badge>
-          </div>
-          <div className="flex items-center gap-1 col-span-2">
-            <Calendar className="h-3 w-3 text-muted-foreground" />
-            <span className="text-muted-foreground text-xs">Modified: {formatDate(process.lastModified)}</span>
-          </div>
-        </div>
-        
-        <div className="mt-3 flex flex-wrap gap-1">
-          <Badge variant="outline" className="text-xs">
-            {process.activities} Activities
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            {process.tasks} Tasks
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            {process.artifacts} Artifacts
-          </Badge>
-        </div>
-      </CardContent>
-      
-      <CardFooter className="pt-0 flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onView(process)}
-          className="flex-1"
+const ProcessCard = ({ process, simulationId, onDelete, formatDate }) => {
+    const navigate = useNavigate();
+
+    const handleEdit = () => {
+        navigate(`/simulations/${simulationId}/processes/${process.id}/edit`);
+    };
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
         >
-          <Eye className="h-3 w-3 mr-1" />
-          Preview
-        </Button>
-        <Button
-          variant="default"
-          size="sm"
-          onClick={() => onEdit(process.id)}
-          className="flex-1"
-        >
-          <Edit className="h-3 w-3 mr-1" />
-          Edit
-        </Button>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => onDelete(process.id, process.name)}
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
-      </CardFooter>
-    </Card>
-  </motion.div>
-);
+            <Card className="h-full border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl">
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-lg font-semibold truncate">{process.name}</CardTitle>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>Last Modified: {process.lastModified ? formatDate(process.lastModified) : '—'}</span>
+                    </div>
+                </CardHeader>
+
+                <CardContent className="pt-1 pb-2">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                            <Activity className="h-4 w-4 text-primary" />
+                            <span>{process.phases} Phases</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Repeat className="h-4 w-4 text-primary" />
+                            <span>{process.iterations} Iterations</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Flag className="h-4 w-4 text-primary" />
+                            <span>{process.milestones || 0} Milestones</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4 text-primary" />
+                            <span>{process.roles} Roles</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Activity className="h-4 w-4 text-primary" />
+                            <span>{process.activities} Activities</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <FileText className="h-4 w-4 text-primary" />
+                            <span>{process.tasks} Tasks</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <FileText className="h-4 w-4 text-primary" />
+                            <span>{process.artifacts} Artifacts</span>
+                        </div>
+                    </div>
+                </CardContent>
+
+                <CardFooter className="pt-2 flex gap-2">
+                    <Button variant="default" size="sm" onClick={handleEdit} className="flex-1">
+                        <Edit className="h-3 w-3 mr-1" /> Edit
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete process "${process.name}"?`)) {
+                                onDelete(process.id, process.name);
+                            }
+                        }}
+                    >
+                        <Trash2 className="h-3 w-3" />
+                    </Button>
+                </CardFooter>
+            </Card>
+        </motion.div>
+    );
+};
 
 export default ProcessCard;
