@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -46,25 +47,13 @@ public class SimulationService {
                     if (p instanceof DeliveryProcess) {
                         DeliveryProcess dp = (DeliveryProcess) p;
 
-                        // CONTAGEM SIMPLES USANDO processElements do JSON
-                        if (dp.getProcessElements() != null) {
-                            phases = (int) dp.getProcessElements().stream()
-                                    .filter(e -> "PHASE".equals(e.getType()))
-                                    .count();
+                        // Contagem recursiva de elementos
+                        List<ProcessElement> elements = new ArrayList<>(dp.getProcessElements());
 
-                            iterations = (int) dp.getProcessElements().stream()
-                                    .filter(e -> "ITERATION".equals(e.getType()))
-                                    .count();
-
-                            activities = (int) dp.getProcessElements().stream()
-                                    .filter(e -> "ACTIVITY".equals(e.getType()))
-                                    .count();
-
-                            tasks = dp.getProcessElements().stream()
-                                    .filter(e -> "ACTIVITY".equals(e.getType()) && e.getChildren() != null)
-                                    .mapToInt(e -> e.getChildren().size())
-                                    .sum();
-                        }
+                        phases = countTypeRecursive(elements, "PHASE");
+                        iterations = countTypeRecursive(elements, "ITERATION");
+                        activities = countTypeRecursive(elements, "ACTIVITY");
+                        tasks = countChildrenRecursive(elements, "ACTIVITY");
 
                         if (dp.getRoleConfigs() != null) roles = dp.getRoleConfigs().size();
                         if (dp.getWorkProductConfigs() != null) artifacts = dp.getWorkProductConfigs().size();
@@ -88,14 +77,9 @@ public class SimulationService {
                 }).toList();
             }
 
-            String status;
-            if (sim.getStatus() != null) {
-                status = sim.getStatus();
-            } else if (sim.getProcesses() == null || sim.getProcesses().isEmpty()) {
-                status = "Empty";
-            } else {
-                status = "Setup";
-            }
+            String status = sim.getStatus() != null
+                    ? sim.getStatus()
+                    : (sim.getProcesses() == null || sim.getProcesses().isEmpty() ? "Empty" : "Setup");
 
             String lastModified = sim.getLastModified() != null
                     ? sim.getLastModified().format(formatter)
@@ -110,6 +94,31 @@ public class SimulationService {
                     lastModified
             );
         }).toList();
+    }
+
+    // Função recursiva para contar elementos de um tipo específico
+    private int countTypeRecursive(List<ProcessElement> elements, String type) {
+        if (elements == null) return 0;
+        int count = 0;
+        for (ProcessElement e : elements) {
+            if (type.equals(e.getType())) count++;
+            // Precisa fazer cast para List<ProcessElement> porque Activity.getChildren() é List<Activity>
+            count += countTypeRecursive((List<ProcessElement>)(List<?>) e.getChildren(), type);
+        }
+        return count;
+    }
+
+    // Função recursiva para contar filhos de certo tipo
+    private int countChildrenRecursive(List<ProcessElement> elements, String type) {
+        if (elements == null) return 0;
+        int count = 0;
+        for (ProcessElement e : elements) {
+            if (type.equals(e.getType()) && e.getChildren() != null) {
+                count += e.getChildren().size();
+            }
+            count += countChildrenRecursive((List<ProcessElement>)(List<?>) e.getChildren(), type);
+        }
+        return count;
     }
 
 
@@ -136,16 +145,11 @@ public class SimulationService {
                 if (p instanceof DeliveryProcess) {
                     DeliveryProcess dp = (DeliveryProcess) p;
 
+                    if (dp.getPhaseConfigs() != null)
+                        phases = dp.getPhaseConfigs().size();
 
-                    if (dp.getActivityConfigs() != null) {
-                        activities = dp.getActivityConfigs().size();
-                        tasks = dp.getActivityConfigs().stream()
-                                .mapToInt(ac ->
-                                        ac.getActivity() != null && ac.getActivity().getChildren() != null
-                                                ? ac.getActivity().getChildren().size()
-                                                : 0
-                                ).sum();
-                    }
+                    if (dp.getIterationConfigs() != null)
+                        iterations = dp.getIterationConfigs().size();
 
                     if (dp.getRoleConfigs() != null)
                         roles = dp.getRoleConfigs().size();
@@ -153,12 +157,19 @@ public class SimulationService {
                     if (dp.getWorkProductConfigs() != null)
                         artifacts = dp.getWorkProductConfigs().size();
 
-                    if (dp.getPhaseConfigs() != null)
-                        phases = dp.getPhaseConfigs().size();
+                    if (dp.getActivityConfigs() != null) {
+                        activities = dp.getActivityConfigs().size();
 
-                    // Contagem de iterações novamente
-                    if (dp.getGeneratorConfigs() != null)
-                        iterations = dp.getGeneratorConfigs().size();
+                        tasks = dp.getActivityConfigs().stream()
+                                .map(ActivityConfig::getActivity)
+                                .filter(a -> a != null && a.getChildren() != null)
+                                .flatMap(a -> a.getChildren().stream()
+                                        .filter(child ->
+                                                child.getSuperActivity() != null &&
+                                                        child.getSuperActivity().equals(a)))
+                                .mapToInt(child -> 1)
+                                .sum();
+                    }
                 }
 
                 String lastModified = sim.getLastModified() != null
@@ -179,14 +190,10 @@ public class SimulationService {
             }).toList();
         }
 
-        String status;
-        if (sim.getStatus() != null) {
-            status = sim.getStatus();
-        } else if (sim.getProcesses() == null || sim.getProcesses().isEmpty()) {
-            status = "Empty";
-        } else {
-            status = "Setup";
-        }
+        // ✅ STATUS
+        String status = sim.getStatus() != null
+                ? sim.getStatus()
+                : (sim.getProcesses() == null || sim.getProcesses().isEmpty() ? "Empty" : "Setup");
 
         String lastModified = sim.getLastModified() != null
                 ? sim.getLastModified().format(formatter)
@@ -215,4 +222,18 @@ public class SimulationService {
 
         return simulationRepository.save(simulation);
     }
+
+    public SimulationResponseDTO updateObjective(Long id, String newObjective) {
+        Simulation sim = simulationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Simulação não encontrada"));
+
+        sim.setObjective(newObjective);
+        simulationRepository.save(sim);
+
+        return getSimulation(id);
+    }
+
+
+
+
 }

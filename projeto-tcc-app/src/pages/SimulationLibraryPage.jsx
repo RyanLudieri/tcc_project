@@ -59,6 +59,11 @@ const SimulationLibraryPage = () => {
         setOpen(true);
     };
 
+    const handleEditObjective = (simulationId, updatedSimulation) => {
+        setSimulations(prev => prev.map(s => s.id === simulationId ? updatedSimulation : s));
+    };
+
+
     const handleEditSimulation = (simulationId, processId) => {
         navigate(`/simulations/${simulationId}/processes/${processId}/edit`);
     };
@@ -192,6 +197,7 @@ const SimulationLibraryPage = () => {
                                             simulation={simulation}
                                             onView={handleViewSimulation}
                                             onEdit={handleEditSimulation}
+                                            onEditObjective={handleEditObjective}
                                             onDelete={handleDeleteSimulation}
                                         />
                                     ))}

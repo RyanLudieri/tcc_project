@@ -12,16 +12,52 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import {toast} from "@/components/ui/use-toast.js";
+import { API_BASE_URL } from "@/config/api";
+
 
 const SimulationCard = ({ simulation, onEditObjective, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newObjective, setNewObjective] = useState(simulation.objective || '');
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
-  const handleSave = () => {
-    onEditObjective(simulation.id, newObjective);
-    setIsEditing(false);
+
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/simulations/${simulation.id}/objective`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ objective: newObjective }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => null);
+        throw new Error(text || 'Failed to update objective');
+      }
+
+      toast({
+        title: "Objective updated!",
+        description: "Your changes have been saved successfully.",
+      });
+
+      const updated = await res.json();
+
+      if (onEditObjective) onEditObjective(simulation.id, updated);
+
+      setNewObjective(updated.objective ?? newObjective);
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Error updating objective:', err);
+      toast({ title: 'Erro', description: 'Error updating objective', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
   };
+
 
   const statusColor = {
     Empty: 'secondary',
@@ -124,7 +160,6 @@ const SimulationCard = ({ simulation, onEditObjective, onDelete }) => {
           </CardContent>
 
           <CardFooter className="pt-0">
-            {/* Apenas mostra o botão View se não estiver editando */}
             {!isEditing && (
                 <Button
                     variant="outline"

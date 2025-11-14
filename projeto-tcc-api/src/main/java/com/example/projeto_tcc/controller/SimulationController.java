@@ -124,4 +124,16 @@ public class SimulationController {
         Simulation updated = simulationService.linkDeliveryProcess(simulationId, process);
         return ResponseEntity.ok(updated);
     }
+
+    @PatchMapping("/{id}/objective")
+    public ResponseEntity<SimulationResponseDTO> updateObjective(
+            @PathVariable Long id,
+            @RequestBody SimulationCreateDTO dto) {
+
+        SimulationResponseDTO updated = simulationService.updateObjective(id, dto.getObjective());
+        return ResponseEntity.ok(updated);
+    }
+
+
 }
+
