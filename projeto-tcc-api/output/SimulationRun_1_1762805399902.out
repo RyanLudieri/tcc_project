@@ -1,0 +1,179 @@
+
+                    Simulation Report
+
+Simulation ended at time 5051.824
+Statistics collected from instant 0.0 during 5051.824 time units.
+
+          Observers' report
+----------------------------------------------------------------------
+
+Report from observer q9 Observer 10
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 24
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer Release planning Observer 1
+Statistics summary:
+Active state idle time (or inter-arrival time for Generate states):
+Average: 179.934 StdDev: 0.0 Variance: 0.0
+ Minimum: 3.4028235E38 Maximum: 179.934 Observations: 1
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer Working software Observer 1
+Statistics summary:
+Active state idle time (or inter-arrival time for Generate states):
+Average: 205.28017 StdDev: 200.69643 Variance: 40279.055
+ Minimum: 101.776 Maximum: 1139.936 Observations: 24
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q0 Observer 1
+Statistics summary:
+Queue length:
+Average: 0.035617433 StdDev: 0.19508472 Variance: 0.03805805
+ Minimum: 0.0 Maximum: 1.0 Observations: 30
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q10 Observer 11
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 24
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q2 Observer 3
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 30
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q5 Observer 6
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 27
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer Planning & development Observer 1
+Statistics summary:
+Active state idle time (or inter-arrival time for Generate states):
+Average: NaN StdDev: 0.0 Variance: 0.0
+ Minimum: 3.4028235E38 Maximum: 0.0 Observations: 0
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer Iteration Observer 1
+Statistics summary:
+Active state idle time (or inter-arrival time for Generate states):
+Average: NaN StdDev: 0.0 Variance: 0.0
+ Minimum: 3.4028235E38 Maximum: 0.0 Observations: 0
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q7 Observer 8
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 24
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer Pair programming with test driven development Observer 1
+Statistics summary:
+Active state idle time (or inter-arrival time for Generate states):
+Average: 659.934 StdDev: 0.0 Variance: 0.0
+ Minimum: 3.4028235E38 Maximum: 659.934 Observations: 1
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q8 Observer 9
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 24
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer Software production Observer 1
+Statistics summary:
+Active state idle time (or inter-arrival time for Generate states):
+Average: NaN StdDev: 0.0 Variance: 0.0
+ Minimum: 3.4028235E38 Maximum: 0.0 Observations: 0
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer Customer queue Observer 1
+Statistics summary:
+Number of resources permanencing in queue:
+Average: 13.290476 StdDev: 7.3680625 Variance: 54.28834
+ Minimum: 3.4028235E38 Maximum: 28.0 Observations: 27
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q1 Observer 2
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 30
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q3 Observer 4
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 30
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q4 Observer 5
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 27
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer Release Observer 1
+Statistics summary:
+Active state idle time (or inter-arrival time for Generate states):
+Average: NaN StdDev: 0.0 Variance: 0.0
+ Minimum: 3.4028235E38 Maximum: 0.0 Observations: 0
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q6 Observer 7
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 24
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer Developer queue Observer 1
+Statistics summary:
+Number of resources permanencing in queue:
+Average: 23.447584 StdDev: 20.137873 Variance: 405.53394
+ Minimum: 3.4028235E38 Maximum: 53.0 Observations: 51
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Report from observer q11 Observer 12
+Statistics summary:
+Queue length:
+Average: 0.0 StdDev: 0.0 Variance: 0.0
+ Minimum: 0.0 Maximum: 0.0 Observations: 24
+----------------------------------------------------------------------
+
+          Histograms' report
+
+Simulation Report End

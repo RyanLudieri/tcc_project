@@ -42,37 +42,34 @@ public class SimulationController {
 
         try {
             String uniqueAcdId = acdId + "_" + processId + "_" + System.currentTimeMillis();
-
             Path generatedFilePath = simulationGenerationService.generateSimulation(processId, uniqueAcdId);
-
             String javaCode = new String(Files.readAllBytes(generatedFilePath));
 
-            String fullClassName = "DynamicExperimentationProgramProxy";
+            // "Compila" (prepara) a sessão de execução
+            executionService.compile(javaCode, "DynamicExperimentationProgramProxy",processId);
 
-            executionService.compile(javaCode, fullClassName, processId);
-
-            String message = "Simulação gerada e compilada com sucesso. Pronta para executar.";
-            return ResponseEntity.ok(message);
-
+            return ResponseEntity.ok("Simulação gerada e sessão preparada.");
         } catch (Exception e) {
-            String errorMessage = "Falha ao gerar ou compilar a simulação: " + e.getMessage();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Falha ao gerar ou compilar: " + e.getMessage());
         }
     }
 
     @PostMapping("/execute")
     public ResponseEntity<String> executeSimulation(
-            @RequestParam float simulationDuration) {
+            @RequestParam float simulationDuration,
+            @RequestParam(defaultValue = "1") Integer replications) {
 
         try {
-            executionService.execute(simulationDuration);
-
-            String message = "Execução com duração " + simulationDuration + " concluída com sucesso.";
-            return ResponseEntity.ok(message);
+            // Chama o 'execute' que faz o loop
+            executionService.executeSimulation(simulationDuration, replications);
+            return ResponseEntity.ok("Execução de " + replications + " replicações concluída.");
 
         } catch (Exception e) {
-            String errorMessage = "Falha na execução: " + e.getMessage();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Falha na execução: " + e.getMessage());
         }
     }
 
@@ -92,10 +89,10 @@ public class SimulationController {
             Long processId = executionService.getActiveProcessId();
             if (processId == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Erro: Nenhuma simulação foi compilada nesta sessão.");
+                        .body("Erro: Nenhuma simulação foi compilada nesta sessão. Chame /generate-and-compile primeiro.");
             }
 
-            // 2. BUSCA A LISTA ATUALIZADA DO BANCO DE DADOS
+            // 2. BUSCA A LISTA ATUALIZADA (com 'variableType') DO BANCO DE DADOS
             List<WorkProductConfig> configList = workProductConfigService.findAllByDeliveryProcessId(processId);
 
             // 3. Passa a lista (do DB) para o ExecutionService (da sessão)
@@ -106,6 +103,7 @@ public class SimulationController {
                     .body(results);
 
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao buscar ou filtrar resultados: " + e.getMessage());
         }
@@ -144,6 +142,8 @@ public class SimulationController {
         Simulation updated = simulationService.linkDeliveryProcess(simulationId, process);
         return ResponseEntity.ok(updated);
     }
+
+
 
 
 }

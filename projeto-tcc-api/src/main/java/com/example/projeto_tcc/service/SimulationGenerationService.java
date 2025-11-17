@@ -11,7 +11,7 @@ public class SimulationGenerationService {
 
     private final XACDMLService xacdmlService;
     private final XsltTransformationService xsltTransformationService;
-    private final ExecutionService executionService; // <-- INJETA O NOVO SERVIÇO
+    private final ExecutionService executionService;
 
     public Path generateSimulation(Long processId, String acdId) {
         try {
@@ -21,7 +21,15 @@ public class SimulationGenerationService {
             String javaOutputPath = "target/generated-sources/DynamicExperimentationProgramProxy.java";
             String generatedJavaCode = xsltTransformationService.transform(xacdmlContent, xsltPath, javaOutputPath);
 
-            executionService.compile(generatedJavaCode, "DynamicExperimentationProgramProxy", processId);
+            // --- CORRETO ---
+            // Esta chamada agora está correta. Ela chama o 'compile' (Janino)
+            // com os 3 argumentos que o nosso ExecutionService espera.
+            executionService.compile(
+                    generatedJavaCode,
+                    "DynamicExperimentationProgramProxy", // O nome da classe para o Janino
+                    processId
+            );
+            // ---------------
 
             return Paths.get(javaOutputPath);
 

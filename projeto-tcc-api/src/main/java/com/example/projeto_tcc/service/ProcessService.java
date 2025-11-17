@@ -161,30 +161,17 @@ public class ProcessService {
         // 2. Atualizar Campos Diretos
         existingProcess.setName(dto.getName());
         existingProcess.setOptional(dto.isOptional());
-        System.out.println("Atualizando processo ID " + processId + ": " + existingProcess.getName());
 
-        // --- Limpeza Profunda ---
-        System.out.println("Iniciando limpeza das estruturas antigas...");
-
-        // 3. Remover Configurações (WP, Role, Generator)
-        System.out.println("Removendo configs antigas (WP, Role, Generator)...");
         workProductConfigRepository.deleteByDeliveryProcessId(processId);
         roleConfigRepository.deleteByDeliveryProcessId(processId);
         generatorConfigRepository.deleteByDeliveryProcessId(processId);
-        // ActivityConfig será removida manualmente (passo 4c) ou em cascata
 
-        // 4. Remover Estrutura WBS Antiga
         WorkBreakdownStructure oldWbs = existingProcess.getWbs();
         if (oldWbs != null) {
-            System.out.println("Limpando WBS antiga...");
-
-            // 4a. Coleta todas as atividades (raízes e filhas)
             List<Activity> oldRootActivities = oldWbs.getProcessElements() != null ? new ArrayList<>(oldWbs.getProcessElements()) : new ArrayList<>();
             List<Activity> allOldActivities = new ArrayList<>();
             collectAllActivities(oldRootActivities, allOldActivities);
 
-            // 4b. [CORREÇÃO FK] Quebrar links @ManyToMany (Predecessores)
-            System.out.println("Quebrando " + allOldActivities.size() + " links de predecessores antigos...");
             if (!allOldActivities.isEmpty()) {
                 for (Activity act : allOldActivities) {
                     act.setPredecessors(new ArrayList<>());
@@ -192,39 +179,26 @@ public class ProcessService {
                 repository.saveAllAndFlush(allOldActivities);
             }
 
-            // 4c. [CORREÇÃO DUPLICATE KEY] Deletar ActivityConfigs manualmente
-            // Isso deve ser feito ANTES do orphanRemoval deletar as Activities
             if (!allOldActivities.isEmpty()) {
                 List<Long> allOldActivityIds = allOldActivities.stream()
                         .map(Activity::getId)
                         .collect(Collectors.toList());
-                System.out.println("Deletando " + allOldActivityIds.size() + " ActivityConfigs antigas manualmente...");
-                activityConfigRepository.deleteByActivityIdIn(allOldActivityIds); // <<< USA O NOVO MÉTODO
+                activityConfigRepository.deleteByActivityIdIn(allOldActivityIds);
                 activityConfigRepository.flush();
             }
-
-            // 4d. Acionar Cascade de OrphanRemoval (para WBS, Activities e MethodElements)
-            // (Assumindo que WBS tem orphanRemoval=true para MethodElements também)
-            System.out.println("Desassociando WBS para acionar remoção em cascata (orphanRemoval)...");
             existingProcess.setWbs(null);
 
         } else {
             System.out.println("Nenhuma WBS antiga encontrada para remover.");
         }
 
-        repository.saveAndFlush(existingProcess); // O Hibernate executa toda a limpeza em cascata aqui
-        System.out.println("Limpeza concluída.");
+        repository.saveAndFlush(existingProcess);
 
-        // --- Recriação (Idêntica à lógica do saveProcess) ---
-        System.out.println("Iniciando recriação da estrutura...");
-
-        // 5. Reiniciar estado dos helpers
         currentIndex = 0;
         indexToActivity.clear();
-        existingProcess.setIndex(currentIndex++); // Raiz é índice 0
+        existingProcess.setIndex(currentIndex++);
         indexToActivity.put(existingProcess.getIndex(), existingProcess);
 
-        // 6. Criar Nova WBS e Elementos Filhos
         WorkBreakdownStructure newWbs = new WorkBreakdownStructure();
         List<Activity> newRootElements = new ArrayList<>();
         List<ProcessElementDTO> elementDTOs = dto.getProcessElements();
@@ -237,13 +211,12 @@ public class ProcessService {
             }
         }
 
-        // 7. Resolver Predecessores (dos filhos e da raiz)
         if (elementDTOs != null) {
             for (int i = 0; i < elementDTOs.size(); i++) {
                 resolvePredecessors(elementDTOs.get(i), newRootElements.get(i));
             }
         }
-        if (dto.getPredecessors() != null) { // Lógica de resolução da raiz
+        if (dto.getPredecessors() != null) {
             List<Activity> resolvedPredecessors = new ArrayList<>();
             for (Integer predIndex : dto.getPredecessors()) {
                 Activity pred = indexToActivity.get(predIndex);
@@ -255,7 +228,6 @@ public class ProcessService {
             existingProcess.setPredecessors(new ArrayList<>());
         }
 
-        // 8. Criar Novos MethodElements
         List<MethodElement> newMethodElements = new ArrayList<>();
         if (dto.getMethodElements() != null) {
             for (MethodElementDTO methodDto : dto.getMethodElements()) {
@@ -265,26 +237,20 @@ public class ProcessService {
         }
         newMethodElements = methodElementRepository.saveAll(newMethodElements);
 
-        // 9. Associar Novos Elementos à WBS e ao Processo
         newWbs.setProcessElements(newRootElements);
         newWbs.setMethodElements(newMethodElements);
         existingProcess.setWbs(newWbs);
 
-        // 10. Recriar Configurações Padrão (ActivityConfig)
         List<Activity> allNewActivities = new ArrayList<>();
         collectAllActivities(newRootElements, allNewActivities);
         for (Activity activity : allNewActivities) {
             activityConfigService.createDefaultConfigsRecursively(activity, existingProcess);
         }
 
-        // 11. Regenerar Configurações (WorkProduct e Role)
         workProductConfigService.generateConfigurations(newMethodElements, newRootElements, existingProcess);
         roleConfigService.generateConfigurations(newMethodElements, existingProcess);
 
-        // 12. Salvar o Processo Atualizado
-        System.out.println("Salvando processo atualizado...");
         Process updatedProcess = repository.save(existingProcess);
-        System.out.println("Processo ID " + updatedProcess.getId() + " atualizado com sucesso.");
 
         return updatedProcess;
     }
@@ -500,6 +466,50 @@ public class ProcessService {
 
         return dto;
     }
+
+
+    @Transactional
+    public void deleteProcess(Long processId) {
+        DeliveryProcess processToDelete = (DeliveryProcess) repository.findById(processId)
+                .filter(p -> p instanceof DeliveryProcess)
+                .orElseThrow(() -> new EntityNotFoundException("DeliveryProcess não encontrado com ID: " + processId));
+
+        workProductConfigRepository.deleteByDeliveryProcessId(processId);
+        roleConfigRepository.deleteByDeliveryProcessId(processId);
+        generatorConfigRepository.deleteByDeliveryProcessId(processId);
+
+        WorkBreakdownStructure oldWbs = processToDelete.getWbs();
+        if (oldWbs != null) {
+            List<Activity> oldRootActivities = oldWbs.getProcessElements() != null ? new ArrayList<>(oldWbs.getProcessElements()) : new ArrayList<>();
+            List<Activity> allOldActivities = new ArrayList<>();
+            collectAllActivities(oldRootActivities, allOldActivities);
+
+            if (!allOldActivities.isEmpty()) {
+                for (Activity act : allOldActivities) {
+                    act.setPredecessors(new ArrayList<>());
+                }
+                repository.saveAllAndFlush(allOldActivities);
+            }
+
+            if (!allOldActivities.isEmpty()) {
+                List<Long> allOldActivityIds = allOldActivities.stream()
+                        .map(Activity::getId)
+                        .collect(Collectors.toList());
+                activityConfigRepository.deleteByActivityIdIn(allOldActivityIds);
+                activityConfigRepository.flush();
+            }
+
+            processToDelete.setWbs(null);
+
+            repository.saveAndFlush(processToDelete);
+
+        } else {
+            System.out.println("Nenhuma WBS antiga encontrada para remover.");
+        }
+
+        repository.delete(processToDelete);
+    }
+
 
 
 }

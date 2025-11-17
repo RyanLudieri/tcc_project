@@ -75,4 +75,19 @@ public class ProcessController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // Retorna 500
         }
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProcess(@PathVariable Long id) {
+        try {
+            service.deleteProcess(id);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            // Log do erro para debug
+            System.err.println("Erro ao deletar processo ID " + id + ": " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
