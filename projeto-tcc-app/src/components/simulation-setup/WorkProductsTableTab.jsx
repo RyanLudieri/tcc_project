@@ -178,11 +178,26 @@ const WorkProductsTableTab = ({ processId }) => {
         <Checkbox
             name={fieldName}
             checked={wp[fieldName]}
-            onCheckedChange={(checked) => handleInputChange({ target: { name: fieldName, checked, type: 'checkbox' } }, wp.id)}
-            className="border-border data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+            onCheckedChange={(checked) =>
+                handleInputChange(
+                    { target: { name: fieldName, checked, type: 'checkbox' } },
+                    wp.id
+                )
+            }
+            className="
+        w-5 h-5
+        rounded-full
+        border-2 border-blue-500
+        data-[state=checked]:bg-primary
+        data-[state=checked]:border-blue-600
+        transition-all duration-200
+        hover:ring-2 hover:ring-blue-900/40
+      "
         />
       </div>
   );
+
+
 
 
   /* ===== OBSERVERS ===== */
