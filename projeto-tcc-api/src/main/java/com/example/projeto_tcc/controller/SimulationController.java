@@ -1,7 +1,12 @@
 package com.example.projeto_tcc.controller;
 
+import com.example.projeto_tcc.dto.SimulationCreateDTO;
+import com.example.projeto_tcc.dto.SimulationResponseDTO;
+import com.example.projeto_tcc.entity.DeliveryProcess;
+import com.example.projeto_tcc.entity.Simulation;
 import com.example.projeto_tcc.entity.WorkProductConfig;
 import com.example.projeto_tcc.service.*;
+//import com.example.projeto_tcc.service.SimulationGenerationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -11,12 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import com.example.projeto_tcc.dto.SimulationCreateDTO;
-import com.example.projeto_tcc.entity.DeliveryProcess;
-import com.example.projeto_tcc.entity.Simulation;
-
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/simulations")
@@ -26,7 +26,6 @@ public class SimulationController {
 
     private final SimulationService simulationService;
     private final DeliveryProcessService deliveryProcessService;
-
     private final SimulationGenerationService simulationGenerationService;
 
     @Autowired
@@ -39,7 +38,6 @@ public class SimulationController {
     public ResponseEntity<String> generateAndCompileSimulation(
             @PathVariable Long processId,
             @RequestParam(defaultValue = "SimulationRun") String acdId) {
-
         try {
             String uniqueAcdId = acdId + "_" + processId + "_" + System.currentTimeMillis();
             Path generatedFilePath = simulationGenerationService.generateSimulation(processId, uniqueAcdId);
@@ -62,7 +60,6 @@ public class SimulationController {
             @RequestParam(defaultValue = "1") Integer replications) {
 
         try {
-            // Chama o 'execute' que faz o loop
             executionService.executeSimulation(simulationDuration, replications);
             return ResponseEntity.ok("Execução de " + replications + " replicações concluída.");
 
@@ -116,15 +113,15 @@ public class SimulationController {
         return ResponseEntity.ok(simulationService.createSimulation(simulation));
     }
 
-
     @GetMapping
-    public ResponseEntity<List<Simulation>> getAllSimulations() {
-        return ResponseEntity.ok(simulationService.getAllSimulations());
+    public List<SimulationResponseDTO> getAllSimulations() {
+        return simulationService.getAllSimulations();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Simulation> getSimulation(@PathVariable Long id) {
-        return ResponseEntity.ok(simulationService.getSimulation(id));
+    public ResponseEntity<SimulationResponseDTO> getSimulation(@PathVariable Long id) {
+        SimulationResponseDTO simulationDto = simulationService.getSimulation(id);
+        return ResponseEntity.ok(simulationDto);
     }
 
     @DeleteMapping("/{id}")
@@ -143,7 +140,17 @@ public class SimulationController {
         return ResponseEntity.ok(updated);
     }
 
+    @PatchMapping("/{id}/objective")
+    public ResponseEntity<SimulationResponseDTO> updateObjective(
+            @PathVariable Long id,
+            @RequestBody SimulationCreateDTO dto) {
+
+        SimulationResponseDTO updated = simulationService.updateObjective(id, dto.getObjective());
+        return ResponseEntity.ok(updated);
+    }
+
 
 
 
 }
+

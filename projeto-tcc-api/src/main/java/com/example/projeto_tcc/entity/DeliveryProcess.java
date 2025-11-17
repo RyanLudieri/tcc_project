@@ -33,9 +33,24 @@ public class DeliveryProcess extends Process {
     @JsonIgnore
     private List<GeneratorConfig> generatorConfigs = new ArrayList<>();
 
-    @OneToOne(mappedBy = "deliveryProcess")
+    @OneToMany(mappedBy = "deliveryProcess", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<PhaseConfig> phaseConfigs = new ArrayList<>();
+
+    @Transient
+    private List<ProcessElement> processElements = new ArrayList<>();
+
+    @OneToMany(mappedBy = "deliveryProcess", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<IterationConfig> iterationConfigs = new ArrayList<>();
+
+
+
+    @ManyToOne
+    @JoinColumn(name = "simulation_id")
     @JsonBackReference
     private Simulation simulation;
+
 }
 
 

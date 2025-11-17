@@ -3,13 +3,14 @@ import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster.jsx";
 import Navbar from "@/components/Navbar.jsx";
 import HomePage from "@/pages/HomePage.jsx";
-import ProcessLibraryPage from "@/pages/ProcessLibraryPage.jsx";
 import ProcessEditor from "@/pages/ProcessEditor.jsx";
 import SimulationSetup from "@/pages/SimulationSetup.jsx";
 import SimulationResults from "@/pages/SimulationResults.jsx";
 import LoginPage from "@/components/auth/LoginPage.jsx";
 import { TooltipProvider } from "@/components/ui/tooltip.jsx";
 import { AuthProvider } from "@/contexts/SupabaseAuthContext.jsx";
+import SimulationLibraryPage from "@/pages/SimulationLibraryPage.jsx";
+import SimulationProcessesPage from '@/pages/SimulationProcessesPage.jsx';
 
 function App() {
   return (
@@ -21,7 +22,9 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/library" element={<ProcessLibraryPage />} />
+
+              <Route path="/simulations" element={<SimulationLibraryPage />} />
+              <Route path="/simulations/:simulationId" element={<SimulationProcessesPage />} />
 
               {/* Editor */}
               <Route path="/simulations/:simulationId/processes/:processId/edit" element={<ProcessEditor />} />

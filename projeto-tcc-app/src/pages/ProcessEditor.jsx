@@ -25,6 +25,8 @@ import { API_BASE_URL } from "@/config/api";
 const ProcessEditor = () => {
   const { simulationId, processId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isNewProcess = location.pathname.includes("/new");
   const { toast } = useToast();
 
   const {
@@ -158,40 +160,79 @@ const ProcessEditor = () => {
       return;
     }
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/process`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error(await response.text());
-
-      const savedProcess = await response.json();
-
-      if (simulationId) {
-        await fetch(`${API_BASE_URL}/simulations/${simulationId}/delivery-process/${savedProcess.id}`, {
-          method: 'PATCH',
+    if (!isNewProcess) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/process/${processId}`, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
         });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || "Failed to update process");
+        }
+
+        const updatedProcess = await response.json();
+
+        toast({
+          title: "Process Updated!",
+          description: "Your changes were saved successfully.",
+        });
+
+        navigate(`/simulations/${simulationId}/processes/${updatedProcess.id}/simulate`);
+
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Update Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsSaving(false);
       }
 
-      toast({
-        title: "Process Saved!",
-        description: "Your process model has been successfully saved.",
-      });
+      return;
 
-      navigate(`/simulations/${simulationId}/processes/${savedProcess.id}/simulate`);
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Save Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
+    } else {
+      try {
+          const response = await fetch(`${API_BASE_URL}/process`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) throw new Error(await response.text());
+
+          const savedProcess = await response.json();
+
+          if (simulationId) {
+            await fetch(`${API_BASE_URL}/simulations/${simulationId}/delivery-process/${savedProcess.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+
+          toast({
+            title: "Process Saved!",
+            description: "Your process model has been successfully saved.",
+          });
+
+          navigate(`/simulations/${simulationId}/processes/${savedProcess.id}/simulate`);
+        } catch (error) {
+        console.error(error);
+        toast({
+          title: "Save Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsSaving(false);
+      }
     }
+
+
   };
 
   const allowedTypesForDialog = parentNodeForDialog

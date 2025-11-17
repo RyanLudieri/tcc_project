@@ -1,22 +1,22 @@
 package com.example.projeto_tcc.entity;
 
-import com.example.projeto_tcc.dto.ActivityResponseDTO;
-import com.example.projeto_tcc.dto.SimulationParamsDTO;
-import com.example.projeto_tcc.enums.*;
+import com.example.projeto_tcc.enums.ProcessType;
+import com.example.projeto_tcc.enums.TimeScale;
 import com.example.projeto_tcc.serializer.CustomElementSerializer;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Data
 @Inheritance(strategy = InheritanceType.JOINED)
