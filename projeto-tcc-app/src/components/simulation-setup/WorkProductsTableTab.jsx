@@ -10,15 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { API_BASE_URL } from "@/config/api";
 import DistributionField from "@/components/simulation-setup/work-breakdown-elements/DistributionField.jsx";
-
-const FieldSection = ({ title, children }) => {
-  return (
-      <div className="space-y-4 border border-gray-300 shadow-lg rounded-lg p-4 mb-4">
-        {title && <h3 className="text-sm font-semibold">{title}</h3>}
-        {children}
-      </div>
-  );
-};
+import FieldSection from "@/components/simulation-setup/work-products/FieldSection";
 
 const observerTypes = ['NONE', 'LENGTH', 'TIME'];
 const observerTypesGenerateActivity = ['NONE', 'ACTIVE', 'DELAY', 'PROCESSOR'];
@@ -41,7 +33,7 @@ const WorkProductsTableTab = ({ processId }) => {
   const [selectedObserverGenerateActivity, setSelectedObserverGenerateActivity] = useState("");
 
 
-  const selectedWorkProductObj = workProducts.find(wp => wp.taskName === clickedWorkProduct);
+  const selectedWorkProductObj = workProducts.find(wp => wp.queueName === clickedWorkProduct);
   const selectedWorkProductGenerateActivity = selectedWorkProductObj ? selectedWorkProductObj.generateActivity : false;
 
   useEffect(() => {
@@ -156,6 +148,7 @@ const WorkProductsTableTab = ({ processId }) => {
     setIsAdding(false);
     toast({ title: "Work Product Added", description: `New workProduct "${newWorkProduct.workProduct}" added.`, variant: "default" });
   };
+
 
   const renderInputField = (wp, fieldName, placeholder, type = "text") => (
       <Input
@@ -399,28 +392,29 @@ const WorkProductsTableTab = ({ processId }) => {
 
               {/* =============== Work Products Table ===================*/}
               <div className="overflow-x-auto max-h-[400px] border border-border rounded-lg">
+                  <div className="sticky top-0 z-10 flex bg-muted border-b border-border h-12 items-center">
+                    <div className="w-[10%] text-sm text-primary text-center">Work Product</div>
+                    <div className="w-[10%] text-sm text-primary text-center">Input/Output</div>
+                    <div className="w-[10%] text-sm text-primary text-center">Task Name</div>
+                    <div className="w-[10%] text-sm text-primary text-center">Queue Name</div>
+                    <div className="w-[10%] text-sm text-primary text-center">Queue Type</div>
+                    <div className="w-[10%] text-sm text-primary text-center">Queue Size</div>
+                    <div className="w-[10%] text-sm text-primary text-center">Initial Quantity</div>
+                    <div className="w-[10%] text-sm text-primary text-center">Policy</div>
+                    <div className="w-[10%] text-sm text-primary text-center">Generate Activity?</div>
+                    <div className="w-[10%] text-sm text-primary text-center">Actions</div>
+                  </div>
                 <Table className="min-w-[800px] w-full table-fixed">
-                  <TableHeader className="sticky top-0 bg-muted z-10">
-                    <TableRow className="border-border h-12">
-                      <TableHead className="text-center text-primary w-1/10">Work Product</TableHead>
-                      <TableHead className="text-center text-primary w-1/10">Input/Output</TableHead>
-                      <TableHead className="text-center text-primary w-1/10">Task Name</TableHead>
-                      <TableHead className="text-center text-primary w-1/10">Queue Name</TableHead>
-                      <TableHead className="text-center text-primary w-1/10">Queue Type</TableHead>
-                      <TableHead className="text-center text-primary w-1/10">Queue Size</TableHead>
-                      <TableHead className="text-primary text-center w-1/10">Initial Quantity</TableHead>
-                      <TableHead className="text-primary text-center w-1/10">Policy</TableHead>
-                      <TableHead className="text-primary text-center w-1/10">Generate Activity?</TableHead>
-                      <TableHead className="text-primary text-center w-1/10">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
                   <TableBody>
                     {workProducts.map((wp) => (
                         <TableRow key={wp.id}
-                                  className={`border-border hover:bg-muted h-12 cursor-pointer ${
-                                      clickedWorkProduct === wp.taskName ? "bg-blue-100" : ""
-                                  }`}
-                                  onClick={() => setClickedWorkProduct(wp.taskName)}>
+                                  className={` border-border h-12 cursor-pointer active:bg-primary/20
+                                      ${clickedWorkProduct === wp.queueName 
+                                        ? "bg-blue-100 hover:bg-blue-200"  
+                                        : "hover:bg-muted"                  
+                                      }
+                                  `}
+                                  onClick={() => setClickedWorkProduct(wp.queueName)}>
                           <TableCell className="text-center min-w-1/10">{wp.workProduct}</TableCell>
                           <TableCell className="text-center min-w-1/10">{wp.inputOutput}</TableCell>
                           <TableCell className="text-center min-w-1/10">{wp.taskName}</TableCell>
@@ -455,7 +449,10 @@ const WorkProductsTableTab = ({ processId }) => {
           <div className="flex items-start gap-4 mt-6 w-full">
 
             {/* OBSERVERS */}
-            <Card className="bg-card border-border text-foreground flex-none w-1/2 h-[calc(100vh-200px)] flex flex-col">
+            <Card className={`bg-card border-border text-foreground flex-none w-1/2 flex flex-col
+            ${isAddingObserver}? 
+            : 'h-[calc(100vh-50px)]'
+            : 'h-[calc(100vh-200px)]'`}>
               <CardHeader>
                 <CardTitle className="text-2xl text-primary">Observers for Work Products queue's</CardTitle>
                 <CardDescription className="text-muted-foreground">
@@ -523,15 +520,13 @@ const WorkProductsTableTab = ({ processId }) => {
                     </div>
                 )}
 
-                <div className="overflow-x-auto max-h-[430px] border border-border rounded-lg">
-                  <Table className="min-w-[500px] w-full table-fixed h-full">
-                    <TableHeader className="sticky top-0 bg-muted z-10">
-                      <TableRow className="border-border h-12">
-                        <TableHead className="text-center text-primary min-w-[150px]">Name</TableHead>
-                        <TableHead className="text-center text-primary min-w-[120px]">Type</TableHead>
-                        <TableHead className="text-center text-primary text-center min-w-[120px]">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                <div className="overflow-x-auto max-h-[430px] border border-border rounded-lg relative z-0">
+                    <div className="sticky top-0 z-10 flex bg-muted border-b border-border h-12 items-center">
+                      <div className="w-[33%] text-sm text-primary text-center">Name</div>
+                      <div className="w-[33%] text-sm text-primary text-center">Type</div>
+                      <div className="w-[33%] text-sm text-primary text-center">Actions</div>
+                    </div>
+                  <Table className="min-w-[500px] w-full table-fixed h-full relative z-0">
                     <TableBody>
                       {observers.map((obs) => (
                           <TableRow key={obs.id} className="border-border hover:bg-muted h-12">

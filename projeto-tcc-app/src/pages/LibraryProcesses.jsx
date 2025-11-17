@@ -9,7 +9,7 @@ import ProcessListItem from '@/components/library/ProcessListItem.jsx';
 import { Search, ArrowLeft, Grid3X3, List, Activity, Plus } from 'lucide-react';
 import { API_BASE_URL } from '@/config/api';
 
-const SimulationProcessesPage = () => {
+const LibraryProcesses = () => {
     const { simulationId } = useParams();
     const [simulation, setSimulation] = useState(null);
     const [processes, setProcesses] = useState([]);
@@ -177,6 +177,8 @@ const SimulationProcessesPage = () => {
                                 process={process}
                                 onView={(p) => navigate(`/simulations/${simulationId}/processes/${p.id}/edit`)}
                                 onEdit={(id) => navigate(`/simulations/${simulationId}/processes/${id}/edit`)}
+                                onSetup={(id) => navigate(`/simulations/${simulationId}/processes/${id}/setup`)}
+                                onSimulate={(id) => navigate(`/simulations/${simulationId}/processes/${id}/results`)}
                                 onDelete={handleDeleteProcess}
                                 formatDate={(date) =>
                                     new Date(date).toLocaleDateString('en-US', {
@@ -196,4 +198,4 @@ const SimulationProcessesPage = () => {
     );
 };
 
-export default SimulationProcessesPage;
+export default LibraryProcesses;

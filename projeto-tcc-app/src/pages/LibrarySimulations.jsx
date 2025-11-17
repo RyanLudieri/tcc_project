@@ -20,7 +20,7 @@ import { API_BASE_URL } from "@/config/api";
 import { v4 as uuidv4 } from 'uuid';
 
 
-const SimulationLibraryPage = () => {
+const LibrarySimulations = () => {
     const [simulations, setSimulations] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState('grid');
@@ -254,4 +254,4 @@ const SimulationLibraryPage = () => {
     );
 };
 
-export default SimulationLibraryPage;
+export default LibrarySimulations;

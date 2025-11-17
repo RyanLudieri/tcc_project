@@ -4,13 +4,21 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
 import { Calendar, Activity, Repeat, Flag, Users, FileText } from 'lucide-react';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Settings, Rocket, Eye } from 'lucide-react';
 
 const ProcessCard = ({ process, simulationId, onDelete, formatDate }) => {
     const navigate = useNavigate();
 
     const handleEdit = () => {
         navigate(`/simulations/${simulationId}/processes/${process.id}/edit`);
+    };
+
+    const handleSetup = () => {
+        navigate(`/simulations/${simulationId}/processes/${process.id}/setup`);
+    };
+
+    const handleSimulate = () => {
+        navigate(`/simulations/${simulationId}/processes/${process.id}/results`);
     };
 
     return (
@@ -65,9 +73,34 @@ const ProcessCard = ({ process, simulationId, onDelete, formatDate }) => {
                 </CardContent>
 
                 <CardFooter className="pt-2 flex gap-2">
-                    <Button variant="default" size="sm" onClick={handleEdit} className="flex-1">
-                        <Edit className="h-3 w-3 mr-1" /> Edit
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEdit}
+                        className="flex-1"
+                    >
+                        <Eye className="h-3 w-3 mr-1" /> View
                     </Button>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSetup}
+                        className="flex-1"
+                    >
+                        <Settings className="h-3 w-3 mr-1" /> Setup
+                    </Button>
+
+                    <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleSimulate}
+                        className="relative overflow-hidden shimmer-btn flex-1"
+
+                    >
+                        <Rocket className="h-3 w-3 mr-1" /> Simulate
+                    </Button>
+
                     <Button
                         variant="destructive"
                         size="sm"

@@ -4,13 +4,13 @@ import { Toaster } from "@/components/ui/toaster.jsx";
 import Navbar from "@/components/Navbar.jsx";
 import HomePage from "@/pages/HomePage.jsx";
 import ProcessEditor from "@/pages/ProcessEditor.jsx";
-import SimulationSetup from "@/pages/SimulationSetup.jsx";
+import Setup from "@/pages/Setup.jsx";
 import SimulationResults from "@/pages/SimulationResults.jsx";
 import LoginPage from "@/components/auth/LoginPage.jsx";
 import { TooltipProvider } from "@/components/ui/tooltip.jsx";
 import { AuthProvider } from "@/contexts/SupabaseAuthContext.jsx";
-import SimulationLibraryPage from "@/pages/SimulationLibraryPage.jsx";
-import SimulationProcessesPage from '@/pages/SimulationProcessesPage.jsx';
+import LibrarySimulations from "@/pages/LibrarySimulations.jsx";
+import LibraryProcesses from '@/pages/LibraryProcesses.jsx';
 
 function App() {
   return (
@@ -23,14 +23,14 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
 
-              <Route path="/simulations" element={<SimulationLibraryPage />} />
-              <Route path="/simulations/:simulationId" element={<SimulationProcessesPage />} />
+              <Route path="/simulations" element={<LibrarySimulations />} />
+              <Route path="/simulations/:simulationId" element={<LibraryProcesses />} />
 
               {/* Editor */}
               <Route path="/simulations/:simulationId/processes/:processId/edit" element={<ProcessEditor />} />
 
               {/* Simulation Setup */}
-              <Route path="/simulations/:simulationId/processes/:processId/simulate" element={<SimulationSetup />} />
+              <Route path="/simulations/:simulationId/processes/:processId/setup" element={<Setup />} />
 
               {/* Simulation Results */}
               <Route path="/simulations/:simulationId/processes/:processId/results" element={<SimulationResults />} />
