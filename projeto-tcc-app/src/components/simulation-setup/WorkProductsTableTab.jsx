@@ -122,6 +122,60 @@ const WorkProductsTableTab = ({ processId }) => {
 
       if (!response.ok) throw new Error("Failed to update work product config");
 
+      if (wpToSave.generateActivity) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/simulation-config/process/${processId}/generators`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+              workProductConfigId: id,
+              distributionType: "",
+              scale: 0,
+              shape: 0
+            }),
+          });
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: `Unable to generate activity for work product ${wpToSave.queueName}.`,
+            variant: "destructive",
+          });
+        }
+      } else {
+        try{
+          const response = await fetch (`${API_BASE_URL}/simulation-config/process/${processId}/generators`, {
+                method: "GET",
+                headers: {"Content-Type": "application/json"},
+              });
+
+          const data = await response.json();
+          for (const generator of data) {
+            const targetId = generator.targetWorkProduct.id;
+            if (targetId === id) {
+              try {
+                const response = await fetch(`${API_BASE_URL}/simulation-config/generators/${generator.id}`, {
+                  method: "DELETE",
+                  headers: {"Content-Type": "application/json"},
+                });
+              } catch (error) {
+                toast({
+                  title: "Error",
+                  description: `Unable to uncheck generate activity for work product ${wpToSave.queueName}.`,
+                  variant: "destructive",
+                });
+              }
+            }
+          }
+
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: `Unable to find generate activity for work product ${wpToSave.queueName}.`,
+            variant: "destructive",
+          });
+        }
+      }
+
       toggleEdit(id);
       toast({
         title: "Saved",

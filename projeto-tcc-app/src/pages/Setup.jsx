@@ -56,10 +56,10 @@ const Setup = () => {
                   Back to Editor
                 </Link>
                 <h1 className="text-4xl font-bold mt-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-sky-600">
-                  Simulation Setup & Export
+                  Simulation Setup
                 </h1>
                 <p className="text-muted-foreground">
-                  Configure simulation parameters and export your process model for Process ID:{" "}
+                  Configure simulation parameters and simulate your process model for Process ID:{" "}
                   <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono">
                     {processId}
                   </code>
