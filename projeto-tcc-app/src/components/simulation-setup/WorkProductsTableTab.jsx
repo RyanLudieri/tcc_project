@@ -22,6 +22,7 @@ const WorkProductsTableTab = ({ processId }) => {
   const [newWorkProduct, setNewWorkProduct] = useState({ workProduct: '', inputOutput: 'Input', taskName: '', queueName: '', queueSize: 10, queueInitialQuantity: 0, policy: 'FIFO', generateActivity: true });
   const [isAdding, setIsAdding] = useState(false);
   const [observers, setObservers] = useState([]);
+  const [observersGenerateActivity, setObserversGenerateActivity] = useState([]);
   const [selectedWorkProduct, setSelectedWorkProduct] = useState("");
   const [selectedGenerateActivity, setSelectedGenerateActivity] = useState("");
   const [isAddingObserver, setIsAddingObserver] = useState(false);
@@ -79,6 +80,54 @@ const WorkProductsTableTab = ({ processId }) => {
     };
     fetchWorkProducts();
   }, [processId]);
+
+  useEffect(() => {
+    const fetchObserversForSelectedGenerateActivity = async () => {
+      if (!selectedWorkProductObj) return;
+
+      try {
+        const genResponse = await fetch(
+            `${API_BASE_URL}/simulation-config/process/${processId}/generators`
+        );
+        const generators = await genResponse.json();
+
+        const generator = generators.find(
+            (g) => g.targetWorkProduct.id === selectedWorkProductObj.id
+        );
+
+        if (!generator) {
+          setObserversGenerateActivity([]);
+          return;
+        }
+
+        const obsResponse = await fetch(
+            `${API_BASE_URL}/simulation-config/generators/${generator.id}/observers`
+        );
+
+        if (!obsResponse.ok) throw new Error("Error to fetch observers");
+
+        const obsData = await obsResponse.json();
+
+        const mapped = obsData.map((o) => ({
+          id: o.id,
+          name: o.name,
+          queueName: o.queueName,
+          type: o.type,
+          position: o.position,
+          isEditing: false,
+        }));
+
+        setObserversGenerateActivity(mapped);
+
+      } catch (error) {
+        console.error("Error to load observers for generate activity:", error);
+        setObserversGenerateActivity([]);
+      }
+    };
+
+    fetchObserversForSelectedGenerateActivity();
+  }, [selectedWorkProductObj, processId]);
+
 
   /* ===== WORK PRODUCTS ===== */
   const handleInputChange = (e, id) => {
@@ -256,7 +305,7 @@ const WorkProductsTableTab = ({ processId }) => {
 
   /* ===== OBSERVERS ===== */
   const showAddObserverForm = (isGenerateActivity) => {
-    if(isGenerateActivity && !selectedWorkProductObj.isEditing) {
+    if(isGenerateActivity) {
       setIsAddingObserverGenerateActivity(true);
       setSelectedGenerateActivity(selectedWorkProductObj.queueName);
       setSelectedTypeGenerateActivity("ACTIVE");
@@ -290,41 +339,72 @@ const WorkProductsTableTab = ({ processId }) => {
   };
 
   const handleAddObserver = async (isGenerateActivity) => {
-    if(isGenerateActivity){
+    if (isGenerateActivity) {
 
-      try{
-        const response = await fetch (`${API_BASE_URL}/simulation-config/process/${processId}/generators`, {
-          method: "GET",
-          headers: {"Content-Type": "application/json"},
-        });
+      try {
+        const res = await fetch(`${API_BASE_URL}/simulation-config/process/${processId}/generators`);
+        const gens = await res.json();
 
-        const data = await response.json();
-        for (const generator of data) {
-          const targetId = generator.targetWorkProduct.id;
-          if (targetId === selectedWorkProductObj.id) {
-            try {
-              const response = await fetch(
-                  `${API_BASE_URL}/simulation-config/generators/${targetId}/observers`,
-                  { method: "POST",
-                headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({
-                      type: selectedTypeGenerateActivity
-                    })
+        const generator = gens.find(g => g.targetWorkProduct.id === selectedWorkProductObj.id);
 
-              });
-            } catch (error) {
-              toast({
-                title: "Error",
-                description: `Unable to create observer for generate activity ${selectedWorkProductObj.queueName}.`,
-                variant: "destructive",
-              });
-            }
-          }
+        if (!generator) {
+          toast({
+            title: "Error",
+            description: `No generator found for WP ${selectedWorkProductObj.queueName}.`,
+            variant: "destructive",
+          });
+          return;
         }
 
-      } catch (error) {
+        const createRes = await fetch(
+            `${API_BASE_URL}/simulation-config/generators/${generator.id}/observers`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type: selectedTypeGenerateActivity
+              })
+            }
+        );
 
+        if (!createRes.ok) throw new Error("Failed to create observer");
+
+        const savedObserver = await createRes.json();
+
+        setObserversGenerateActivity(prev => [
+          ...prev,
+          {
+            id: savedObserver.id,
+            name: savedObserver.name,
+            queueName: savedObserver.queue_name,
+            type: savedObserver.type,
+            position: savedObserver.position,
+            isEditing: false,
+          }
+        ]);
+
+        setClickedWorkProduct(null);
+        requestAnimationFrame(() => {
+          setClickedWorkProduct(selectedWorkProductObj.queueName);
+        });
+
+
+        setIsAddingObserverGenerateActivity(false);
+
+        toast({
+          title: "Observer Added",
+          description: `Observer added to generate activity of ${selectedWorkProductObj.queueName}.`,
+          variant: "default",
+        });
+
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: `Unable to create observer for generate activity ${selectedWorkProductObj.queueName}.`,
+          variant: "destructive",
+        });
       }
+
       return;
     }
 
@@ -757,8 +837,8 @@ const WorkProductsTableTab = ({ processId }) => {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {observers
-                                .filter((obs) => obs.generateActivity)
+                            {observersGenerateActivity
+                                .filter((obs) => obs.queueName === selectedWorkProductObj?.queueName)
                                 .map((obs) => (
                                     <TableRow
                                         key={obs.id}
@@ -809,7 +889,7 @@ const WorkProductsTableTab = ({ processId }) => {
                         </Table>
                       </div>
 
-                      {observers.filter((obs) => obs.generateActivity).length === 0 && <p className="text-center text-muted-foreground mt-4">No observers for generate activity configured.</p>}
+                      {observersGenerateActivity.length === 0 && <p className="text-center text-muted-foreground mt-4">No observers for generate activity configured.</p>}
                     </CardContent>
                 ) : (
                     <CardContent>
