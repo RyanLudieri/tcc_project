@@ -2,7 +2,6 @@ package com.example.projeto_tcc.controller;
 
 import com.example.projeto_tcc.dto.ActivityConfigDTO;
 import com.example.projeto_tcc.dto.ObserverActivityDTO;
-import com.example.projeto_tcc.entity.ActivityConfig;
 import com.example.projeto_tcc.service.ActivityConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/activity-configs")
-@CrossOrigin(origins = "*") // permitir acesso do front-end
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class ActivityConfigController {
     private final ActivityConfigService configService;

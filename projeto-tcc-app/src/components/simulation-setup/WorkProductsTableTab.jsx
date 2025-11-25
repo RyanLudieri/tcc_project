@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { API_BASE_URL } from "@/config/api";
 import DistributionField from "@/components/simulation-setup/work-breakdown-elements/DistributionField.jsx";
 import FieldSection from "@/components/simulation-setup/work-products/FieldSection";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 const observerTypes = ['NONE', 'LENGTH', 'TIME'];
 const observerTypesGenerateActivity = ['NONE', 'ACTIVE', 'DELAY', 'PROCESSOR'];
@@ -29,7 +31,7 @@ const WorkProductsTableTab = ({ processId }) => {
   const [isAddingObserverGenerateActivity, setIsAddingObserverGenerateActivity] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState("");
   const [selectedType, setSelectedType] = useState("NONE");
-  const [selectedTypeGenerateActivity, setSelectedTypeGenerateActivity] = useState("ACTIVE");
+  const [selectedTypeGenerateActivity, setSelectedTypeGenerateActivity] = useState("NONE");
   const [distribution, setDistribution] = useState({ type: 'CONSTANT', params: {} });
   const [selectedObserverGenerateActivity, setSelectedObserverGenerateActivity] = useState("");
 
@@ -308,7 +310,7 @@ const WorkProductsTableTab = ({ processId }) => {
     if(isGenerateActivity) {
       setIsAddingObserverGenerateActivity(true);
       setSelectedGenerateActivity(selectedWorkProductObj.queueName);
-      setSelectedTypeGenerateActivity("ACTIVE");
+      setSelectedTypeGenerateActivity("NONE");
 
     } else {
       setIsAddingObserver(true);
@@ -450,64 +452,117 @@ const WorkProductsTableTab = ({ processId }) => {
     }
   };
 
-  const toggleObserverEdit = (id) => {
-    setObservers(observers.map(o => o.id === id ? { ...o, isEditing: !o.isEditing } : o));
+  const toggleObserverEdit = (id, isGenerateActivity) => {
+    if (isGenerateActivity) {
+      const obs = observersGenerateActivity.find(o => o.id === id);
+      setSelectedTypeGenerateActivity(obs?.type || "NONE");
+      setObserversGenerateActivity(prev =>
+          prev.map(o => o.id === id ? { ...o, isEditing: !o.isEditing } : o)
+      );
+      return;
+    }
+    setObservers(prev => prev.map(o => o.id === id ? { ...o, isEditing: !o.isEditing } : o));
   };
 
-  const handleObserverTypeChange = (value, id) => {
-    setObservers(observers.map(o => o.id === id ? { ...o, type: value } : o));
+
+  const handleObserverTypeChange = (value, id, isGenerateActivity = false) => {
+    if (isGenerateActivity) {
+      setObserversGenerateActivity(prev => prev.map(o => o.id === id ? { ...o, type: value } : o));
+    } else {
+      setObservers(prev => prev.map(o => o.id === id ? { ...o, type: value } : o));
+    }
   };
 
-  const saveUpdateObserver = async (id) => {
-    const observerToSave = observers.find(o => o.id === id);
+
+  const saveUpdateObserver = async (id, isGenerateActivity) => {
+    const targetList = isGenerateActivity ? observersGenerateActivity : observers;
+    const observerToSave = targetList.find(o => o.id === id);
+
     const body = { type: observerToSave.type, queueName: observerToSave.name };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/work-product-configs/observers/${id}`, {
+      const url = isGenerateActivity
+          ? `${API_BASE_URL}/simulation-config/generator-observers/${id}`
+          : `${API_BASE_URL}/work-product-configs/observers/${id}`;
+
+      const response = await fetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+
       if (!response.ok) throw new Error("Error updating observer");
 
-      toggleObserverEdit(id);
+      if (isGenerateActivity) {
+        setObserversGenerateActivity(prev => prev.map(o => o.id === id ? { ...o, isEditing: false } : o));
+      } else {
+        setObservers(prev => prev.map(o => o.id === id ? { ...o, isEditing: false } : o));
+      }
+
       toast({ title: "Observer Updated", description: `Observer "${observerToSave.name}" updated.`, variant: "default" });
     } catch (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
-  const cancelObserverEdit = (id) => toggleObserverEdit(id);
 
-  const handleRemoveObserver = async (id) => {
-    const observerToRemove = observers.find(o => o.id === id);
+  const cancelObserverEdit = (id, isGenerateActivity) => toggleObserverEdit(id, isGenerateActivity);
+
+  const handleRemoveObserver = async (id, isGenerateActivity) => {
+
+    const observerToRemove =
+        isGenerateActivity?
+            observersGenerateActivity.find(o => o.id === id)
+            : observers.find(o => o.id === id);
+
     if (!observerToRemove) return;
 
-    // setObservers(observers.filter(o => o.id !== id));
-
-    const wp = workProducts.find(wp => wp.queueName === observerToRemove.queueName);
-    if (!wp) {
-      toast({ title: "Error", description: "Unable to determine work product for this observer.", variant: "destructive" });
-      return;
+    if (isGenerateActivity) {
+      setObserversGenerateActivity(prev => prev.filter(o => o.id !== id));
+    } else {
+      setObservers(prev => prev.filter(o => o.id !== id));
     }
 
+    const url = isGenerateActivity
+        ? `${API_BASE_URL}/simulation-config/generator-observers/${id}`
+        : (() => {
+          const wp = workProducts.find(
+              wp => wp.queueName === observerToRemove.queueName
+          );
+
+          if (!wp) {
+            toast({
+              title: "Error",
+              description: "Unable to determine work product for this observer.",
+              variant: "destructive"
+            });
+            return null;
+          }
+
+          return `${API_BASE_URL}/work-product-configs/${wp.id}/observers/${id}`;
+        })();
+
+    if (!url) return;
+
     try {
-      const response = await fetch(
-          `${API_BASE_URL}/work-product-configs/${wp.id}/observers/${id}`,
-          {method: "DELETE"}
-      );
+      const response = await fetch(url, { method: "DELETE" });
       if (!response.ok) throw new Error("Failed to delete observer");
 
-      setObservers(prev => prev.filter(o => o.id !== id));
       toast({
         title: "Observer Removed",
         description: `Observer "${observerToRemove.name}" has been removed.`,
         variant: "default"
       });
     } catch (error) {
-      toast({title: "Error", description: "Unable to delete observer.", variant: "destructive"});
-    }
+      toast({
+        title: "Error",
+        description: "Unable to delete observer.",
+        variant: "destructive"
+      });
 
+      // undo (se quiser) → só tirar o comentário
+      // setObservers(prev => [...prev, observerToRemove]);
+    }
   };
 
   return (
@@ -643,65 +698,89 @@ const WorkProductsTableTab = ({ processId }) => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={() => showAddObserverForm(false)} className="bg-primary hover:bg-primary/90 text-primary-foreground mb-4">
-                  <PlusCircle className="mr-2 h-5 w-5" /> Add Observer
-                </Button>
+                <AnimatePresence mode="wait">
+                  {!isAddingObserver ? (
+                      <motion.div
+                          key="btn"
+                          initial={{ scale: 0.9 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0.9 }}
+                          transition={{ duration: 0.12, ease: "easeOut" }}
+                      >
+                        <Button
+                            onClick={() => showAddObserverForm(false)}
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground mb-4"
+                        >
+                          <PlusCircle className="mr-2 h-5 w-5" /> Add Observer
+                        </Button>
+                      </motion.div>
+                  ) : (
+                      <motion.div
+                          key="form"
+                          initial={{ scale: 0.7, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.7, opacity: 0 }}
+                          transition={{ duration: 0.12, ease: "easeOut" }}
+                          className="mb-4 p-4 border border-border rounded-lg bg-muted"
+                      >
+                        {/* === FORM ORIGINAL === */}
+                        <h3 className="text-lg font-semibold text-primary mb-3">Add New Observer</h3>
 
-                {isAddingObserver && (
-                    <div className="mb-4 p-4 border border-border rounded-lg bg-muted">
-                      <h3 className="text-lg font-semibold text-primary mb-3">Add New Observer</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <Label className="text-foreground mb-2">Select Queue Name</Label>
-                          <Select value={selectedWorkProduct} onValueChange={setSelectedWorkProduct}>
-                            <SelectTrigger className="bg-card border-border text-foreground">
-                              <SelectValue placeholder="Choose a queue" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card border-border text-foreground">
-                              {workProducts.map((wp) => (
-                                  <SelectItem key={wp.id} value={wp.id} className="hover:bg-muted">
-                                    {wp.queueName}
-                                  </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label className="text-foreground mb-2">Select Queue Name</Label>
+                            <Select value={selectedWorkProduct} onValueChange={setSelectedWorkProduct}>
+                              <SelectTrigger className="bg-card border-border text-foreground">
+                                <SelectValue placeholder="Choose a queue" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-card border-border text-foreground">
+                                {workProducts.map((wp) => (
+                                    <SelectItem key={wp.id} value={wp.id}>
+                                      {wp.queueName}
+                                    </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
 
+                          <div>
+                            <Label className="text-foreground mb-2">Observer Type</Label>
+                            <Select value={selectedType} onValueChange={setSelectedType}>
+                              <SelectTrigger className="bg-card border-border text-foreground">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-card border-border text-foreground">
+                                {observerTypes.map((t) => (
+                                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex items-end gap-2">
+                            <Button
+                                onClick={() => handleAddObserver(false)}
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2"
+                            >
+                              <Save className="h-4 w-4" />
+                              <span>Add</span>
+                            </Button>
+
+                            <Button
+                                onClick={() => cancelAddObserver(false)}
+                                variant="outline"
+                                className="flex items-center gap-2 text-foreground border-border hover:bg-muted px-4 py-2"
+                            >
+                              <X className="h-4 w-4" />
+                              <span>Cancel</span>
+                            </Button>
+                          </div>
                         </div>
-                        <div>
-                          <Label className="text-foreground mb-2">Observer Type</Label>
-                          <Select value={selectedType} onValueChange={setSelectedType}>
-                            <SelectTrigger className="bg-card border-border text-foreground">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card border-border text-foreground">
-                              {observerTypes.map((t) => (
-                                  <SelectItem key={t} value={t} className="hover:bg-muted">{t}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex items-end gap-2">
-                          <Button
-                              onClick={() => handleAddObserver(false)}
-                              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2"
-                          >
-                            <Save className="h-4 w-4 shrink-0" />
-                            <span>Add</span>
-                          </Button>
+                        {/* === /FORM === */}
+                      </motion.div>
+                  )}
+                </AnimatePresence>
 
-                          <Button
-                              onClick={() => cancelAddObserver(false)}
-                              variant="outline"
-                              className="flex items-center gap-2 text-foreground border-border hover:bg-muted px-4 py-2"
-                          >
-                            <X className="h-4 w-4 shrink-0" />
-                            <span>Cancel</span>
-                          </Button>
-                        </div>
-
-                      </div>
-                    </div>
-                )}
 
                 <div className="overflow-x-auto max-h-[430px] border border-border rounded-lg relative z-0">
                     <div className="sticky top-0 z-10 flex bg-muted border-b border-border h-12 items-center">
@@ -732,19 +811,19 @@ const WorkProductsTableTab = ({ processId }) => {
                               <div className="flex justify-center gap-2">
                                 {obs.isEditing ? (
                                     <>
-                                      <Button size="sm" variant="outline" onClick={() => saveUpdateObserver(obs.id)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
+                                      <Button size="sm" variant="outline" onClick={() => saveUpdateObserver(obs.id, false)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
                                         <Save className="h-4 w-4" />
                                       </Button>
-                                      <Button size="sm" variant="outline" onClick={() => cancelObserverEdit(obs.id)} className="text-muted-foreground border-border hover:bg-muted">
+                                      <Button size="sm" variant="outline" onClick={() => cancelObserverEdit(obs.id, false)} className="text-muted-foreground border-border hover:bg-muted">
                                         <X className="h-4 w-4" />
                                       </Button>
                                     </>
                                 ) : (
                                     <>
-                                      <Button size="sm" variant="outline" onClick={() => toggleObserverEdit(obs.id)} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
+                                      <Button size="sm" variant="outline" onClick={() => toggleObserverEdit(obs.id, false)} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
                                         <Edit3 className="h-4 w-4" />
                                       </Button>
-                                      <Button size="sm" variant="outline" onClick={() => handleRemoveObserver(obs.id)} className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                                      <Button size="sm" variant="outline" onClick={() => handleRemoveObserver(obs.id, false)} className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
                                     </>
@@ -776,56 +855,85 @@ const WorkProductsTableTab = ({ processId }) => {
                 </CardHeader>
                 {selectedWorkProductGenerateActivity ? (
                     <CardContent>
-                      <Button onClick={() => showAddObserverForm(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground mb-4">
-                        <PlusCircle className="mr-2 h-5 w-5" /> Add Observer
-                      </Button>
-                      {isAddingObserverGenerateActivity && (
-                          <div className="mb-4 p-4 border border-border rounded-lg bg-muted">
-                            <h3 className="text-lg font-semibold text-primary mb-3">Add New Observer for {selectedWorkProductObj.taskName || ""}</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-3/8">
-                              <div>
-                                <Label className="text-foreground mb-2">Queue Name</Label>
-                                <Input
-                                    value={selectedWorkProductObj.queueName || ""}
-                                    disabled
-                                    className="bg-card border-border text-foreground"
-                                />
-                              </div>
-                              <div>
-                                <Label className="text-foreground mb-2 w-9/12">Observer Type</Label>
-                                <Select value={selectedTypeGenerateActivity} onValueChange={setSelectedTypeGenerateActivity}>
-                                  <SelectTrigger className="bg-card border-border text-foreground">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-card border-border text-foreground">
-                                    {observerTypesGenerateActivity.map((t) => (
-                                        <SelectItem key={t} value={t} className="hover:bg-muted">{t}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex items-end gap-2">
-                                <Button
-                                    onClick={() => handleAddObserver(true)}
-                                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2"
-                                >
-                                  <Save className="h-4 w-4 shrink-0" />
-                                  <span>Add</span>
-                                </Button>
+                      <AnimatePresence mode="wait">
+                        {!isAddingObserverGenerateActivity && (
+                            <motion.div
+                                key="btn"
+                                initial={{ scale: 0.9 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0.9 }}
+                                transition={{ duration: 0.12, ease: "easeOut" }}
+                            >
+                              <Button
+                                  onClick={() => showAddObserverForm(true)}
+                                  className="bg-primary hover:bg-primary/90 text-primary-foreground mb-4"
+                              >
+                                <PlusCircle className="mr-2 h-5 w-5" /> Add Observer
+                              </Button>
+                            </motion.div>
+                        )}
 
-                                <Button
-                                    onClick={() => cancelAddObserver(true)}
-                                    variant="outline"
-                                    className="flex items-center gap-2 text-foreground border-border hover:bg-muted px-4 py-2"
-                                >
-                                  <X className="h-4 w-4 shrink-0" />
-                                  <span>Cancel</span>
-                                </Button>
-                              </div>
+                        {isAddingObserverGenerateActivity && (
+                            <motion.div
+                                key="form"
+                                initial={{ scale: 0.7, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.7, opacity: 0 }}
+                                transition={{ duration: 0.12, ease: "easeOut" }}
+                                className="mb-4 p-4 border border-border rounded-lg bg-muted"
+                            >
+                              <h3 className="text-lg font-semibold text-primary mb-3">
+                                Add New Observer for {selectedWorkProductObj.taskName || ""}
+                              </h3>
 
-                            </div>
-                          </div>
-                      )}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-3/8">
+                                <div>
+                                  <Label className="text-foreground mb-2">Queue Name</Label>
+                                  <Input
+                                      value={selectedWorkProductObj.queueName || ""}
+                                      disabled
+                                      className="bg-card border-border text-foreground"
+                                  />
+                                </div>
+
+                                <div>
+                                  <Label className="text-foreground mb-2 w-9/12">Observer Type</Label>
+                                  <Select value={selectedTypeGenerateActivity} onValueChange={setSelectedTypeGenerateActivity}>
+                                    <SelectTrigger className="bg-card border-border text-foreground">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-card border-border text-foreground">
+                                      {observerTypesGenerateActivity.map((t) => (
+                                          <SelectItem key={t} value={t} className="hover:bg-muted">
+                                            {t}
+                                          </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="flex items-end gap-2">
+                                  <Button
+                                      onClick={() => handleAddObserver(true)}
+                                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2"
+                                  >
+                                    <Save className="h-4 w-4 shrink-0" />
+                                    <span>Add</span>
+                                  </Button>
+
+                                  <Button
+                                      onClick={() => cancelAddObserver(true)}
+                                      variant="outline"
+                                      className="flex items-center gap-2 text-foreground border-border hover:bg-muted px-4 py-2"
+                                  >
+                                    <X className="h-4 w-4 shrink-0" />
+                                    <span>Cancel</span>
+                                  </Button>
+                                </div>
+                              </div>
+                            </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       <div className="overflow-x-auto max-h-[400px] border border-border rounded-lg">
                         <Table className="min-w-[500px] w-full table-fixed">
@@ -848,7 +956,9 @@ const WorkProductsTableTab = ({ processId }) => {
                                       <TableCell className="text-center min-w-[150px]">{obs.name}</TableCell>
                                       <TableCell className="text-center min-w-[120px]">
                                         {obs.isEditing ? (
-                                            <Select value={obs.type} onValueChange={(val) => handleObserverTypeChange(val, obs.id)}>
+                                            <Select
+                                                value={obs.type}
+                                                onValueChange={(val) => handleObserverTypeChange(val, obs.id, true)}>
                                               <SelectTrigger className="bg-card border-border text-foreground">
                                                 <SelectValue />
                                               </SelectTrigger>
@@ -864,19 +974,19 @@ const WorkProductsTableTab = ({ processId }) => {
                                         <div className="flex justify-center gap-2">
                                           {obs.isEditing ? (
                                               <>
-                                                <Button size="sm" variant="outline" onClick={() => saveUpdateObserver(obs.id)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
+                                                <Button size="sm" variant="outline" onClick={() => saveUpdateObserver(obs.id, true)} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
                                                   <Save className="h-4 w-4" />
                                                 </Button>
-                                                <Button size="sm" variant="outline" onClick={() => cancelObserverEdit(obs.id)} className="text-muted-foreground border-border hover:bg-muted">
+                                                <Button size="sm" variant="outline" onClick={() => cancelObserverEdit(obs.id, true)} className="text-muted-foreground border-border hover:bg-muted">
                                                   <X className="h-4 w-4" />
                                                 </Button>
                                               </>
                                           ) : (
                                               <>
-                                                <Button size="sm" variant="outline" onClick={() => toggleObserverEdit(obs.id)} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
+                                                <Button size="sm" variant="outline" onClick={() => toggleObserverEdit(obs.id, true)} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
                                                   <Edit3 className="h-4 w-4" />
                                                 </Button>
-                                                <Button size="sm" variant="outline" onClick={() => handleRemoveObserver(obs.id)} className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                                                <Button size="sm" variant="outline" onClick={() => handleRemoveObserver(obs.id, true)} className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
                                                   <Trash2 className="h-4 w-4" />
                                                 </Button>
                                               </>
