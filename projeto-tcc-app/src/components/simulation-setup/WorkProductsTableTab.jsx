@@ -256,9 +256,9 @@ const WorkProductsTableTab = ({ processId }) => {
 
   /* ===== OBSERVERS ===== */
   const showAddObserverForm = (isGenerateActivity) => {
-    if(isGenerateActivity) {
+    if(isGenerateActivity && !selectedWorkProductObj.isEditing) {
       setIsAddingObserverGenerateActivity(true);
-      setSelectedGenerateActivity(selectedWorkProduct.get().queueName);
+      setSelectedGenerateActivity(selectedWorkProductObj.queueName);
       setSelectedTypeGenerateActivity("ACTIVE");
 
     } else {
@@ -291,14 +291,48 @@ const WorkProductsTableTab = ({ processId }) => {
 
   const handleAddObserver = async (isGenerateActivity) => {
     if(isGenerateActivity){
+
+      try{
+        const response = await fetch (`${API_BASE_URL}/simulation-config/process/${processId}/generators`, {
+          method: "GET",
+          headers: {"Content-Type": "application/json"},
+        });
+
+        const data = await response.json();
+        for (const generator of data) {
+          const targetId = generator.targetWorkProduct.id;
+          if (targetId === selectedWorkProductObj.id) {
+            try {
+              const response = await fetch(
+                  `${API_BASE_URL}/simulation-config/generators/${targetId}/observers`,
+                  { method: "POST",
+                headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                      type: selectedTypeGenerateActivity
+                    })
+
+              });
+            } catch (error) {
+              toast({
+                title: "Error",
+                description: `Unable to create observer for generate activity ${selectedWorkProductObj.queueName}.`,
+                variant: "destructive",
+              });
+            }
+          }
+        }
+
+      } catch (error) {
+
+      }
       return;
     }
+
     if (!selectedWorkProduct) {
       toast({ title: "Error", description: "Please select a work product first.", variant: "destructive" });
       return;
     }
 
-    // Obter o `workProduct` completo usando o `selectedWorkProduct.id`
     const selectedWorkProductData = workProducts.find(wp => wp.id === selectedWorkProduct);
     if (!selectedWorkProductData) return;
 
@@ -317,7 +351,7 @@ const WorkProductsTableTab = ({ processId }) => {
 
       setObservers([...observers, {
         id: savedObserver.id,
-        workProductConfigId: selectedWorkProductData.id,  // Enviar o workProduct.id ao backend
+        workProductConfigId: selectedWorkProductData.id,
         name: savedObserver.name,
         queueName: savedObserver.queue_name,
         type: savedObserver.type,
