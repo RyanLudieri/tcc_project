@@ -5,6 +5,7 @@ import com.example.projeto_tcc.dto.SimulationResponseDTO;
 import com.example.projeto_tcc.entity.DeliveryProcess;
 import com.example.projeto_tcc.entity.Simulation;
 import com.example.projeto_tcc.entity.WorkProductConfig;
+import com.example.projeto_tcc.repository.WorkProductConfigRepository;
 import com.example.projeto_tcc.service.*;
 //import com.example.projeto_tcc.service.SimulationGenerationService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,9 @@ public class SimulationController {
     private final SimulationService simulationService;
     private final DeliveryProcessService deliveryProcessService;
     private final SimulationGenerationService simulationGenerationService;
+
+    @Autowired
+    private WorkProductConfigRepository workProductConfigRepository;
 
     @Autowired
     private ExecutionService executionService;
@@ -70,39 +74,46 @@ public class SimulationController {
         }
     }
 
-    @GetMapping("/get_generated_code")
-    public ResponseEntity<String> getGeneratedCode() {
-        String javaCode = executionService.getGeneratedJavaCode();
+    @GetMapping("/generated-code/{processId}")
+    public ResponseEntity<String> getGeneratedCode(@PathVariable Long processId) {
+
+        // Chama o método que gera o código sob demanda
+        String javaCode = executionService.generateCodeForPreview(processId);
+
+        if (javaCode == null || javaCode.startsWith("Erro")) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(javaCode != null ? javaCode : "Erro desconhecido ao gerar código.");
+        }
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "text/plain; charset=utf-8")
                 .body(javaCode);
     }
 
-    @PostMapping("/get_results")
+    @GetMapping("/get_results")
     public ResponseEntity<String> getResults() {
         try {
-            // 1. Pega o ID do processo que está ativo na sessão
+            // 1. Recupera o ID do processo ativo na sessão do service
             Long processId = executionService.getActiveProcessId();
             if (processId == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Erro: Nenhuma simulação foi compilada nesta sessão. Chame /generate-and-compile primeiro.");
+                return ResponseEntity.badRequest().body("Nenhum processo ativo ou simulação não compilada.");
             }
 
-            // 2. BUSCA A LISTA ATUALIZADA (com 'variableType') DO BANCO DE DADOS
-            List<WorkProductConfig> configList = workProductConfigService.findAllByDeliveryProcessId(processId);
+            // 2. Busca a configuração para saber quais filas calcular estatísticas globais
+            List<WorkProductConfig> configs = workProductConfigRepository.findAllByDeliveryProcessId(processId);
 
-            // 3. Passa a lista (do DB) para o ExecutionService (da sessão)
-            String results = executionService.getFilteredResults(configList);
+            // 3. Gera as duas partes do relatório
+            String detalhado = executionService.getDetailedSimulationLog();
+            String global = executionService.getFilteredResults(configs);
 
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_TYPE, "text/plain; charset=utf-8")
-                    .body(results);
+            // 4. Concatena e retorna
+            String relatorioFinal = detalhado + "\n" + global;
+
+            return ResponseEntity.ok(relatorioFinal);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao buscar ou filtrar resultados: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Erro ao gerar relatório: " + e.getMessage());
         }
     }
 
