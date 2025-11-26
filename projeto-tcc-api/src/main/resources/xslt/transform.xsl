@@ -417,6 +417,7 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
 </xsl:template>
 
 <xsl:template match="entity_class">
+  <xsl:variable name="neededQty" select="../@need"/>
   <xsl:variable name="queue2" select="@next"/>
   <xsl:for-each select="/acd/dead">
   <xsl:if test="(@id = $queue2) and (type/@init != type/@size)">
@@ -431,7 +432,7 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   <xsl:value-of select="@id"/>
   <xsl:text>");// mapped by next resource dead
   iae.addResourceQty(new Integer(</xsl:text>
-  <xsl:value-of select="type/@init"/>
+  <xsl:value-of select="$neededQty"/>
   <xsl:text>));// mapped by init on resource dead</xsl:text>
   </xsl:if>
   </xsl:for-each>
