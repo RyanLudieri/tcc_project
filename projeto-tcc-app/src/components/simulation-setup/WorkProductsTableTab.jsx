@@ -34,8 +34,7 @@ const WorkProductsTableTab = ({ processId }) => {
   const [selectedTypeGenerateActivity, setSelectedTypeGenerateActivity] = useState("NONE");
   const [distribution, setDistribution] = useState({ type: 'CONSTANT', params: {} });
   const [selectedObserverGenerateActivity, setSelectedObserverGenerateActivity] = useState("");
-
-
+  const [selectedGeneratorId, setSelectedGeneratorId] = useState(null);
   const selectedWorkProductObj = workProducts.find(wp => wp.queueName === clickedWorkProduct);
   const selectedWorkProductGenerateActivity = selectedWorkProductObj ? selectedWorkProductObj.generateActivity : false;
 
@@ -97,10 +96,51 @@ const WorkProductsTableTab = ({ processId }) => {
             (g) => g.targetWorkProduct.id === selectedWorkProductObj.id
         );
 
+
+
         if (!generator) {
+          setSelectedGeneratorId(null);
           setObserversGenerateActivity([]);
           return;
         }
+
+        setSelectedGeneratorId(generator.id);
+
+// === GET DISTRIBUTION PARAMETERS ===
+        // === GET DISTRIBUTION PARAMETERS ===
+        try {
+          const genConfigRes = await fetch(
+              `${API_BASE_URL}/simulation-config/generators/${generator.id}`
+          );
+
+          if (genConfigRes.ok) {
+            const genConfig = await genConfigRes.json();
+
+            console.log("GENERATOR CONFIG:", genConfig);
+
+            const d = genConfig.distribution || {};
+
+            setDistribution({
+              type: genConfig.distributionType,
+              params: {
+                constant: d.constant ?? "",
+                mean: d.mean ?? "",
+                average: d.average ?? "",
+                standardDeviation: d.standardDeviation ?? "",
+                low: d.low ?? "",
+                high: d.high ?? "",
+                scale: d.scale ?? "",
+                shape: d.shape ?? ""
+              }
+            });
+          }
+        } catch (e) {
+          console.error("Error loading generator config:", e);
+        }
+
+
+
+
 
         const obsResponse = await fetch(
             `${API_BASE_URL}/simulation-config/generators/${generator.id}/observers`
@@ -130,7 +170,6 @@ const WorkProductsTableTab = ({ processId }) => {
     fetchObserversForSelectedGenerateActivity();
   }, [selectedWorkProductObj, processId]);
 
-
   /* ===== WORK PRODUCTS ===== */
   const handleInputChange = (e, id) => {
     const { name, value, type, checked } = e.target;
@@ -141,7 +180,6 @@ const WorkProductsTableTab = ({ processId }) => {
       setNewWorkProduct({ ...newWorkProduct, [name]: val });
     }
   };
-
   const handleSelectChange = (value, name, id) => {
     if (id) {
       setWorkProducts(workProducts.map(r => r.id === id ? { ...r, [name]: value } : r));
@@ -149,11 +187,9 @@ const WorkProductsTableTab = ({ processId }) => {
       setNewWorkProduct({ ...newWorkProduct, [name]: value });
     }
   };
-
   const toggleEdit = (id) => {
     setWorkProducts(workProducts.map(r => r.id === id ? { ...r, isEditing: !r.isEditing } : r));
   };
-
   const saveWorkProduct = async (id) => {
     const wpToSave = workProducts.find(r => r.id === id);
 
@@ -241,7 +277,6 @@ const WorkProductsTableTab = ({ processId }) => {
       });
     }
   };
-
   const addWorkProduct = () => {
     if (!newWorkProduct.workProduct || !newWorkProduct.taskName || !newWorkProduct.queueName) {
       toast({ title: "Error", description: "Work Product, Task Name, and Queue Name are required.", variant: "destructive" });
@@ -254,7 +289,6 @@ const WorkProductsTableTab = ({ processId }) => {
     toast({ title: "Work Product Added", description: `New workProduct "${newWorkProduct.workProduct}" added.`, variant: "default" });
   };
 
-
   const renderInputField = (wp, fieldName, placeholder, type = "text") => (
       <Input
           name={fieldName}
@@ -266,7 +300,6 @@ const WorkProductsTableTab = ({ processId }) => {
           min={type === "number" ? "0" : undefined}
       />
   );
-
   const renderSelectField = (wp, fieldName, options) => (
       <Select name={fieldName} value={wp[fieldName]} onValueChange={(value) => handleSelectChange(value, fieldName, wp.id)}>
         <SelectTrigger className="bg-card border-border text-foreground">
@@ -277,7 +310,6 @@ const WorkProductsTableTab = ({ processId }) => {
         </SelectContent>
       </Select>
   );
-
   const renderCheckboxField = (wp, fieldName) => (
       <div className="flex items-center justify-center h-full">
         <Checkbox
@@ -303,8 +335,6 @@ const WorkProductsTableTab = ({ processId }) => {
   );
 
 
-
-
   /* ===== OBSERVERS ===== */
   const showAddObserverForm = (isGenerateActivity) => {
     if(isGenerateActivity) {
@@ -318,7 +348,6 @@ const WorkProductsTableTab = ({ processId }) => {
       setSelectedType("NONE");
     }
   };
-
   const cancelAddObserver = (isGenerateActivity) => {
     if(isGenerateActivity){
       setIsAddingObserverGenerateActivity(false);
@@ -330,7 +359,6 @@ const WorkProductsTableTab = ({ processId }) => {
     setSelectedWorkProduct("");
     setSelectedType("NONE");
   };
-
   const getNextObserverIndex = () => {
     if (observers.length === 0) return 1;
     const existingIndices = observers.map(obs => {
@@ -339,7 +367,6 @@ const WorkProductsTableTab = ({ processId }) => {
     });
     return Math.max(...existingIndices) + 1;
   };
-
   const handleAddObserver = async (isGenerateActivity) => {
     if (isGenerateActivity) {
 
@@ -451,7 +478,6 @@ const WorkProductsTableTab = ({ processId }) => {
       toast({ title: "Error", description: "Unable to save observer.", variant: "destructive" });
     }
   };
-
   const toggleObserverEdit = (id, isGenerateActivity) => {
     if (isGenerateActivity) {
       const obs = observersGenerateActivity.find(o => o.id === id);
@@ -463,8 +489,6 @@ const WorkProductsTableTab = ({ processId }) => {
     }
     setObservers(prev => prev.map(o => o.id === id ? { ...o, isEditing: !o.isEditing } : o));
   };
-
-
   const handleObserverTypeChange = (value, id, isGenerateActivity = false) => {
     if (isGenerateActivity) {
       setObserversGenerateActivity(prev => prev.map(o => o.id === id ? { ...o, type: value } : o));
@@ -472,8 +496,6 @@ const WorkProductsTableTab = ({ processId }) => {
       setObservers(prev => prev.map(o => o.id === id ? { ...o, type: value } : o));
     }
   };
-
-
   const saveUpdateObserver = async (id, isGenerateActivity) => {
     const targetList = isGenerateActivity ? observersGenerateActivity : observers;
     const observerToSave = targetList.find(o => o.id === id);
@@ -504,10 +526,7 @@ const WorkProductsTableTab = ({ processId }) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
-
-
   const cancelObserverEdit = (id, isGenerateActivity) => toggleObserverEdit(id, isGenerateActivity);
-
   const handleRemoveObserver = async (id, isGenerateActivity) => {
 
     const observerToRemove =
@@ -564,6 +583,20 @@ const WorkProductsTableTab = ({ processId }) => {
       // setObservers(prev => [...prev, observerToRemove]);
     }
   };
+
+  /*==== DISTRIBUTION ===*/
+  const handleSaveDistribuition = async (id) => {
+
+    const response = await fetch(`${API_BASE_URL}/simulation-config/generators/${id}`, {
+      method: "PATCH",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        distributionType: distribution.type,
+        ...distribution.params
+      })
+    });
+  };
+
 
   return (
       <>
@@ -705,7 +738,7 @@ const WorkProductsTableTab = ({ processId }) => {
                           initial={{ scale: 0.9 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0.9 }}
-                          transition={{ duration: 0.12, ease: "easeOut" }}
+                          transition={{ duration: 0.05, ease: "easeOut" }}
                       >
                         <Button
                             onClick={() => showAddObserverForm(false)}
@@ -1034,11 +1067,12 @@ const WorkProductsTableTab = ({ processId }) => {
                       {/*{selectedWorkProduct && (*/}
                       <DistributionField
                           value={distribution}
-                          onChange={(updatedDistribution) => {
-                            setDistribution(updatedDistribution);
-                            // saveDistribution(updatedDistribution);
-                          }}
+
+                          onChange={(updated) => setDistribution(updated)}
+                          onSave={() => handleSaveDistribuition(selectedGeneratorId)}
                       />
+
+
                       {/*)}*/}
                     </FieldSection>
 
