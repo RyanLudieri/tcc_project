@@ -235,17 +235,15 @@ const RoleQueueMappingTab = ({ processId }) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto w-full">
+            <div className="overflow-x-auto w-full border border-border rounded-lg">
+              <div className="sticky top-0 z-10 flex bg-muted border-b border-border h-12 items-center">
+                <div className="w-[20%] text-sm text-primary text-left px-4">Role Name</div>
+                <div className="w-[20%] text-sm text-primary text-left px-4">Queue Name</div>
+                <div className="w-[20%] text-sm text-primary text-left px-4">Queue Type</div>
+                <div className="w-[20%] text-sm text-primary text-right px-4">Initial Quantity</div>
+                <div className="w-[20%] text-sm text-primary text-center px-4">Actions</div>
+              </div>
               <Table className="min-w-[700px] table-fixed">
-                <TableHeader>
-                  <TableRow className="border-border hover:bg-muted/30">
-                    <TableHead className="text-primary">Role Name</TableHead>
-                    <TableHead className="text-primary">Queue Name</TableHead>
-                    <TableHead className="text-primary">Queue Type</TableHead>
-                    <TableHead className="text-primary text-right">Initial Quantity</TableHead>
-                    <TableHead className="text-primary text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
                 <TableBody>
                   {mappings.map((mapping) => (
                       <TableRow key={mapping.id} className="border-border hover:bg-muted/30">
@@ -356,15 +354,13 @@ const RoleQueueMappingTab = ({ processId }) => {
                 </div>
             )}
 
-            <div className="overflow-x-auto mt-6">
-              <Table className="min-w-[500px] table-fixed">
-                <TableHeader>
-                  <TableRow className="border-border hover:bg-muted/30">
-                    <TableHead className="text-primary">Name</TableHead>
-                    <TableHead className="text-primary">Type</TableHead>
-                    <TableHead className="text-primary text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
+            <div className="overflow-x-auto max-h-[430px] border border-border rounded-lg relative z-0">
+              <div className="sticky top-0 z-10 flex bg-muted border-b border-border h-12 items-center">
+                <div className="w-[33%] text-sm text-primary text-left px-4 ">Name</div>
+                <div className="w-[33%] text-sm text-primary text-left px-5">Type</div>
+                <div className="w-[33%] text-sm text-primary text-center">Actions</div>
+              </div>
+              <Table className="min-w-[500px] w-full table-fixed h-full relative z-0">
                 <TableBody>
                   {observers.map((obs) => (
                       <TableRow key={obs.id} className="border-border hover:bg-muted/30">

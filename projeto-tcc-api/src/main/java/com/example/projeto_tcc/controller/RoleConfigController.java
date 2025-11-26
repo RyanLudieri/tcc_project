@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/role-configs")
-@CrossOrigin(origins = "*") // permite chamadas do frontend
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class RoleConfigController {
 

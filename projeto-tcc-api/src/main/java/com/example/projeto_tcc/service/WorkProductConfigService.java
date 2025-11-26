@@ -1,9 +1,8 @@
 package com.example.projeto_tcc.service;
 
 import com.example.projeto_tcc.dto.*;
-import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.entity.Observer;
-import com.example.projeto_tcc.enums.ObserverActivityType;
+import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.enums.ProcessType;
 import com.example.projeto_tcc.enums.Queue;
@@ -510,7 +509,7 @@ public class WorkProductConfigService {
      * POST: Adiciona um novo observer padrão a um gerador existente.
      */
     @Transactional
-    public GenerateObserverDTO addGeneratorObserver(Long generatorId) {
+    public GenerateObserverDTO addGeneratorObserver(Long generatorId, GenerateObserverRequestDTO request) {
         GeneratorConfig generator = generatorConfigRepository.findById(generatorId)
                 .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado: " + generatorId));
 
@@ -525,12 +524,14 @@ public class WorkProductConfigService {
         observer.setPosition(position);
         observer.setQueue_name(queueName);
         observer.setName(defaultName);
-        observer.setType(ObserverActivityType.ACTIVE);
+
+        observer.setType(request.getType());
 
         GeneratorObserver savedObserver = generatorObserverRepository.save(observer);
 
         return mapObserverToDTO(savedObserver);
     }
+
 
     /**
      * PATCH: Atualiza campos específicos de um observer.

@@ -148,7 +148,11 @@ const ProcessEditor = () => {
 
   const handleSaveAndSimulate = async () => {
     setIsSaving(true);
-    const payload = transformNodesForBackend(nodes);
+    const payload = {
+      name: nodes.find(n => n.type === "Process")?.presentationName || "Process",
+      ...transformNodesForBackend(nodes)
+    };
+
 
     if (!payload) {
       toast({
@@ -180,7 +184,7 @@ const ProcessEditor = () => {
           description: "Your changes were saved successfully.",
         });
 
-        navigate(`/simulations/${simulationId}/processes/${updatedProcess.id}/simulate`);
+        navigate(`/simulations/${simulationId}/processes/${updatedProcess.id}/setup`);
 
       } catch (error) {
         console.error(error);
@@ -219,7 +223,7 @@ const ProcessEditor = () => {
             description: "Your process model has been successfully saved.",
           });
 
-          navigate(`/simulations/${simulationId}/processes/${savedProcess.id}/simulate`);
+          navigate(`/simulations/${simulationId}/processes/${savedProcess.id}/setup`);
         } catch (error) {
         console.error(error);
         toast({
@@ -300,7 +304,7 @@ const ProcessEditor = () => {
                   className="w-full bg-gradient-to-r from-sky-500 to-indigo-600
                          hover:from-sky-600 hover:to-indigo-700 text-white
                          font-bold py-3 text-base shadow-lg rounded-lg
-                         disabled:opacity-70 disabled:cursor-not-allowed"
+                         disabled:opacity-70 disabled:cursor-not-allowed relative overflow-hidden shimmer-btn flex-1"
               >
                 <Rocket className={`mr-2 h-5 w-5 ${isSaving ? 'animate-spin' : ''}`} />
                 {isSaving ? 'Saving...' : 'Save & Continue'}

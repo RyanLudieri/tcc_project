@@ -43,18 +43,26 @@ const HomePage = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.9, duration: 0.8 }}
           >
-            {/* Botão verde/accent permanece aqui */}
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                  onClick={() => setModalOpen(true)}
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg px-8 py-6 rounded-lg shadow-lg"
+              <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
               >
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Create New Simulation
-              </Button>
-            </motion.div>
+                  <Button
+                      onClick={() => setModalOpen(true)}
+                      className="
+                          pulse-animation
+                          bg-accent hover:bg-accent/90 text-green-950 font-bold text-lg px-8 py-6 rounded-lg
+                          shadow-lg btn-simulation"
+                  >
+                      <PlusCircle className="mr-2 h-5 w-5" />
+                      Create New Simulation
+                  </Button>
+              </motion.div>
 
-            {user && (
+
+
+
+              {user && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link to="/library">
                     <Button

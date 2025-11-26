@@ -1,9 +1,9 @@
 package com.example.projeto_tcc.controller;
 
 import com.example.projeto_tcc.dto.GenerateObserverDTO;
+import com.example.projeto_tcc.dto.GenerateObserverRequestDTO;
 import com.example.projeto_tcc.dto.GeneratorConfigDTO;
 import com.example.projeto_tcc.dto.GeneratorConfigRequestDTO;
-import com.example.projeto_tcc.entity.GeneratorConfig;
 import com.example.projeto_tcc.service.WorkProductConfigService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -98,14 +98,18 @@ public class SimulationConfigController {
      * POST: Cria um NOVO observer padrão para um gerador.
      */
     @PostMapping("/generators/{generatorId}/observers")
-    public ResponseEntity<GenerateObserverDTO> addGeneratorObserver(@PathVariable Long generatorId) {
+    public ResponseEntity<GenerateObserverDTO> addGeneratorObserver(
+            @PathVariable Long generatorId,
+            @RequestBody GenerateObserverRequestDTO request
+    ) {
         try {
-            GenerateObserverDTO newObserver = configService.addGeneratorObserver(generatorId);
+            GenerateObserverDTO newObserver = configService.addGeneratorObserver(generatorId, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(newObserver);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
     }
+
 
     /**
      * PATCH: Atualiza um observer específico pelo ID dele.

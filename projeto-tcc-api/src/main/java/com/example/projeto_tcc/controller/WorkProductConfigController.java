@@ -5,7 +5,6 @@ import com.example.projeto_tcc.dto.WorkProductConfigDTO;
 import com.example.projeto_tcc.dto.WorkProductConfigGetDTO;
 import com.example.projeto_tcc.dto.WorkProductConfigUpdateDTO;
 import com.example.projeto_tcc.entity.MethodElementObserver;
-import com.example.projeto_tcc.entity.WorkProductConfig;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.service.WorkProductConfigService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/work-product-configs")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // permite chamadas do frontend
+@CrossOrigin(origins = "*")
 public class WorkProductConfigController {
 
     private final WorkProductConfigService workProductConfigService;
