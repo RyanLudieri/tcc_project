@@ -148,7 +148,11 @@ const ProcessEditor = () => {
 
   const handleSaveAndSimulate = async () => {
     setIsSaving(true);
-    const payload = transformNodesForBackend(nodes);
+    const payload = {
+      name: nodes.find(n => n.type === "Process")?.presentationName || "Process",
+      ...transformNodesForBackend(nodes)
+    };
+
 
     if (!payload) {
       toast({
