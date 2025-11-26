@@ -759,9 +759,9 @@ const WorkProductsTableTab = ({ processId }) => {
                         {/* === FORM ORIGINAL === */}
                         <h3 className="text-lg font-semibold text-primary mb-3">Add New Observer</h3>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <Label className="text-foreground mb-2">Select Queue Name</Label>
+                        <div className="flex flex-wrap gap-4 items-end">
+                          <div className="w-full md:w-1/4">
+                          <Label className="text-foreground mb-2">Select Queue Name</Label>
                             <Select value={selectedWorkProduct} onValueChange={setSelectedWorkProduct}>
                               <SelectTrigger className="bg-card border-border text-foreground">
                                 <SelectValue placeholder="Choose a queue" />
@@ -776,8 +776,8 @@ const WorkProductsTableTab = ({ processId }) => {
                             </Select>
                           </div>
 
-                          <div>
-                            <Label className="text-foreground mb-2">Observer Type</Label>
+                          <div className="w-full md:w-1/4">
+                          <Label className="text-foreground mb-2">Observer Type</Label>
                             <Select value={selectedType} onValueChange={setSelectedType}>
                               <SelectTrigger className="bg-card border-border text-foreground">
                                 <SelectValue />
@@ -790,10 +790,10 @@ const WorkProductsTableTab = ({ processId }) => {
                             </Select>
                           </div>
 
-                          <div className="flex items-end gap-2">
+                          <div className="flex gap-2 w-full md:w-1/3 md:justify-end">
                             <Button
                                 onClick={() => handleAddObserver(false)}
-                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2"
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3"
                             >
                               <Save className="h-4 w-4" />
                               <span>Add</span>
@@ -802,8 +802,7 @@ const WorkProductsTableTab = ({ processId }) => {
                             <Button
                                 onClick={() => cancelAddObserver(false)}
                                 variant="outline"
-                                className="flex items-center gap-2 text-foreground border-border hover:bg-muted px-4 py-2"
-                            >
+                                className="flex items-center gap-2 text-foreground border-border hover:bg-muted px-4 py-2">
                               <X className="h-4 w-4" />
                               <span>Cancel</span>
                             </Button>
@@ -919,9 +918,10 @@ const WorkProductsTableTab = ({ processId }) => {
                                 Add New Observer for {selectedWorkProductObj.taskName || ""}
                               </h3>
 
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-3/8">
-                                <div>
-                                  <Label className="text-foreground mb-2">Queue Name</Label>
+                              <div className="flex flex-wrap gap-4 items-end">
+                                <div className="w-full md:w-1/4">
+
+                                <Label className="text-foreground mb-2">Queue Name</Label>
                                   <Input
                                       value={selectedWorkProductObj.queueName || ""}
                                       disabled
@@ -929,7 +929,7 @@ const WorkProductsTableTab = ({ processId }) => {
                                   />
                                 </div>
 
-                                <div>
+                                <div className="w-full md:w-1/4">
                                   <Label className="text-foreground mb-2 w-9/12">Observer Type</Label>
                                   <Select value={selectedTypeGenerateActivity} onValueChange={setSelectedTypeGenerateActivity}>
                                     <SelectTrigger className="bg-card border-border text-foreground">
@@ -945,7 +945,7 @@ const WorkProductsTableTab = ({ processId }) => {
                                   </Select>
                                 </div>
 
-                                <div className="flex items-end gap-2">
+                                <div className="flex gap-2 w-full md:w-1/3 md:justify-end">
                                   <Button
                                       onClick={() => handleAddObserver(true)}
                                       className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2"
