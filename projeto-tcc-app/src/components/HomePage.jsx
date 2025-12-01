@@ -9,9 +9,13 @@ import SimulationObjectiveModal from "@/components/modals/SimulationObjectiveMod
 const HomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [modalOpen, setModalOpen] = useState(false);
 
-  return (
+    const handleStartNewSimulation = () => {
+        navigate("/simulations/new/processes/new/edit");
+    };
+
+
+    return (
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <motion.div
             className="text-center"
@@ -48,14 +52,14 @@ const HomePage = () => {
                   whileTap={{ scale: 0.95 }}
               >
                   <Button
-                      onClick={() => setModalOpen(true)}
+                      onClick={handleStartNewSimulation}
                       className="
                           pulse-animation
                           bg-accent hover:bg-accent/90 text-green-950 font-bold text-lg px-8 py-6 rounded-lg
                           shadow-lg btn-simulation"
                   >
                       <PlusCircle className="mr-2 h-5 w-5" />
-                      Create New Simulation
+                      Model New Process
                   </Button>
               </motion.div>
 
@@ -103,8 +107,6 @@ const HomePage = () => {
           </div>
         </motion.div>
 
-        {/* Modal separado, modularizado */}
-        <SimulationObjectiveModal open={modalOpen} setOpen={setModalOpen} />
       </div>
   );
 };
