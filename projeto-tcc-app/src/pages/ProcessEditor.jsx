@@ -183,8 +183,8 @@ const ProcessEditor = () => {
 
       // 4) Done → redirecionar
       toast({
-        title: "Everything saved!",
-        description: "Simulation and process created successfully."
+        title: "New process saved!",
+        description: "Process created successfully."
       });
 
       navigate(`/simulations/${simulationId}/processes/${savedProcess.id}/setup`);
@@ -342,8 +342,12 @@ const ProcessEditor = () => {
 
           <SimulationObjectiveModal
               open={modalOpen}
-              setOpen={setModalOpen}
+              setOpen={(open) => {
+                setModalOpen(open);
+                if (!open) setIsSaving(false);
+              }}
               onSave={handleModalSave}
+
           />
 
 
