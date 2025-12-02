@@ -26,14 +26,11 @@ const WorkProductsTableTab = ({ processId }) => {
   const [observers, setObservers] = useState([]);
   const [observersGenerateActivity, setObserversGenerateActivity] = useState([]);
   const [selectedWorkProduct, setSelectedWorkProduct] = useState("");
-  const [selectedGenerateActivity, setSelectedGenerateActivity] = useState("");
   const [isAddingObserver, setIsAddingObserver] = useState(false);
   const [isAddingObserverGenerateActivity, setIsAddingObserverGenerateActivity] = useState(false);
-  const [selectedQueue, setSelectedQueue] = useState("");
   const [selectedType, setSelectedType] = useState("LENGTH");
   const [selectedTypeGenerateActivity, setSelectedTypeGenerateActivity] = useState("ACTIVE");
   const [distribution, setDistribution] = useState({ type: 'CONST', params: {} });
-  const [selectedObserverGenerateActivity, setSelectedObserverGenerateActivity] = useState("");
   const [selectedGeneratorId, setSelectedGeneratorId] = useState(null);
   const selectedWorkProductObj = workProducts.find(wp => wp.queueName === clickedWorkProduct);
   const selectedWorkProductGenerateActivity = selectedWorkProductObj ? selectedWorkProductObj.generateActivity : false;

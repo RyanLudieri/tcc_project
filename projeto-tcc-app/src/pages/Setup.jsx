@@ -54,6 +54,7 @@ const Setup = () => {
     }
   };
 
+
   return (
       <motion.div
           initial={{ opacity: 0, y: 20 }}
