@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,11 @@ const Simulate = () => {
   const { simulationId, processId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [simParams, setSimParams] = useState({
+    duration: "",
+    replications: ""
+  });
+
 
   useEffect(() => {
     if (processId && processId !== "new") {
@@ -25,8 +30,28 @@ const Simulate = () => {
         description: "Please wait...",
       });
 
-      const duration = 36000.0;
-      const reps = 10;
+      const duration = Number(simParams.duration);
+      const reps = Number(simParams.replications);
+
+      if (!duration || duration <= 0) {
+        toast({
+          title: "Invalid duration",
+          description: "Please enter a duration greater than zero.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!reps || reps <= 0) {
+        toast({
+          title: "Invalid replications",
+          description: "Please enter at least 1 replication.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+
 
       const response = await fetch(
           `${API_BASE_URL}/simulations/execute?simulationDuration=${duration}&replications=${reps}`,
@@ -98,7 +123,10 @@ const Simulate = () => {
         </header>
 
         <div className="bg-card p-6 rounded-lg shadow-inner">
-          <WorkProductsVariablesTable processId={processId} />
+          <WorkProductsVariablesTable
+              processId={processId}
+              onChangeSimulationParams={setSimParams}
+          />
         </div>
       </motion.div>
   );

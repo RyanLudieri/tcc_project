@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { API_BASE_URL } from "@/config/api";
 
-const WorkProductsVariablesTable = ({ processId }) => {
+const WorkProductsVariablesTable = ({ processId, onChangeSimulationParams }) => {
     const { toast } = useToast();
     const variableTypes = ['INDEPENDENT', 'DEPENDENT', 'INTERMEDIATE'];
     const [clickedWorkProduct, setClickedWorkProduct] = useState(null);
@@ -18,6 +18,14 @@ const WorkProductsVariablesTable = ({ processId }) => {
     const [selectedTypeGenerateActivity, setSelectedTypeGenerateActivity] = useState("NONE");
     const [distribution, setDistribution] = useState({ type: 'CONSTANT', params: {} });
     const selectedWorkProductObj = workProducts.find(wp => wp.queueName === clickedWorkProduct);
+    const [duration, setDuration] = useState("");
+    const [replications, setReplications] = useState("");
+
+    useEffect(() => {
+        if (onChangeSimulationParams) {
+            onChangeSimulationParams({ duration, replications });
+        }
+    }, [duration, replications]);
 
     useEffect(() => {
         const fetchWorkProducts = async () => {
@@ -58,85 +66,26 @@ const WorkProductsVariablesTable = ({ processId }) => {
                 method: "PATCH",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
-                    queue_name: wpToSave.queueName,
-                    queue_type: wpToSave.queueType || "QUEUE",
-                    initial_quantity: wpToSave.queueInitialQuantity,
-                    queue_size: wpToSave.queueSize,
-                    policy: wpToSave.policy,
-                    generate_activity: wpToSave.generateActivity,
+                    variableType: wpToSave.variableType
                 }),
             });
 
             if (!response.ok) throw new Error("Failed to update work product config");
 
-            if (wpToSave.generateActivity) {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/simulation-config/process/${processId}/generators`, {
-                        method: "POST",
-                        headers: {"Content-Type": "application/json"},
-                        body: JSON.stringify({
-                            workProductConfigId: id,
-                            distributionType: "",
-                            scale: 0,
-                            shape: 0
-                        }),
-                    });
-                } catch (error) {
-                    toast({
-                        title: "Error",
-                        description: `Unable to generate activity for work product ${wpToSave.queueName}.`,
-                        variant: "destructive",
-                    });
-                }
-            } else {
-                try{
-                    const response = await fetch (`${API_BASE_URL}/simulation-config/process/${processId}/generators`, {
-                        method: "GET",
-                        headers: {"Content-Type": "application/json"},
-                    });
-
-                    const data = await response.json();
-                    for (const generator of data) {
-                        const targetId = generator.targetWorkProduct.id;
-                        if (targetId === id) {
-                            try {
-                                const response = await fetch(`${API_BASE_URL}/simulation-config/generators/${generator.id}`, {
-                                    method: "DELETE",
-                                    headers: {"Content-Type": "application/json"},
-                                });
-                            } catch (error) {
-                                toast({
-                                    title: "Error",
-                                    description: `Unable to uncheck generate activity for work product ${wpToSave.queueName}.`,
-                                    variant: "destructive",
-                                });
-                            }
-                        }
-                    }
-
-                } catch (error) {
-                    toast({
-                        title: "Error",
-                        description: `Unable to find generate activity for work product ${wpToSave.queueName}.`,
-                        variant: "destructive",
-                    });
-                }
-            }
-
             toggleEdit(id);
             toast({
                 title: "Saved",
-                description: `Work product config for "${wpToSave.queueName}" updated successfully.`,
-                variant: "default",
+                description: `Variable type for "${wpToSave.queueName}" updated successfully.`,
             });
         } catch (error) {
             toast({
                 title: "Error",
-                description: "Unable to save work product config.",
+                description: "Unable to save variable type.",
                 variant: "destructive",
             });
         }
     };
+
 
     return (
         <>
@@ -166,6 +115,8 @@ const WorkProductsVariablesTable = ({ processId }) => {
                                             type="number"
                                             className="w-24 appearance-none"
                                             placeholder="0"
+                                            value={duration}
+                                            onChange={(e) => setDuration(e.target.value)}
                                         />
                                     </div>
 
@@ -211,6 +162,8 @@ const WorkProductsVariablesTable = ({ processId }) => {
                                             type="number"
                                             className="w-24 appearance-none"
                                             placeholder="0"
+                                            value={replications}
+                                            onChange={(e) => setReplications(e.target.value)}
                                         />
                                     </div>
 
