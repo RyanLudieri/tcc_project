@@ -3,17 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Copy, Download, Save, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Copy, Download } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { API_BASE_URL } from "@/config/api";
-
 
 const XACDMLExportTab = ({ processId }) => {
   const { toast } = useToast();
   const [acdId, setAcdId] = useState(() => localStorage.getItem(`xacdml_acdId_${processId}`) || 'example.acd.id.001');
   const [generatedXACDML, setGeneratedXACDML] = useState('');
-  const [isValidated, setIsValidated] = useState(null);
 
   useEffect(() => {
     localStorage.setItem(`xacdml_acdId_${processId}`, acdId);
@@ -29,9 +27,8 @@ const XACDMLExportTab = ({ processId }) => {
 
       const content = await response.text();
       setGeneratedXACDML(content);
-      setIsValidated(null);
 
-      toast({ title: "Generation Completed", description: "XACDML successfully generated!", variant: "default" });
+      toast({ title: "Generation Completed", description: "XACDML successfully generated!" });
     } catch (error) {
       console.error(error);
       toast({ title: "Generation Error", description: "Could not generate XACDML.", variant: "destructive" });
@@ -40,7 +37,7 @@ const XACDMLExportTab = ({ processId }) => {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(generatedXACDML);
-    toast({ title: "Copied!", description: "XACDML content copied to clipboard.", variant: "default" });
+    toast({ title: "Copied!", description: "XACDML content copied to clipboard." });
   };
 
   const handleDownload = () => {
@@ -53,25 +50,7 @@ const XACDMLExportTab = ({ processId }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast({ title: "Download Started", description: `Downloading ${acdId || 'process'}.xml`, variant: "default" });
-  };
-
-  const handleSaveXACDML = () => {
-    toast({
-      title: "Save XACDML",
-      description: "🚧 This feature (saving to server/storage) is not implemented yet.",
-      variant: "default",
-    });
-  };
-
-  const handleValidateXACDML = () => {
-    const isValid = Math.random() > 0.3;
-    setIsValidated(isValid);
-    if (isValid) {
-      toast({ title: "Validation Completed", description: "XACDML seems valid!", variant: "default" });
-    } else {
-      toast({ title: "Validation Failed", description: "Problems were found in XACDML.", variant: "destructive" });
-    }
+    toast({ title: "Download Started", description: `Downloading ${acdId || 'process'}.xml` });
   };
 
   return (
@@ -82,6 +61,7 @@ const XACDMLExportTab = ({ processId }) => {
             Generate and export the XACDML representation of your process.
           </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-6">
 
           {/* ACD ID */}
@@ -105,7 +85,7 @@ const XACDMLExportTab = ({ processId }) => {
             </Button>
           </div>
 
-          {/* XACDML Output */}
+          {/* OUTPUT */}
           <div>
             <Label htmlFor="xacdmlOutput" className="text-foreground">XACDML Output (Read-only)</Label>
             <Textarea
@@ -117,39 +97,25 @@ const XACDMLExportTab = ({ processId }) => {
             />
           </div>
 
-          {/* Actions */}
+          {/* ACTIONS */}
           <div className="flex flex-wrap gap-3 items-center">
-            <Button variant="outline" onClick={handleCopy} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
-              <Copy className="mr-2 h-4 w-4" /> Copy
-            </Button>
-            <Button variant="outline" onClick={handleDownload} className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
-              <Download className="mr-2 h-4 w-4" /> Download
-            </Button>
-            <Button variant="outline" onClick={handleSaveXACDML} className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
-              <Save className="mr-2 h-4 w-4" /> Save XACDML
-            </Button>
             <Button
                 variant="outline"
-                onClick={handleValidateXACDML}
-                className={`
-              ${isValidated === true
-                    ? 'text-green-600 border-green-600 hover:bg-green-600 hover:text-white'
-                    : isValidated === false
-                        ? 'text-red-600 border-red-600 hover:bg-red-600 hover:text-white'
-                        : 'text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white'}
-              flex items-center
-            `}
+                onClick={handleCopy}
+                className="text-primary border-primary hover:bg-primary hover:text-primary-foreground"
             >
-              {isValidated === true && <CheckCircle className="mr-2 h-4 w-4" />}
-              {isValidated === false && <AlertTriangle className="mr-2 h-4 w-4" />}
-              {isValidated === null && <AlertTriangle className="mr-2 h-4 w-4 opacity-50" />}
-              Validate XACDML
+              <Copy className="mr-2 h-4 w-4" /> Copy
+            </Button>
+
+            <Button
+                variant="outline"
+                onClick={handleDownload}
+                className="text-primary border-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              <Download className="mr-2 h-4 w-4" /> Download
             </Button>
           </div>
 
-          {/* Validation messages */}
-          {isValidated === true && <p className="text-sm text-green-600">XACDML validated successfully!</p>}
-          {isValidated === false && <p className="text-sm text-red-600">XACDML contains errors. Please check the structure.</p>}
         </CardContent>
       </Card>
   );
