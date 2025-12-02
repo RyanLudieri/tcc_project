@@ -16,17 +16,24 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-.gradle/
-build/
 out/
 
-### IntelliJ IDEA ###
+### Node.js ###
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log*
+
+### IDEs ###
+## IntelliJ IDEA
 .idea/
 *.iws
 *.iml
 *.ipr
-
-### STS / Eclipse ###
+## STS / Eclipse
 .apt_generated
 .classpath
 .factorypath
@@ -34,8 +41,7 @@ out/
 .settings/
 .springBeans
 .sts4-cache
-
-### VS Code ###
+## VS Code
 .vscode/
 
 ### Logs ###
@@ -49,3 +55,13 @@ Thumbs.db
 .env
 .env.local
 .env.production
+
+### Ignorar arquivos gerados XACDML ###
+/src/main/java/com/example/projeto_tcc/xacdml_output/
+
+### Output e builds gerais ###
+/output
+
+### Exceção para biblioteca de simulação ###
+*.jar
+!/libs/simulation-manager-1.0-SNAPSHOT.jar
