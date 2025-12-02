@@ -42,7 +42,7 @@ const Setup = () => {
         throw new Error(err || "Failed to generate simulation");
       }
 
-      navigate(`/simulations/${simulationId}/processes/${processId}/results`);
+      navigate(`/simulations/${simulationId}/processes/${processId}/simulate`);
 
     } catch (error) {
       console.error(error);
@@ -90,13 +90,13 @@ const Setup = () => {
               <Button
                   onClick={handleGenerateSimulation}
                   className="
-        bg-accent text-green-950 font-semibold py-3 px-6 rounded-lg shadow-lg
-        relative overflow-hidden shimmer-btn
-        hover:bg-accent hover:text-green-950
-        hover:scale-[1.04] active:scale-[0.98]
-        transition-all duration-300
-        animated-border
-        btn-simulation
+                      bg-accent text-green-950 font-semibold py-3 px-6 rounded-lg shadow-lg
+                      relative overflow-hidden shimmer-btn
+                      hover:bg-accent hover:text-green-950
+                      hover:scale-[1.04] active:scale-[0.98]
+                      transition-all duration-300
+                      animated-border
+                      btn-simulation
       "
               >
                 <Rocket className="mr-2 h-5 w-5" />

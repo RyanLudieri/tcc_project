@@ -18,15 +18,12 @@ public class SimulationGenerationService {
             String xacdmlContent = xacdmlService.generateXACDMLContent(processId, acdId);
 
             String xsltPath = "/xslt/transform.xsl";
-            String javaOutputPath = "target/generated-sources/DynamicExperimentationProgramProxy.java";
+            String javaOutputPath = "projeto-tcc-api/target/generated-sources/DynamicExperimentationProgramProxy.java";
             String generatedJavaCode = xsltTransformationService.transform(xacdmlContent, xsltPath, javaOutputPath);
 
-            // --- CORRETO ---
-            // Esta chamada agora está correta. Ela chama o 'compile' (Janino)
-            // com os 3 argumentos que o nosso ExecutionService espera.
             executionService.compile(
                     generatedJavaCode,
-                    "DynamicExperimentationProgramProxy", // O nome da classe para o Janino
+                    "DynamicExperimentationProgramProxy",
                     processId
             );
             // ---------------

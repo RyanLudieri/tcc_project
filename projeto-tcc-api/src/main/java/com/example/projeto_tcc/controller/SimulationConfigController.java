@@ -63,14 +63,12 @@ public class SimulationConfigController {
         return ResponseEntity.ok().build();
     }
 
-    // --- NOVO: GET PARA LISTAR GERADORES POR PROCESSO ---
     @GetMapping("/process/{processId}/generators")
     public ResponseEntity<List<GeneratorConfigDTO>> getGeneratorsByProcess(@PathVariable Long processId) {
         List<GeneratorConfigDTO> generators = configService.getGeneratorsByProcess(processId);
         return ResponseEntity.ok(generators);
     }
 
-    // --- NOVO: GET PARA BUSCAR UM GERADOR ESPECÍFICO POR ID ---
     @GetMapping("/generators/{generatorId}")
     public ResponseEntity<GeneratorConfigDTO> getGeneratorById(@PathVariable Long generatorId) {
         try {

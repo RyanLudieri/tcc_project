@@ -139,9 +139,9 @@ const SimulationResults = () => {
         <header className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <Link to={`/simulations/${simulationId}/processes/${processId}/setup`} className="inline-flex items-center text-primary hover:text-primary/80 transition-colors mb-2 group">
+              <Link to={`/simulations/${simulationId}/processes/${processId}/simulate`} className="inline-flex items-center text-primary hover:text-primary/80 transition-colors mb-2 group">
                 <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-                Back to Setup
+                Back to Simulation Experimentation Setup
               </Link>
               <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
                 Simulation Results
