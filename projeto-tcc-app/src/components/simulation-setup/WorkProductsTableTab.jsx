@@ -14,8 +14,8 @@ import FieldSection from "@/components/simulation-setup/work-products/FieldSecti
 import { motion, AnimatePresence } from "framer-motion";
 
 
-const observerTypes = ['NONE', 'LENGTH', 'TIME'];
-const observerTypesGenerateActivity = ['NONE', 'ACTIVE', 'DELAY', 'PROCESSOR'];
+const observerTypes = ['LENGTH', 'TIME'];
+const observerTypesGenerateActivity = ['ACTIVE', 'DELAY', 'PROCESSOR'];
 
 const WorkProductsTableTab = ({ processId }) => {
   const [clickedWorkProduct, setClickedWorkProduct] = useState(null);
@@ -30,9 +30,9 @@ const WorkProductsTableTab = ({ processId }) => {
   const [isAddingObserver, setIsAddingObserver] = useState(false);
   const [isAddingObserverGenerateActivity, setIsAddingObserverGenerateActivity] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState("");
-  const [selectedType, setSelectedType] = useState("NONE");
-  const [selectedTypeGenerateActivity, setSelectedTypeGenerateActivity] = useState("NONE");
-  const [distribution, setDistribution] = useState({ type: 'CONSTANT', params: {} });
+  const [selectedType, setSelectedType] = useState("LENGTH");
+  const [selectedTypeGenerateActivity, setSelectedTypeGenerateActivity] = useState("ACTIVE");
+  const [distribution, setDistribution] = useState({ type: 'CONST', params: {} });
   const [selectedObserverGenerateActivity, setSelectedObserverGenerateActivity] = useState("");
   const [selectedGeneratorId, setSelectedGeneratorId] = useState(null);
   const selectedWorkProductObj = workProducts.find(wp => wp.queueName === clickedWorkProduct);
@@ -1067,7 +1067,7 @@ const WorkProductsTableTab = ({ processId }) => {
                       {/*{selectedWorkProduct && (*/}
                       <DistributionField
                           value={distribution}
-
+                          showSaveButton={true}
                           onChange={(updated) => setDistribution(updated)}
                           onSave={() => handleSaveDistribuition(selectedGeneratorId)}
                       />

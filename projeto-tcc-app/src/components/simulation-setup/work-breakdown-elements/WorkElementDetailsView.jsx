@@ -448,6 +448,7 @@ const WorkElementDetailsView = ({ selectedItem }) => {
                         {selectedItem ? (
                             <DistributionField
                                 value={distribution}
+                                showSaveButton={false}
                                 onChange={(updatedDistribution) => {
                                     setDistribution(updatedDistribution);
                                     saveDistribution(updatedDistribution);
