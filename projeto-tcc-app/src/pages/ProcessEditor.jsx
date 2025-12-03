@@ -20,6 +20,7 @@ import AddNodeDialog from '@/components/process-editor/AddNodeDialog';
 import { useToast } from "@/components/ui/use-toast";
 import { useProcessNodes } from '@/hooks/useProcessNodes';
 import { transformNodesForBackend } from '@/lib/nodeUtils';
+import SimulationObjectiveModal from "@/components/modals/SimulationObjectiveModal.jsx";
 import { API_BASE_URL } from "@/config/api";
 
 const ProcessEditor = () => {
@@ -27,7 +28,10 @@ const ProcessEditor = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isNewProcess = location.pathname.includes("/new");
+  const [modalOpen, setModalOpen] = useState(false);
   const { toast } = useToast();
+  const [pendingPayload, setPendingPayload] = useState(null);
+
 
   const {
     nodes,
@@ -146,6 +150,58 @@ const ProcessEditor = () => {
     }
   };
 
+  const handleModalSave = async (objective) => {
+    setIsSaving(true);
+
+    try {
+      // 1) Criar simulação primeiro
+      const simResponse = await fetch(`${API_BASE_URL}/simulations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ objective })
+      });
+
+      if (!simResponse.ok) throw new Error(await simResponse.text());
+      const newSimulation = await simResponse.json();
+      const simulationId = newSimulation.id;
+
+      // 2) Criar processo com o payload pendente
+      const processResponse = await fetch(`${API_BASE_URL}/process`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pendingPayload),
+      });
+
+      if (!processResponse.ok) throw new Error(await processResponse.text());
+      const savedProcess = await processResponse.json();
+
+      // 3) Linkar processo à simulação criada
+      await fetch(`${API_BASE_URL}/simulations/${simulationId}/delivery-process/${savedProcess.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      // 4) Done → redirecionar
+      toast({
+        title: "New process saved!",
+        description: "Process created successfully."
+      });
+
+      navigate(`/simulations/${simulationId}/processes/${savedProcess.id}/setup`);
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Save Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+      setModalOpen(false);
+    }
+  };
+
   const handleSaveAndSimulate = async () => {
     setIsSaving(true);
     const payload = {
@@ -200,40 +256,11 @@ const ProcessEditor = () => {
       return;
 
     } else {
-      try {
-          const response = await fetch(`${API_BASE_URL}/process`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
 
-          if (!response.ok) throw new Error(await response.text());
+      setModalOpen(true);
+      setPendingPayload(payload);
 
-          const savedProcess = await response.json();
-
-          if (simulationId) {
-            await fetch(`${API_BASE_URL}/simulations/${simulationId}/delivery-process/${savedProcess.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-            });
-          }
-
-          toast({
-            title: "Process Saved!",
-            description: "Your process model has been successfully saved.",
-          });
-
-          navigate(`/simulations/${simulationId}/processes/${savedProcess.id}/setup`);
-        } catch (error) {
-        console.error(error);
-        toast({
-          title: "Save Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } finally {
-        setIsSaving(false);
-      }
+      return;
     }
 
 
@@ -252,6 +279,7 @@ const ProcessEditor = () => {
           onDragEnd={onDragEnd}
       >
         <div className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_350px] gap-6 p-6 bg-gray-100 dark:bg-gray-900 h-[calc(100vh-4rem)]">
+
           <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -311,6 +339,18 @@ const ProcessEditor = () => {
               </Button>
             </div>
           </motion.div>
+
+          <SimulationObjectiveModal
+              open={modalOpen}
+              setOpen={(open) => {
+                setModalOpen(open);
+                if (!open) setIsSaving(false);
+              }}
+              onSave={handleModalSave}
+
+          />
+
+
         </div>
 
         <AddNodeDialog
@@ -330,6 +370,7 @@ const ProcessEditor = () => {
         </DragOverlay>
       </DndContext>
   );
+
 };
 
 export default ProcessEditor;

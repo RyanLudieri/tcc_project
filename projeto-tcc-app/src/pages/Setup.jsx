@@ -9,6 +9,7 @@ import WorkProductsTableTab from '@/components/simulation-setup/WorkProductsTabl
 import XACDMLExportTab from '@/components/simulation-setup/XACDMLExportTab';
 import WorkBreakdownElementsTab from '@/components/simulation-setup/work-breakdown-elements/WorkBreakdownElementsTab.jsx';
 import { useToast } from "@/components/ui/use-toast";
+import { API_BASE_URL } from "@/config/api";
 
 const Setup = () => {
   const { simulationId, processId } = useParams();
@@ -23,14 +24,36 @@ const Setup = () => {
 
   const lastProcessId = localStorage.getItem("lastProcessId") || processId;
 
-  const handleRunSimulation = () => {
-    toast({
-      title: "Simulation Started (Placeholder)",
-      description: "Redirecting to results page...",
-      variant: "default",
-    });
-    navigate(`/simulations/${simulationId}/processes/${processId}/results`);
+  const handleGenerateSimulation = async () => {
+    try {
+      toast({
+        title: "Generating Simulation Program",
+        description: "Please wait...",
+        variant: "default",
+      });
+
+      const response = await fetch(`${API_BASE_URL}/simulations/generate_and_compile/${processId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err || "Failed to generate simulation");
+      }
+
+      navigate(`/simulations/${simulationId}/processes/${processId}/simulate`);
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
+
 
   return (
       <motion.div
@@ -66,19 +89,19 @@ const Setup = () => {
                 </p>
               </div>
               <Button
-                  onClick={handleRunSimulation}
+                  onClick={handleGenerateSimulation}
                   className="
-        bg-accent text-green-950 font-semibold py-3 px-6 rounded-lg shadow-lg
-        relative overflow-hidden shimmer-btn
-        hover:bg-accent hover:text-green-950
-        hover:scale-[1.04] active:scale-[0.98]
-        transition-all duration-300
-        animated-border
-        btn-simulation
+                      bg-accent text-green-950 font-semibold py-3 px-6 rounded-lg shadow-lg
+                      relative overflow-hidden shimmer-btn
+                      hover:bg-accent hover:text-green-950
+                      hover:scale-[1.04] active:scale-[0.98]
+                      transition-all duration-300
+                      animated-border
+                      btn-simulation
       "
               >
                 <Rocket className="mr-2 h-5 w-5" />
-                Run Simulation
+                Generate Simulation
               </Button>
 
 

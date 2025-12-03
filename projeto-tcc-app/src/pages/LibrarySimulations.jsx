@@ -56,7 +56,7 @@ const LibrarySimulations = () => {
     );
 
     const handleCreateNew = () => {
-        setOpen(true);
+        navigate(`/simulations/new/processes/new/edit`);
     };
 
     const handleEditObjective = (simulationId, updatedSimulation) => {
@@ -177,7 +177,7 @@ const LibrarySimulations = () => {
                                 <p className="text-muted-foreground mb-4">
                                     {searchTerm
                                         ? "No simulations match your search criteria."
-                                        : "You haven't created any simulations yet."}
+                                        : "You haven't modeled any processes for any simulations yet."}
                                 </p>
                                 {!searchTerm && (
                                     <Button onClick={handleCreateNew}>

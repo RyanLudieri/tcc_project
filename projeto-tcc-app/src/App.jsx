@@ -11,6 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip.jsx";
 import { AuthProvider } from "@/contexts/SupabaseAuthContext.jsx";
 import LibrarySimulations from "@/pages/LibrarySimulations.jsx";
 import LibraryProcesses from '@/pages/LibraryProcesses.jsx';
+import Simulate from '@/pages/Simulate.jsx';
 
 function App() {
   return (
@@ -20,9 +21,11 @@ function App() {
           <Navbar />
           <main className="flex-1 flex flex-col">
             <Routes>
+              {/* Login/SignUp */}
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
 
+              {/* Libraries */}
               <Route path="/simulations" element={<LibrarySimulations />} />
               <Route path="/simulations/:simulationId" element={<LibraryProcesses />} />
 
@@ -31,6 +34,9 @@ function App() {
 
               {/* Simulation Setup */}
               <Route path="/simulations/:simulationId/processes/:processId/setup" element={<Setup />} />
+
+              {/* Simulation Experimentation Setup */}
+              <Route path="/simulations/:simulationId/processes/:processId/simulate" element={<Simulate />} />
 
               {/* Simulation Results */}
               <Route path="/simulations/:simulationId/processes/:processId/results" element={<SimulationResults />} />

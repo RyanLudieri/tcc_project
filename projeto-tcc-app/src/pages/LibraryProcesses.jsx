@@ -43,7 +43,7 @@ const LibraryProcesses = () => {
         if (!confirm(`Are you sure you want to delete process "${name}"?`)) return;
 
         try {
-            const res = await fetch(`${API_BASE_URL}/simulations/${simulationId}/processes/${id}`, {
+            const res = await fetch(`${API_BASE_URL}/process/${id}`, {
                 method: 'DELETE',
             });
             if (!res.ok) throw new Error('Failed to delete process');

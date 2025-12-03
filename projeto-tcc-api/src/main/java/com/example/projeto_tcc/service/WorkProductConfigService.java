@@ -173,6 +173,7 @@ public class WorkProductConfigService {
             config.setInput_output(inputOutput);
             config.setTask_name(taskName);
             config.setDeliveryProcess(deliveryProcess);
+            config.setVariableType(VariableType.INDEPENDENT);
 
             configRepository.save(config);
             queueMap.put(key, config);

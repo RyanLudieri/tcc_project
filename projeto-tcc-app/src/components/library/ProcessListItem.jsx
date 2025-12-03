@@ -106,9 +106,9 @@ const ProcessListItem = ({ process, onSetup, onEdit, onSimulate, onDelete, forma
                 variant="destructive"
                 size="sm"
                 onClick={() => {
-                  if (window.confirm(`Are you sure you want to delete process "${process.name}"?`)) {
+
                     onDelete(process.id, process.name);
-                  }
+
                 }}
             >
               <Trash2 className="h-3 w-3" />
