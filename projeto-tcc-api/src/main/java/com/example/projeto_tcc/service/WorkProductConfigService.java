@@ -169,6 +169,7 @@ public class WorkProductConfigService {
             config.setPolicy(Queue.FIFO);
             config.setGenerate_activity(false);
             config.setDestroyer(false);
+            config.setVariableType(VariableType.INDEPENDENT);
             config.setInput_output(inputOutput);
             config.setTask_name(taskName);
             config.setDeliveryProcess(deliveryProcess);
