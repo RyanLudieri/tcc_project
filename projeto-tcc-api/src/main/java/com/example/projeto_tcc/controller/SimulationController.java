@@ -3,6 +3,7 @@ package com.example.projeto_tcc.controller;
 import com.example.projeto_tcc.dto.SimulationCreateDTO;
 import com.example.projeto_tcc.dto.SimulationResponseDTO;
 import com.example.projeto_tcc.entity.DeliveryProcess;
+import com.example.projeto_tcc.entity.GlobalSimulationResult;
 import com.example.projeto_tcc.entity.Simulation;
 import com.example.projeto_tcc.entity.WorkProductConfig;
 import com.example.projeto_tcc.repository.WorkProductConfigRepository;
@@ -17,7 +18,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/simulations")
@@ -58,26 +61,35 @@ public class SimulationController {
         }
     }
 
-    @PostMapping("/execute")
-    public ResponseEntity<String> executeSimulation(
+    @PostMapping("/execute/{processId}")
+    public ResponseEntity<Map<String, Long>> executeSimulation(
+            @PathVariable Long processId,
             @RequestParam float simulationDuration,
             @RequestParam(defaultValue = "1") Integer replications) {
 
         try {
-            executionService.executeSimulation(simulationDuration, replications);
-            return ResponseEntity.ok("Execução de " + replications + " replicações concluída.");
+            List<WorkProductConfig> configList = workProductConfigRepository.findByDeliveryProcessId(processId);
+
+            GlobalSimulationResult result = executionService.executeSimulation(simulationDuration, replications, configList);
+
+            Map<String, Long> response = new HashMap<>();
+
+            if (result != null) {
+                response.put("executionId", result.getId());
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.internalServerError().build();
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Falha na execução: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     @GetMapping("/generated-code/{processId}")
     public ResponseEntity<String> getGeneratedCode(@PathVariable Long processId) {
 
-        // Chama o método que gera o código sob demanda
         String javaCode = executionService.generateCodeForPreview(processId);
 
         if (javaCode == null || javaCode.startsWith("Erro")) {

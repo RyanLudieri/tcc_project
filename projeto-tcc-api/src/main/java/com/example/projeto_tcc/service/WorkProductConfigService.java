@@ -6,6 +6,7 @@ import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.enums.ProcessType;
 import com.example.projeto_tcc.enums.Queue;
+import com.example.projeto_tcc.enums.VariableType;
 import com.example.projeto_tcc.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -168,6 +169,7 @@ public class WorkProductConfigService {
             config.setPolicy(Queue.FIFO);
             config.setGenerate_activity(false);
             config.setDestroyer(false);
+            config.setVariableType(VariableType.INDEPENDENT);
             config.setInput_output(inputOutput);
             config.setTask_name(taskName);
             config.setDeliveryProcess(deliveryProcess);

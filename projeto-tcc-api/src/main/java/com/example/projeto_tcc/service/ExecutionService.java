@@ -1,8 +1,13 @@
 package com.example.projeto_tcc.service;
 
+import com.example.projeto_tcc.entity.GlobalQueueStat;
+import com.example.projeto_tcc.entity.GlobalSimulationResult;
+import com.example.projeto_tcc.entity.ReplicationResult;
 import com.example.projeto_tcc.entity.WorkProductConfig;
 import com.example.projeto_tcc.enums.VariableType;
 
+import com.example.projeto_tcc.repository.GlobalSimulationResultRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import simula.manager.SimulationManager;
 import simula.manager.QueueEntry;
@@ -19,10 +24,13 @@ import org.codehaus.janino.SimpleCompiler;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.SessionScope;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -31,6 +39,9 @@ public class ExecutionService {
 
     @Autowired
     private SimulationGenerationService simulationGenerationService;
+
+    @Autowired
+    private GlobalSimulationResultRepository globalRepository;
     private String generatedJavaCode; // O código gerado fica aqui
     private Long activeProcessId;
     private Class<?> compiledSimClass;
@@ -106,7 +117,7 @@ public class ExecutionService {
     // ================================================================================
     // 1. EXECUÇÃO (SILENCIOSA - Apenas guarda dados)
     // ================================================================================
-    public void executeSimulation(float duration, Integer replications) throws Exception {
+    public GlobalSimulationResult executeSimulation(float duration, Integer replications, List<WorkProductConfig> configList) throws Exception {
         if (this.compiledSimClass == null) throw new IllegalStateException("Simulação não compilada.");
         if (replications == null || replications < 1) replications = 1;
 
@@ -116,6 +127,10 @@ public class ExecutionService {
         System.out.println("Executando " + replications + " replicações...");
 
         for (int i = 1; i <= replications; i++) {
+            //Activity.isBeginOfSimulation = true;
+            //ActiveEntry.lastid = 0;
+            hardResetLibrary();
+
             Object simInstance = this.compiledSimClass.getDeclaredConstructor().newInstance();
             Method setDur = this.compiledSimClass.getMethod("setSimulationDuration", float.class);
             Method exec = this.compiledSimClass.getMethod("execute", float.class);
@@ -126,7 +141,6 @@ public class ExecutionService {
 
             SimulationManager man = (SimulationManager) getMan.invoke(simInstance);
 
-            // --- CAPTURA DE DADOS ---
             double clock = man.getScheduler().GetClock();
             this.daysPerReplication.add(clock / 480.0);
 
@@ -139,10 +153,161 @@ public class ExecutionService {
 
             man.getScheduler().Stop();
             man.getScheduler().Clear();
-            Activity.isBeginOfSimulation = true;
-            ActiveEntry.lastid = 0;
         }
+
+        GlobalSimulationResult savedResult = persistSimulationData(configList);
+
         System.out.println("Fim da execução.");
+
+        return savedResult;
+    }
+
+    private GlobalSimulationResult persistSimulationData(List<WorkProductConfig> configList) {
+        if (this.totalReplicationsRun == 0) return null;
+
+        try {
+            Set<String> dependentQueues = new HashSet<>();
+            if (configList != null && !configList.isEmpty()) {
+                for (WorkProductConfig cfg : configList) {
+                    if (cfg.getVariableType() == VariableType.DEPENDENT) {
+                        dependentQueues.add(cfg.getQueue_name());
+                    }
+                }
+            }
+
+            GlobalSimulationResult global = new GlobalSimulationResult();
+            global.setProcessId(this.activeProcessId);
+            global.setExecutionDate(LocalDateTime.now());
+            global.setTotalReplications(this.totalReplicationsRun);
+
+            double sumDays = this.daysPerReplication.stream().mapToDouble(d -> d).sum();
+            global.setAverageDuration(sumDays / this.totalReplicationsRun);
+
+            StandardDeviation sd = new StandardDeviation();
+            double[] arrDays = daysPerReplication.stream().mapToDouble(d -> d).toArray();
+            global.setDurationStdDev((arrDays.length > 1) ? sd.evaluate(arrDays) : 0.0);
+
+            Map<String, List<Double>> tempQueueValues = new HashMap<>();
+
+            for (int i = 1; i <= this.totalReplicationsRun; i++) {
+                ReplicationResult rep = new ReplicationResult();
+                rep.setReplicationNumber(i);
+
+                if ((i - 1) < daysPerReplication.size()) {
+                    rep.setDuration(daysPerReplication.get(i - 1));
+                }
+
+                HashMap queuesMap = this.resultadoGlobal.get("run #" + i);
+                if (queuesMap != null) {
+                    for (Object keyObj : queuesMap.keySet()) {
+                        String qName = keyObj.toString();
+                        boolean shouldSave = dependentQueues.isEmpty() || dependentQueues.contains(qName);
+
+                        if (shouldSave) {
+                            Object val = queuesMap.get(keyObj);
+                            int count = 0;
+                            if (val instanceof QueueEntry) {
+                                count = ((QueueEntry) val).deadState.getCount();
+                            }
+
+                            rep.getQueueFinalCounts().put(qName, count);
+                            tempQueueValues.computeIfAbsent(qName, k -> new ArrayList<>()).add((double) count);
+                        }
+                    }
+                }
+                rep.setGlobalResult(global);
+                global.getReplicationResults().add(rep);
+            }
+
+            for (Map.Entry<String, List<Double>> entry : tempQueueValues.entrySet()) {
+                String qName = entry.getKey();
+                List<Double> values = entry.getValue();
+                double[] valuesArr = values.stream().mapToDouble(d -> d).toArray();
+                double mean = values.stream().mapToDouble(d -> d).average().orElse(0.0);
+                double stdDev = (valuesArr.length > 1) ? sd.evaluate(valuesArr) : 0.0;
+
+                GlobalQueueStat stat = new GlobalQueueStat();
+                stat.setQueueName(qName);
+                stat.setAverageCount(mean);
+                stat.setStdDevCount(stdDev);
+                stat.setGlobalResult(global);
+                global.getQueueStats().add(stat);
+            }
+
+            return globalRepository.save(global);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao salvar dados: " + e.getMessage());
+        }
+    }
+
+    private void hardResetLibrary() {
+        // Incluímos Scheduler e InternalActiveEntry na lista
+        Class<?>[] classesToClean = {
+                simula.manager.QueueEntry.class,
+                simula.manager.ResourceEntry.class,
+                simula.manager.ActiveEntry.class,
+                simula.manager.InternalActiveEntry.class,
+                simula.manager.SimulationManager.class,
+                simula.Scheduler.class,
+                simula.Activity.class
+        };
+
+        for (Class<?> clazz : classesToClean) {
+            wipeStaticFields(clazz);
+        }
+
+        // Reseta o flag principal
+        try {
+            Field f = simula.Activity.class.getField("isBeginOfSimulation");
+            f.set(null, true);
+        } catch (Exception e) {}
+    }
+
+    private void wipeStaticFields(Class<?> clazz) {
+        try {
+            Field[] fields = clazz.getDeclaredFields();
+            for (Field field : fields) {
+                if (Modifier.isStatic(field.getModifiers())) {
+                    field.setAccessible(true);
+                    Class<?> type = field.getType();
+                    boolean isFinal = Modifier.isFinal(field.getModifiers());
+
+                    try {
+                        // 1. Mapas e Listas (Limpamos o CONTEÚDO, mesmo se for final)
+                        if (java.util.Map.class.isAssignableFrom(type)) {
+                            Object mapObj = field.get(null);
+                            if (mapObj != null) {
+                                ((java.util.Map<?, ?>) mapObj).clear();
+                                // Debug para confirmar limpeza
+                                // System.out.println("Limpo Map: " + clazz.getSimpleName() + "." + field.getName());
+                            }
+                        }
+                        else if (java.util.Collection.class.isAssignableFrom(type)) { // List, Set, Vector...
+                            Object colObj = field.get(null);
+                            if (colObj != null) {
+                                ((java.util.Collection<?>) colObj).clear();
+                                // System.out.println("Limpo Collection: " + clazz.getSimpleName() + "." + field.getName());
+                            }
+                        }
+                        // 2. Números (Só zeramos se NÃO for final)
+                        else if (!isFinal && (type == int.class || type == Integer.class || type == long.class)) {
+                            field.set(null, 0);
+                        }
+                        // 3. Booleanos (Só resetamos se NÃO for final)
+                        else if (!isFinal && (type == boolean.class || type == Boolean.class)) {
+                            field.set(null, false);
+                        }
+
+                    } catch (Exception e) {
+                        // Ignora campos específicos que derem erro
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            System.out.println("Erro ao limpar classe " + clazz.getSimpleName());
+        }
     }
 
     // ================================================================================
