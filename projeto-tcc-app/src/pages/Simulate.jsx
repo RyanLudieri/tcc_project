@@ -54,10 +54,11 @@ const Simulate = () => {
 
 
       const response = await fetch(
-          `${API_BASE_URL}/simulations/execute?simulationDuration=${duration}&replications=${reps}`,
+          `${API_BASE_URL}/simulations/execute/${processId}?simulationDuration=${duration}&replications=${reps}`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}) // Enviando um corpo JSON vazio, já que os dados estão na URL
           }
       );
 

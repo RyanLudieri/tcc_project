@@ -33,35 +33,35 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
 
  private SimulationManager man;
  private float simulationDuration;
- 
+
  public DynamicExperimentationProgramProxy() {
    this.man = new SimulationManager();
  }
- 
+
  public void setSimulationManager(SimulationManager simulationManager) {
    this.man = simulationManager;
  }
- 
+
  public SimulationManager getSimulationManager() {
    return man;
  }
- 
+
  public void setSimulationDuration(float simulationDuration) {
    this.simulationDuration = simulationDuration;
  }
- 
+
  public float getSimulationDuration() {
    return simulationDuration;
  }
- 
+
  public void execute(float simulationTime) {
   // System.out.println("\nGeracao de </xsl:text>
   // <xsl:value-of select="@id"/>
   // <xsl:text> atraves de Simulation Manager");
   // System.out.println("\n\t\t\tSIMULATION RESULTS AS IMPLEMENTED BY WLADIMIR\n");
   // System.out.println("ACD activiites created");
-  
-  QueueEntry qe;//queues 
+
+  QueueEntry qe;//queues
   ResourceEntry re;//resource queues
   ExternalActiveEntry eae;//generator and detroy
   InternalActiveEntry iae;//activivity and router
@@ -130,31 +130,31 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   </xsl:choose>
    <xsl:value-of select="$time"/>");
   </xsl:variable> -->
-  
-   //System.out.println("Starting the simulation. Each simulation replication (execution) wil run unitl time=" + simulationDuration + 
-    //		" equivalent to " + simulationDuration/480 + " days\n");
-  
 
- 
+   //System.out.println("Starting the simulation. Each simulation replication (execution) wil run unitl time=" + simulationDuration +
+    //		" equivalent to " + simulationDuration/480 + " days\n");
+
+
+
    <!--
   Se tiver iteration and release, chama de um jeito, se tiver so release, de outro, so iteration, de outro, nenhum, de outro
    <xsl:choose>
   <xsl:when test="/acd/act[@id='Iteration'] and /acd/act[@id='Iteration']">//iteration e release
-   man.ExecuteSimulation(<xsl:text><xsl:value-of select="$time"/></xsl:text>,(float)<xsl:text><xsl:if test="/acd/act[@id='Iteration']"><xsl:value-of select="act[@id='Iteration']/stat/@parm1" /></xsl:if></xsl:text>, (float)<xsl:text><xsl:if test="/acd/act[@id='Release']"><xsl:value-of select="act[@id='Release']/stat/@parm1" /></xsl:if> </xsl:text>);  
-  </xsl:when> 
+   man.ExecuteSimulation(<xsl:text><xsl:value-of select="$time"/></xsl:text>,(float)<xsl:text><xsl:if test="/acd/act[@id='Iteration']"><xsl:value-of select="act[@id='Iteration']/stat/@parm1" /></xsl:if></xsl:text>, (float)<xsl:text><xsl:if test="/acd/act[@id='Release']"><xsl:value-of select="act[@id='Release']/stat/@parm1" /></xsl:if> </xsl:text>);
+  </xsl:when>
   <xsl:when test="/acd/act[@id='Iteration'] and not(/acd/act[@id='Iteration'])">//so iteration
-  man.ExecuteSimulation(<xsl:text><xsl:value-of select="$time"/></xsl:text>, (float)<xsl:text><xsl:if test="/acd/act[@id='Iteration']"><xsl:value-of select="act[@id='Iteration']/stat/@parm1" /></xsl:if> </xsl:text>, (float)<xsl:text><xsl:if test="/acd/act[@id='Release']"><xsl:value-of select="act[@id='Release']/stat/@parm1" /></xsl:if> </xsl:text>);  
-  </xsl:when> 
+  man.ExecuteSimulation(<xsl:text><xsl:value-of select="$time"/></xsl:text>, (float)<xsl:text><xsl:if test="/acd/act[@id='Iteration']"><xsl:value-of select="act[@id='Iteration']/stat/@parm1" /></xsl:if> </xsl:text>, (float)<xsl:text><xsl:if test="/acd/act[@id='Release']"><xsl:value-of select="act[@id='Release']/stat/@parm1" /></xsl:if> </xsl:text>);
+  </xsl:when>
    <xsl:when test="not(/acd/act[@id='Iteration']) and /acd/act[@id='Iteration']">//so release
-    man.ExecuteSimulation(<xsl:text><xsl:value-of select="$time"/></xsl:text>, 0 , (float)<xsl:text><xsl:if test="/acd/act[@id='Release']"><xsl:value-of select="act[@id='Release']/stat/@parm1" /></xsl:if> </xsl:text>);  
+    man.ExecuteSimulation(<xsl:text><xsl:value-of select="$time"/></xsl:text>, 0 , (float)<xsl:text><xsl:if test="/acd/act[@id='Release']"><xsl:value-of select="act[@id='Release']/stat/@parm1" /></xsl:if> </xsl:text>);
      </xsl:when>
      <xsl:when test="not(/acd/act[@id='Iteration']) and not(/acd/act[@id='Iteration'])">//nenhum nem outro
-    man.ExecuteSimulation(<xsl:text><xsl:value-of select="$time"/></xsl:text>);  
-     </xsl:when> 
-   
+    man.ExecuteSimulation(<xsl:text><xsl:value-of select="$time"/></xsl:text>);
+     </xsl:when>
+
  </xsl:choose>  -->
-  
- 
+
+
   <!-- Se tiver iteration and release, chama de um jeito, se tiver so release, de outro, so iteration, de outro, nenhum, de outro -->
 <xsl:choose>
   <!-- Iteration e Release -->
@@ -186,8 +186,8 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   </xsl:when>
 </xsl:choose>
 
-  
-  
+
+
   while (!man.Finished())
   {
    try
@@ -216,7 +216,7 @@ public class DynamicExperimentationProgramProxy implements IDynamicExperimentati
   <xsl:text>man.AddQueue(qe);
   </xsl:text>
   </xsl:if>
-  <xsl:if test="type/@size = type/@init" > 
+  <xsl:if test="type/@size = type/@init" >
   <xsl:text>
 
   re = new ResourceEntry();

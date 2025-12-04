@@ -5,24 +5,18 @@ import com.example.projeto_tcc.entity.GlobalSimulationResult;
 import com.example.projeto_tcc.entity.ReplicationResult;
 import com.example.projeto_tcc.entity.WorkProductConfig;
 import com.example.projeto_tcc.enums.VariableType;
-
 import com.example.projeto_tcc.repository.GlobalSimulationResultRepository;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import simula.manager.SimulationManager;
-import simula.manager.QueueEntry;
-import simula.manager.ActiveEntry;
-import simula.Activity;
-
-import simulator.spem.xacdml.results.IterationResults;
-import simulator.spem.xacdml.results.ActivityResults;
-import simulator.spem.xacdml.results.PhaseResults;
-import simulator.spem.xacdml.results.MilestoneResults;
-
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.codehaus.janino.SimpleCompiler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.annotation.SessionScope;
+import simula.manager.QueueEntry;
+import simula.manager.SimulationManager;
+import simulator.spem.xacdml.results.ActivityResults;
+import simulator.spem.xacdml.results.IterationResults;
+import simulator.spem.xacdml.results.MilestoneResults;
+import simulator.spem.xacdml.results.PhaseResults;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -34,17 +28,21 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
-@SessionScope
+//@SessionScope
 public class ExecutionService {
 
+    @Lazy
     @Autowired
     private SimulationGenerationService simulationGenerationService;
 
     @Autowired
     private GlobalSimulationResultRepository globalRepository;
-    private String generatedJavaCode; // O código gerado fica aqui
-    private Long activeProcessId;
-    private Class<?> compiledSimClass;
+
+    @Autowired // NOVO: Injetar o Cache Manager
+    private SimulationCacheManager cacheManager;
+//    private String generatedJavaCode;
+//    private Long activeProcessId;
+//    private Class<?> compiledSimClass;
 
     // Variáveis de Estado (Armazenam os dados da última execução)
     private int totalReplicationsRun = 0;
@@ -82,11 +80,17 @@ public class ExecutionService {
     }
 
     // --- COMPILAÇÃO ---
+// ExecutionService.java
+
+    // --- COMPILAÇÃO ---
     public void compile(String javaCode, String fullClassName, Long processId) throws Exception {
         System.out.println("Iniciando compilação...");
-        this.generatedJavaCode = javaCode; // Armazena o código recebido
-        this.activeProcessId = processId;
-        resetData();
+
+        // Armazena o código e o ID no cache
+        cacheManager.putGeneratedJavaCode(processId, javaCode);
+        cacheManager.setActiveProcess(processId);
+
+        resetData(); // Limpa as variáveis de *instância* do service
 
         Path outputDir = Paths.get("output");
         if (!Files.exists(outputDir)) Files.createDirectories(outputDir);
@@ -94,10 +98,14 @@ public class ExecutionService {
         SimpleCompiler compiler = new SimpleCompiler();
         compiler.setParentClassLoader(ExecutionService.class.getClassLoader());
         compiler.cook(javaCode);
-        this.compiledSimClass = compiler.getClassLoader().loadClass(fullClassName);
-        System.out.println("Compilação OK.");
-    }
+        Class<?> compiledClass = compiler.getClassLoader().loadClass(fullClassName);
 
+        // Armazena a classe compilada no cache compartilhado
+        cacheManager.putCompiledClass(processId, compiledClass);
+
+        System.out.println("Compilação OK.");
+        System.out.println("ExecutionService instance = " + this.hashCode());
+    }
     private void resetData() {
         this.totalReplicationsRun = 0;
         this.daysPerReplication.clear();
@@ -109,16 +117,37 @@ public class ExecutionService {
     }
 
     // --- GETTERS NECESSÁRIOS ---
-    public Long getActiveProcessId() { return activeProcessId; }
+    // ExecutionService.java
 
-    // ESTE ERA O MÉTODO QUE FALTAVA:
-    public String getGeneratedJavaCode() { return this.generatedJavaCode; }
+    // --- GETTERS NECESSÁRIOS ---
+    public Long getActiveProcessId() {
+        return cacheManager.getActiveProcessId(); // Buscar do Cache
+    }
+
+    public String getGeneratedJavaCode() {
+        Long currentProcessId = cacheManager.getActiveProcessId();
+        if (currentProcessId == null) return null;
+        return cacheManager.getGeneratedJavaCode(currentProcessId); // Buscar do Cache
+    }
+
+    // ================================================================================
+    // 1. EXECUÇÃO (SILENCIOSA - Apenas guarda dados)
+    // ================================================================================
+// ExecutionService.java
 
     // ================================================================================
     // 1. EXECUÇÃO (SILENCIOSA - Apenas guarda dados)
     // ================================================================================
     public GlobalSimulationResult executeSimulation(float duration, Integer replications, List<WorkProductConfig> configList) throws Exception {
-        if (this.compiledSimClass == null) throw new IllegalStateException("Simulação não compilada.");
+        System.out.println("ExecutionService instance = " + this.hashCode());
+
+        Long currentProcessId = cacheManager.getActiveProcessId();
+
+        // 🟢 Busca a classe compilada do Cache
+        Class<?> compiledSimClass = cacheManager.getCompiledClass(currentProcessId);
+
+        if (compiledSimClass == null) throw new IllegalStateException("Simulação não compilada.");
+
         if (replications == null || replications < 1) replications = 1;
 
         resetData();
@@ -127,45 +156,65 @@ public class ExecutionService {
         System.out.println("Executando " + replications + " replicações...");
 
         for (int i = 1; i <= replications; i++) {
-            //Activity.isBeginOfSimulation = true;
-            //ActiveEntry.lastid = 0;
             hardResetLibrary();
 
-            Object simInstance = this.compiledSimClass.getDeclaredConstructor().newInstance();
-            Method setDur = this.compiledSimClass.getMethod("setSimulationDuration", float.class);
-            Method exec = this.compiledSimClass.getMethod("execute", float.class);
-            Method getMan = this.compiledSimClass.getMethod("getSimulationManager");
+            // Usa a classe obtida do Cache
+            Object simInstance = compiledSimClass.getDeclaredConstructor().newInstance();
+            Method setDur = compiledSimClass.getMethod("setSimulationDuration", float.class);
+            Method exec = compiledSimClass.getMethod("execute", float.class);
+            Method getMan = compiledSimClass.getMethod("getSimulationManager");
 
             setDur.invoke(simInstance, duration);
+
             exec.invoke(simInstance, duration);
+
+
 
             SimulationManager man = (SimulationManager) getMan.invoke(simInstance);
 
+
+
             double clock = man.getScheduler().GetClock();
+
             this.daysPerReplication.add(clock / 480.0);
 
+
+
             this.historyActivityResults.put(i, man.getScheduler().getMapWithActivityResults());
+
             this.historyPhaseResults.put(i, man.getScheduler().getMapWithPhaseResults());
+
             this.historyMilestoneResults.put(i, man.getScheduler().getMapWithMilestoneResults());
+
             this.historyIterationResults.put(i, man.getScheduler().getMapWithIterationResults());
+
+
 
             this.resultadoGlobal.put("run #" + i, man.getQueues());
 
+
+
             man.getScheduler().Stop();
+
             man.getScheduler().Clear();
         }
 
         GlobalSimulationResult savedResult = persistSimulationData(configList);
-
         System.out.println("Fim da execução.");
-
         return savedResult;
     }
+// ExecutionService.java
 
     private GlobalSimulationResult persistSimulationData(List<WorkProductConfig> configList) {
         if (this.totalReplicationsRun == 0) return null;
 
         try {
+            Long currentProcessId = cacheManager.getActiveProcessId();
+
+            if (currentProcessId == null) {
+                throw new IllegalStateException("Processo ativo não encontrado no cache. A simulação não foi compilada.");
+            }
+
             Set<String> dependentQueues = new HashSet<>();
             if (configList != null && !configList.isEmpty()) {
                 for (WorkProductConfig cfg : configList) {
@@ -176,7 +225,10 @@ public class ExecutionService {
             }
 
             GlobalSimulationResult global = new GlobalSimulationResult();
-            global.setProcessId(this.activeProcessId);
+
+            // 🛠️ CORREÇÃO: Usa o 'currentProcessId' obtido do cache
+            global.setProcessId(currentProcessId);
+
             global.setExecutionDate(LocalDateTime.now());
             global.setTotalReplications(this.totalReplicationsRun);
 
@@ -241,7 +293,6 @@ public class ExecutionService {
             throw new RuntimeException("Erro ao salvar dados: " + e.getMessage());
         }
     }
-
     private void hardResetLibrary() {
         // Incluímos Scheduler e InternalActiveEntry na lista
         Class<?>[] classesToClean = {

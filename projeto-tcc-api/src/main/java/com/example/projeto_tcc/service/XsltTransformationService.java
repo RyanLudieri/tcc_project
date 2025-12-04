@@ -18,6 +18,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 @Service
 public class XsltTransformationService {
@@ -42,6 +43,18 @@ public class XsltTransformationService {
     }
 
     public String transform(String xmlContent, String xsltResourcePath, String outputFilePath) throws Exception {
+        return transform(xmlContent, xsltResourcePath, outputFilePath, null);
+    }
+
+    /**
+     * Transforma um XML usando XSLT, permitindo a passagem de parâmetros.
+     * * @param xmlContent O conteúdo XML de entrada (XACDML).
+     * @param xsltResourcePath O caminho para o arquivo XSLT no classpath.
+     * @param outputFilePath O caminho onde o código Java gerado será salvo no disco.
+     * @param params Parâmetros para serem passados ao XSLT (Map<Nome, Valor>).
+     * @return O conteúdo transformado (código Java).
+     */
+    public String transform(String xmlContent, String xsltResourcePath, String outputFilePath, Map<String, Object> params) throws Exception {
         try {
             // --- 1. Carregar o Stylesheet XSL ---
             InputStream xsltStream = XsltTransformationService.class.getResourceAsStream(xsltResourcePath);
@@ -53,25 +66,33 @@ public class XsltTransformationService {
             TransformerFactory factory = TransformerFactory.newInstance();
             Transformer transformer = factory.newTransformer(xslt);
 
-            // --- 2. Preparar o Parser de XML com nosso "guia" (EntityResolver) ---
+            // Passar os Parâmetros para o Transformer
+            if (params != null) {
+                for (Map.Entry<String, Object> entry : params.entrySet()) {
+                    transformer.setParameter(entry.getKey(), entry.getValue());
+                }
+            }
+
+            // --- 2. Preparar o Parser de XML com o "guia" (EntityResolver) ---
             SAXParserFactory spf = SAXParserFactory.newInstance();
-            spf.setNamespaceAware(true); // Boa prática
+            spf.setNamespaceAware(true);
             XMLReader reader = spf.newSAXParser().getXMLReader();
 
-            // Aqui nós configuramos o parser para usar nosso guia!
+            // Configuração do parser para usar o guia
             reader.setEntityResolver(new ClasspathEntityResolver());
 
             // --- 3. Criar a fonte de dados XML usando o parser configurado ---
             InputSource xmlInputSource = new InputSource(new StringReader(xmlContent));
             Source xmlSource = new SAXSource(reader, xmlInputSource);
 
-            // --- 4. Preparar o resultado e executar a transformação (sem mudanças aqui) ---
+            // --- 4. Preparar o resultado e executar a transformação ---
             StringWriter writer = new StringWriter();
             StreamResult result = new StreamResult(writer);
             transformer.transform(xmlSource, result);
 
             String generatedContent = writer.toString();
 
+            // --- 5. Salvar o código Java gerado em disco ---
             if (outputFilePath != null && !outputFilePath.isBlank()) {
                 Path outputPath = Paths.get(outputFilePath);
                 Files.createDirectories(outputPath.getParent());
