@@ -31,6 +31,7 @@ public class ResultsService {
         dto.setTotalReplications(entity.getTotalReplications());
         dto.setAverageDuration(entity.getAverageDuration());
         dto.setDurationStdDev(entity.getDurationStdDev());
+//        dto.setTotalRolesUsed(entity.getTotalRolesUsed());
 
         dto.setQueueMetrics(entity.getQueueStats().stream()
                 .map(stat -> new QueueMetricDTO(

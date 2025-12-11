@@ -1,31 +1,481 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card.jsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.jsx";
 import { Label } from "@/components/ui/label.jsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.jsx";
-import { ArrowLeft, Download, FileText, BarChart2, LineChart, PieChart as PieChartIcon, Settings, Clock, Package, TrendingUp, DollarSign, Users, AlertCircle, CheckCircle, AlertTriangle, Save } from 'lucide-react';
+import { ArrowLeft, Download, FileText, BarChart2, LineChart, Settings, Clock, Package, TrendingUp, DollarSign, Users, AlertCircle, CheckCircle, AlertTriangle, Save, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from "@/components/ui/use-toast.js";
 import { useAuth } from "@/contexts/SupabaseAuthContext.jsx";
 import {
   ResponsiveContainer,
   LineChart as ReLineChart,
-  BarChart as ReBarChart,
-  AreaChart as ReAreaChart,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
   Line,
-  Bar,
-  Area,
-  Cell
 } from 'recharts';
-import { API_BASE_URL } from "@/config/api";
+// import { API_BASE_URL } from "@/config/api";
 
+
+// --- DADOS REAIS DA SIMULAÇÃO (ATUALIZADOS) ---
+const SIMULATION_DATA_PLACEHOLDER = {
+  "id": 1,
+  "executionDate": "2025-12-05T17:17:15.787417",
+  "totalReplications": 50,
+  "averageDuration": 63.34117521158854,
+  "durationStdDev": 0.6699000022826771,
+  "queueMetrics": [
+    {
+      "queueName": "q1",
+      "averageSize": 0.0,
+      "stdDev": 0.0
+    },
+    {
+      "queueName": "q10",
+      "averageSize": 95.96,
+      "stdDev": 11.517440191788651
+    },
+    {
+      "queueName": "q2",
+      "averageSize": 0.0,
+      "stdDev": 0.0
+    },
+    {
+      "queueName": "q3",
+      "averageSize": 0.0,
+      "stdDev": 0.0
+    },
+    {
+      "queueName": "q4",
+      "averageSize": 0.0,
+      "stdDev": 0.0
+    },
+    {
+      "queueName": "q5",
+      "averageSize": 0.0,
+      "stdDev": 0.0
+    },
+    {
+      "queueName": "q6",
+      "averageSize": 0.0,
+      "stdDev": 0.0
+    },
+    {
+      "queueName": "q7",
+      "averageSize": 0.0,
+      "stdDev": 0.0
+    },
+    {
+      "queueName": "q8",
+      "averageSize": 0.0,
+      "stdDev": 0.0
+    },
+    {
+      "queueName": "q9",
+      "averageSize": 0.0,
+      "stdDev": 0.0
+    },
+    {
+      "queueName": "q0",
+      "averageSize": 0.0,
+      "stdDev": 0.0
+    }
+  ],
+  "logs": [
+    {
+      "replicationNumber": 1,
+      "duration": 63.002079264322916,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 110,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 2,
+      "duration": 63.32166748046875,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 91,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 3,
+      "duration": 63.00173746744792,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 104,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 4,
+      "duration": 63.46024169921875,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 101,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 5,
+      "duration": 63.2218994140625,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 98,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 6,
+      "duration": 63.3444580078125,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 84,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 7,
+      "duration": 63.03446858723958,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 100,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 8,
+      "duration": 63.06692301432292,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 123,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 9,
+      "duration": 63.02421875,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 88,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 10,
+      "duration": 63.70067545572917,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 103,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 11,
+      "duration": 63.018697102864586,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 100,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 12,
+      "duration": 63.0138671875,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 86,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 13,
+      "duration": 63.111897786458336,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 89,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 14,
+      "duration": 63.56114908854167,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 106,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 15,
+      "duration": 63.00354817708333,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 96,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 16,
+      "duration": 63.16066080729167,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 99,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 17,
+      "duration": 64.38050130208333,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 91,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 18,
+      "duration": 63.21853841145833,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 113,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 19,
+      "duration": 63.21931559244792,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 97,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 20,
+      "duration": 63.125325520833336,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 91,
+        "q0": 0
+      }
+    },
+    {
+      "replicationNumber": 21,
+      "duration": 63.18771565755208,
+      "queueFinalCounts": {
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "q8": 0,
+        "q9": 0,
+        "q10": 96,
+        "q0": 0
+      }
+    },
+    { "replicationNumber": 22, "duration": 63.29828287760416, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 95, "q0": 0 } },
+    { "replicationNumber": 23, "duration": 63.660685221354164, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 98, "q0": 0 } },
+    { "replicationNumber": 24, "duration": 63.02434493001302, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 99, "q0": 0 } },
+    { "replicationNumber": 25, "duration": 63.021028645833336, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 100, "q0": 0 } },
+    { "replicationNumber": 26, "duration": 63.267794509710815, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 95, "q0": 0 } },
+    { "replicationNumber": 27, "duration": 63.22013346354167, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 95, "q0": 0 } },
+    { "replicationNumber": 28, "duration": 63.018595377604164, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 97, "q0": 0 } },
+    { "replicationNumber": 29, "duration": 63.15923987507916, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 95, "q0": 0 } },
+    { "replicationNumber": 30, "duration": 63.30397033691406, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 94, "q0": 0 } },
+    { "replicationNumber": 31, "duration": 64.30154622395833, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 94, "q0": 0 } },
+    { "replicationNumber": 32, "duration": 63.48622233072917, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 98, "q0": 0 } },
+    { "replicationNumber": 33, "duration": 63.40794158935547, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 97, "q0": 0 } },
+    { "replicationNumber": 34, "duration": 63.02534586588542, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 95, "q0": 0 } },
+    { "replicationNumber": 35, "duration": 63.07823944091797, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 93, "q0": 0 } },
+    { "replicationNumber": 36, "duration": 63.4907958984375, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 98, "q0": 0 } },
+    { "replicationNumber": 37, "duration": 63.504222005208336, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 94, "q0": 0 } },
+    { "replicationNumber": 38, "duration": 63.30396499633789, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 98, "q0": 0 } },
+    { "replicationNumber": 39, "duration": 63.31055740443423, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 96, "q0": 0 } },
+    { "replicationNumber": 40, "duration": 63.36018371582031, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 98, "q0": 0 } },
+    { "replicationNumber": 41, "duration": 63.05600868858167, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 96, "q0": 0 } },
+    { "replicationNumber": 42, "duration": 63.40798369344075, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 96, "q0": 0 } },
+    { "replicationNumber": 43, "duration": 64.32187050098923, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 98, "q0": 0 } },
+    { "replicationNumber": 44, "duration": 63.026413661603525, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 97, "q0": 0 } },
+    { "replicationNumber": 45, "duration": 63.46199859203672, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 96, "q0": 0 } },
+    { "replicationNumber": 46, "duration": 63.30397266710485, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 95, "q0": 0 } },
+    { "replicationNumber": 47, "duration": 63.490790807663235, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 95, "q0": 0 } },
+    { "replicationNumber": 48, "duration": 63.4906005859375, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 98, "q0": 0 } },
+    { "replicationNumber": 49, "duration": 63.34446487426758, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 97, "q0": 0 } },
+    { "replicationNumber": 50, "duration": 63.02082824707031, "queueFinalCounts": { "q1": 0, "q2": 0, "q3": 0, "q4": 0, "q5": 0, "q6": 0, "q7": 0, "q8": 0, "q9": 0, "q10": 96, "q0": 0 } }
+  ]
+};
+// -------------------------------------------------------------------------
 
 const ChartWrapper = ({ title, icon, children }) => (
     <Card className="h-[400px] flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
@@ -34,39 +484,10 @@ const ChartWrapper = ({ title, icon, children }) => (
         {React.cloneElement(icon, { className: "h-5 w-5 text-primary" })}
       </CardHeader>
       <CardContent className="flex-1 flex items-center justify-center p-4">
-        {children || <p className="text-muted-foreground text-center">Chart data will appear here after the simulation.</p>}
+        {children || <p className="text-muted-foreground text-center">No simulation data available for this visualization yet.</p>}
       </CardContent>
     </Card>
 );
-
-const mockTimeData = [
-  { name: 'Sprint 1', E_R: 5.2, meta: 5 },
-  { name: 'Sprint 2', E_R: 4.8, meta: 5 },
-  { name: 'Sprint 3', E_R: 5.5, meta: 5 },
-  { name: 'Sprint 4', E_R: 4.5, meta: 4.5 },
-  { name: 'Sprint 5', E_R: 4.9, meta: 4.5 },
-  { name: 'Sprint 6', E_R: 5.1, meta: 4.5 },
-];
-
-const mockResourceData = [
-  { name: 'Senior Frontend Dev', Utilização: 0.85, capacidade: 1 },
-  { name: 'Mid-level Backend Dev', Utilização: 0.78, capacidade: 1 },
-  { name: 'Automation QA', Utilização: 0.92, capacidade: 1 },
-  { name: 'UX Designer', Utilização: 0.60, capacidade: 1 },
-  { name: 'Product Owner', Utilização: 0.70, capacidade: 1 },
-  { name: 'Junior Data Analyst', Utilização: 0.55, capacidade: 1 },
-];
-
-const mockThroughputData = [
-  { name: 'Week 1', Throughput: 8, meta: 10 },
-  { name: 'Week 2', Throughput: 12, meta: 10 },
-  { name: 'Week 3', Throughput: 9, meta: 10 },
-  { name: 'Week 4', Throughput: 14, meta: 12 },
-  { name: 'Week 5', Throughput: 11, meta: 12 },
-  { name: 'Week 6', Throughput: 15, meta: 12 },
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8A2BE2', '#FF69B4'];
 
 const SimulationResults = () => {
   const { simulationId, processId } = useParams();
@@ -74,6 +495,108 @@ const SimulationResults = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // ATUALIZAÇÃO: Usa o novo mock de dados.
+  const [data, setData] = useState(SIMULATION_DATA_PLACEHOLDER);
+
+  // Lógica de processamento dos dados
+  const processedData = useMemo(() => {
+    if (!data) return { summaryStats: [], detailedQueueMetrics: [], stabilityData: [], durationStdDev: 0, totalEntitiesProcessed: 0, SINK_QUEUE_ID: null };
+
+    const avgDuration = data.averageDuration;
+
+    // --- LÓGICA DINÂMICA PARA ENCONTRAR O DISSIPADOR (SINK_QUEUE_ID) ---
+
+    // 1. ORDENAR as filas numericamente por ID (q0, q1, q2, ...)
+    const sortedQueueMetrics = data.queueMetrics.slice().sort((a, b) => {
+      // Extrai o número da string 'qX'
+      const numA = parseInt(a.queueName.substring(1));
+      const numB = parseInt(b.queueName.substring(1));
+      return numA - numB;
+    });
+
+    let SINK_QUEUE_ID = null;
+
+    // 2. ITERAR INVERSAMENTE para encontrar a ÚLTIMA FILA POPULADA
+    for (let i = sortedQueueMetrics.length - 1; i >= 0; i--) {
+      const metric = sortedQueueMetrics[i];
+      // Verifica se o tamanho médio da fila é significativamente maior que zero.
+      // O novo mock tem q10 como a última fila populada
+      if (metric.averageSize > 0.001) {
+        SINK_QUEUE_ID = metric.queueName;
+        break;
+      }
+    }
+
+    // 3. FALLBACK: Se nenhuma fila estava populada (como no seu exemplo),
+    // assumimos que a fila de MAIOR ID é o ponto final teórico (q10 neste caso, a última do array ordenado).
+    if (!SINK_QUEUE_ID && sortedQueueMetrics.length > 0) {
+      // Encontrar a fila de maior ID (maior número)
+      const lastQueue = sortedQueueMetrics.reduce((max, current) => {
+        const numMax = parseInt(max.queueName.substring(1));
+        const numCurrent = parseInt(current.queueName.substring(1));
+        return numCurrent > numMax ? current : max;
+      }, sortedQueueMetrics[0]);
+      SINK_QUEUE_ID = lastQueue.queueName;
+    }
+
+
+    // 4. CALCULA ENTIDADES CONCLUÍDAS (totalEntitiesProcessed)
+    let totalEntitiesProcessed = 0;
+    if (SINK_QUEUE_ID) {
+      const sumFinalCounts = data.logs.reduce((sum, log) => {
+        const finalCount = log.queueFinalCounts[SINK_QUEUE_ID] || 0;
+        return sum + finalCount;
+      }, 0);
+      totalEntitiesProcessed = sumFinalCounts / data.totalReplications;
+    }
+
+
+    // 5. CALCULA THROUGHPUT GLOBAL
+    const globalThroughput = totalEntitiesProcessed > 0 && avgDuration > 0
+        ? (totalEntitiesProcessed / avgDuration)
+        : 0.000;
+
+    // A. Estatísticas Globais
+    const summaryStats = [
+      { title: "Média de Duração", value: `${avgDuration.toFixed(4).replace('.', ',')} dias`, icon: <Clock className="h-6 w-6 text-blue-500" /> },
+      { title: "Total de Réplicas", value: data.totalReplications, icon: <Layers className="h-6 w-6 text-orange-500" /> },
+      { title: "Throughput Global Médio", value: `${globalThroughput.toFixed(3).replace('.', ',')} / dia`, icon: <TrendingUp className="h-6 w-6 text-purple-500" /> },
+      {
+        title: `Entidades Concluídas (via ${SINK_QUEUE_ID})`, // Nome dinâmico
+        value: totalEntitiesProcessed.toFixed(0),
+        icon: <Package className="h-6 w-6 text-green-500" />
+      },
+    ];
+
+    // B. Métricas de Fila (E[N])
+    const detailedQueueMetrics = data.queueMetrics
+        .map(metric => {
+          const lastLog = data.logs[data.logs.length - 1];
+          const finalCount = lastLog?.queueFinalCounts[metric.queueName] ?? 0;
+
+          return {
+            id: metric.queueName,
+            name: metric.queueName,
+            averageSize: metric.averageSize,
+            stdDevSize: metric.stdDev,
+            finalCount: finalCount,
+          };
+        })
+        .sort((a, b) => b.averageSize - a.averageSize); // O maior averageSize vai para o topo (GARGALO)
+
+    // C. Dados para Gráfico de Estabilidade
+    const stabilityData = data.logs.map(log => ({
+      name: `Replica ${log.replicationNumber}`,
+      Duration: log.duration,
+      Avg_Duration: avgDuration
+    }));
+
+    return { summaryStats, detailedQueueMetrics, stabilityData, durationStdDev: data.durationStdDev, totalEntitiesProcessed, SINK_QUEUE_ID };
+  }, [data]);
+
+  const { summaryStats, detailedQueueMetrics, stabilityData, durationStdDev, totalEntitiesProcessed, SINK_QUEUE_ID } = processedData;
+
+  // Handlers (Mantidos)
   const handleExport = (type) => {
     toast({
       title: `Export ${type}`,
@@ -112,21 +635,9 @@ const SimulationResults = () => {
     }
   };
 
-  const summaryStats = [
-    { title: "Total Simulated Time", value: "98.2 days", icon: <Clock className="h-6 w-6 text-blue-500" /> },
-    { title: "Total Entities Processed", value: "723", icon: <Package className="h-6 w-6 text-green-500" /> },
-    { title: "Global Average Throughput", value: "7.36 units/day", icon: <TrendingUp className="h-6 w-6 text-purple-500" /> },
-    { title: "Total Estimated Cost", value: "$15,820.50", icon: <DollarSign className="h-6 w-6 text-yellow-500" /> },
-  ];
-
-  const queueData = [
-    { id: "q_entrada_demanda", name: "New Demand Queue", count: 8, avgTime: "1.8d", maxTime: "3.5d", throughput: "5/day" },
-    { id: "q_desenv_frontend", name: "Frontend Dev Queue", count: 15, avgTime: "3.2d", maxTime: "7.1d", throughput: "2/day" },
-    { id: "q_desenv_backend", name: "Backend Dev Queue", count: 10, avgTime: "4.5d", maxTime: "8.0d", throughput: "1.5/day" },
-    { id: "q_testes_integrados", name: "Integration Testing Queue", count: 5, avgTime: "2.1d", maxTime: "4.2d", throughput: "3/day" },
-    { id: "q_revisao_po", name: "P.O. Review Queue", count: 2, avgTime: "0.8d", maxTime: "1.5d", throughput: "4/day" },
-    { id: "q_deploy_prod", name: "Production Deploy Queue", count: 1, avgTime: "0.5d", maxTime: "1.0d", throughput: "N/A" },
-  ];
+  if (!data) {
+    return <div className="p-8 text-center text-xl text-muted-foreground">Loading simulation results...</div>;
+  }
 
 
   return (
@@ -162,49 +673,6 @@ const SimulationResults = () => {
           </div>
         </header>
 
-        <Card className="mb-8 shadow-xl bg-card">
-          <CardHeader>
-            <CardTitle className="text-2xl text-card-foreground flex items-center">
-              <Settings className="mr-3 h-7 w-7 text-primary"/>
-              Visualization & Export Controls
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col md:flex-row gap-6 items-center">
-            <div className="flex-1 w-full md:w-auto">
-              <Label htmlFor="metric-select" className="text-sm font-medium text-muted-foreground mb-1 block">
-                Dashboard Primary Metric
-              </Label>
-              <Select onValueChange={(value) => console.log("Selected metric:", value)}>
-                <SelectTrigger id="metric-select" className="w-full md:w-[300px] bg-background border-border focus:ring-primary">
-                  <SelectValue placeholder="Select Primary Metric" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="e_n">E[N] — Average Queue Size</SelectItem>
-                  <SelectItem value="e_r">E[R] — Average Response Time</SelectItem>
-                  <SelectItem value="utilization">Resource Utilization</SelectItem>
-                  <SelectItem value="throughput">Stage Throughput</SelectItem>
-                  <SelectItem value="cost">Cost Analysis</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex gap-3 flex-wrap justify-center md:justify-end">
-              <Button variant="outline" onClick={() => handleExport('CSV')} className="border-primary text-primary hover:bg-primary/10">
-                <FileText className="mr-2 h-4 w-4" />
-                Export Data (CSV)
-              </Button>
-              <Button variant="outline" onClick={() => handleExport('Charts')} className="border-primary text-primary hover:bg-primary/10">
-                <Download className="mr-2 h-4 w-4" />
-                Export Charts (PNG)
-              </Button>
-              <Button variant="outline" onClick={() => handleExport('PDF')} className="border-primary text-primary hover:bg-primary/10">
-                <Download className="mr-2 h-4 w-4" />
-                Save Report (PDF)
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         <section className="mb-10">
           <h2 className="text-3xl font-bold mb-6 text-foreground flex items-center">
             <BarChart2 className="mr-3 h-8 w-8 text-primary"/>
@@ -222,13 +690,22 @@ const SimulationResults = () => {
                   </CardContent>
                 </Card>
             ))}
+            <Card key="stdDev" className="shadow-md hover:shadow-lg transition-shadow duration-300 bg-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base font-semibold text-card-foreground">Desvio Padrão (Duração)</CardTitle>
+                <AlertTriangle className="h-6 w-6 text-red-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-red-500">{durationStdDev.toFixed(4).replace('.', ',')}</div>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
         <section className="mb-10">
           <h2 className="text-3xl font-bold mb-6 text-foreground flex items-center">
             <Users className="mr-3 h-8 w-8 text-primary"/>
-            Detailed Queue Metrics
+            Detailed Queue Metrics (E[N] - Avg Size)
           </h2>
           <Card className="shadow-md overflow-hidden bg-card">
             <CardContent className="p-0">
@@ -236,23 +713,34 @@ const SimulationResults = () => {
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="font-semibold text-muted-foreground">Queue Name</TableHead>
-                      <TableHead className="text-right font-semibold text-muted-foreground">Current Entities</TableHead>
-                      <TableHead className="text-right font-semibold text-muted-foreground">Avg Time (Queue)</TableHead>
-                      <TableHead className="text-right font-semibold text-muted-foreground">Max Time (Queue)</TableHead>
-                      <TableHead className="text-right font-semibold text-muted-foreground">Throughput (Queue)</TableHead>
+                      <TableHead className="font-semibold text-muted-foreground">Queue ID</TableHead>
+                      <TableHead className="text-right font-semibold text-muted-foreground">E[N] - Avg Size</TableHead>
+                      <TableHead className="text-right font-semibold text-muted-foreground">Std Dev (Size)</TableHead>
+                      <TableHead className="text-right font-semibold text-muted-foreground">Final Count (Last R.)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {queueData.map((queue) => (
-                        <TableRow key={queue.id} className="border-b-border hover:bg-muted/30">
-                          <TableCell className="font-medium text-card-foreground py-3">{queue.name}</TableCell>
-                          <TableCell className="text-right text-card-foreground py-3">{queue.count}</TableCell>
-                          <TableCell className="text-right text-card-foreground py-3">{queue.avgTime}</TableCell>
-                          <TableCell className="text-right text-card-foreground py-3">{queue.maxTime}</TableCell>
-                          <TableCell className="text-right text-card-foreground py-3">{queue.throughput}</TableCell>
-                        </TableRow>
-                    ))}
+                    {detailedQueueMetrics.map((queue, index) => {
+                      // Se a fila é a de maior averageSize E o averageSize é maior que um pequeno limiar (para evitar 0.000 como gargalo)
+                      const isBottleneck = index === 0 && queue.averageSize > 0.01;
+
+                      return (
+                          <TableRow key={queue.id} className="border-b-border hover:bg-muted/30">
+
+                            <TableCell className={`font-medium py-3 flex items-center ${isBottleneck ? 'text-destructive font-bold' : 'text-card-foreground'}`}>
+                              {isBottleneck ? <AlertTriangle className="mr-2 h-4 w-4 text-destructive" /> : null}
+                              {queue.name}
+                              {isBottleneck && <span className="ml-2 px-2 text-xs font-semibold rounded-full bg-destructive/20 text-destructive">GARGALO</span>}
+                            </TableCell>
+
+                            <TableCell className={`text-right py-3 ${isBottleneck ? 'text-destructive font-bold' : 'text-card-foreground'}`}>
+                              {queue.averageSize.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-right text-card-foreground py-3">{queue.stdDevSize.toFixed(3)}</TableCell>
+                            <TableCell className="text-right text-card-foreground py-3">{queue.finalCount}</TableCell>
+                          </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -267,100 +755,47 @@ const SimulationResults = () => {
           </h2>
 
           <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
-            <ChartWrapper title="Average Response Time (E[R]) per Sprint" icon={<Clock />}>
+
+            <ChartWrapper title="Simulação Estabilidade (Duração por Réplica)" icon={<Clock />}>
               <ResponsiveContainer width="100%" height="100%">
-                <ReLineChart data={mockTimeData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                <ReLineChart data={stabilityData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                  <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} label={{ value: 'Days', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}/>
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '0.5rem' }} />
+                  <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} label={{ value: 'Duração (dias)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}/>
+                  <Tooltip formatter={(value, name) => [value.toFixed(4).replace('.', ','), name]} contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '0.5rem' }} />
                   <Legend wrapperStyle={{ fontSize: "14px", paddingTop: '10px' }} />
-                  <Line type="monotone" dataKey="E_R" name="Avg Time" stroke="hsl(var(--primary))" strokeWidth={2.5} activeDot={{ r: 7 }} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="meta" name="SLA Target" stroke="hsl(var(--accent))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                  <Line type="monotone" dataKey="Duration" name="Duração da Réplica" stroke="hsl(var(--primary))" strokeWidth={2.5} activeDot={{ r: 7 }} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="Avg_Duration" name="Média Geral" stroke="hsl(var(--accent))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                 </ReLineChart>
               </ResponsiveContainer>
             </ChartWrapper>
 
-            <ChartWrapper title="Resource Utilization (%)" icon={<Users />}>
-              <ResponsiveContainer width="100%" height="100%">
-                <ReBarChart data={mockResourceData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" domain={[0, 1]} tickFormatter={(tick) => `${tick * 100}%`} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                  <YAxis dataKey="name" type="category" width={150} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                  <Tooltip formatter={(value) => `${(value * 100).toFixed(1)}%`} contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '0.5rem' }} />
-                  <Legend wrapperStyle={{ fontSize: "14px", paddingTop: '10px' }} />
-                  <Bar dataKey="Utilização" name="Current Utilization" radius={[0, 4, 4, 0]} barSize={20}>
-                    {mockResourceData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.Utilização > 0.85 ? 'hsl(var(--destructive))' : COLORS[index % COLORS.length]} />
-                    ))}
-                  </Bar>
-                  <Bar dataKey="capacidade" name="Capacity (100%)" fill="hsl(var(--border))" radius={[0, 4, 4, 0]} barSize={20} stackId="a" background={{ fill: 'hsl(var(--muted)/0.3)' }} />
-                </ReBarChart>
-              </ResponsiveContainer>
-            </ChartWrapper>
-
-            <ChartWrapper title="Weekly Throughput" icon={<TrendingUp />}>
-              <ResponsiveContainer width="100%" height="100%">
-                <ReAreaChart data={mockThroughputData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                  <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} label={{ value: 'Units', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}/>
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '0.5rem' }} />
-                  <Legend wrapperStyle={{ fontSize: "14px", paddingTop: '10px' }} />
-                  <Area type="monotone" dataKey="Throughput" name="Completed" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.2)" strokeWidth={2.5} />
-                  <Line type="monotone" dataKey="meta" name="Target" stroke="hsl(var(--accent))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                </ReAreaChart>
-              </ResponsiveContainer>
-            </ChartWrapper>
+            <ChartWrapper title="Resource Utilization (%) (Waiting for data)" icon={<Users />} />
+            <ChartWrapper title="Stage Throughput (Waiting for data)" icon={<TrendingUp />} />
 
             <Card className="h-[400px] flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card lg:col-span-1">
               <CardHeader className="border-b border-border">
                 <CardTitle className="text-lg font-semibold text-card-foreground flex items-center">
                   <AlertCircle className="mr-2 h-5 w-5 text-yellow-500"/>
-                  Attention Points
+                  Attention Points (Análise Dinâmica Ativa)
                 </CardTitle>
                 <CardDescription className="text-sm text-muted-foreground">
-                  Metrics that require analysis or optimization.
+                  A fila de saída (`Dissipador`) é determinada dinamicamente pela **Última Fila Populada** no processo.
                 </CardDescription>
               </CardHeader>
-
               <CardContent className="space-y-3 pt-4">
-                <div className="flex items-start p-2 rounded-md bg-destructive/10 border border-destructive/30">
-                  <AlertTriangle className="h-5 w-5 text-destructive mr-3 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-destructive-foreground">
-                      Bottleneck Identified: <span className="font-bold">Automation QA (92% Util.)</span>
-                    </p>
-                    <p className="text-xs text-destructive-foreground/80">
-                      Consider allocating more resources or optimizing test execution.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start p-2 rounded-md bg-yellow-500/10 border border-yellow-500/30">
-                  <Clock className="h-5 w-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-yellow-700 dark:text-yellow-300">
-                      High Avg Time: <span className="font-bold">Backend Dev (4.5d)</span>
-                    </p>
-                    <p className="text-xs text-yellow-600/80 dark:text-yellow-400/80">
-                      Investigate potential blockers or excessive task complexity.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start p-2 rounded-md bg-green-500/10 border border-green-500/30">
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-green-700 dark:text-green-300">
-                      Good Performance: <span className="font-bold">P.O. Review (0.8d)</span>
-                    </p>
-                    <p className="text-xs text-green-600/80 dark:text-green-400/80">
-                      Agile and efficient review process.
-                    </p>
-                  </div>
-                </div>
-
+                <p className="text-muted-foreground text-center pt-10">
+                  <span className="font-bold text-foreground">SINK_QUEUE_ID Detectado:</span> <code className="bg-muted px-2 py-1 rounded-md text-primary font-semibold">{SINK_QUEUE_ID}</code>
+                </p>
+                <p className="text-muted-foreground text-center">
+                  <span className="font-bold text-foreground">Total Médio de Entidades Processadas:</span> <span className="font-semibold text-primary">{totalEntitiesProcessed.toFixed(0)}</span>
+                </p>
+                <p className="text-muted-foreground text-center">
+                  <span className="font-bold text-foreground">Gargalo (Maior E[N]):</span> {detailedQueueMetrics.length > 0 && detailedQueueMetrics[0].averageSize > 0.01 ? <span className="text-destructive font-bold">{detailedQueueMetrics[0].name}</span> : 'Não detectado ou E[N] próximo de zero.'}
+                </p>
+                <p className="text-muted-foreground text-center pt-5">
+                  <AlertCircle className="inline h-4 w-4 mr-1 text-yellow-500"/> Análise automatizada de gargalos e tempos altos virá aqui.
+                </p>
               </CardContent>
             </Card>
 

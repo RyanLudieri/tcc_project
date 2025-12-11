@@ -1,40 +1,43 @@
 import { useState, useEffect } from 'react';
 
-function useLocalStorage(key, initialValue) {
-  const [storedValue, setStoredValue] = useState(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error("Error reading localStorage key “" + key + "”:", error);
-      return initialValue;
-    }
-  });
+function useLocalStorage(rawKey, initialValue) {
+    const [key, setKey] = useState(rawKey);
 
-  const setValue = (value) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-       console.error("Error setting localStorage key “" + key + "”:", error);
-    }
-  };
-
-  useEffect(() => {
-    try {
-        const item = window.localStorage.getItem(key);
-        if (item !== JSON.stringify(storedValue)) {
-             setStoredValue(item ? JSON.parse(item) : initialValue);
+    const [storedValue, setStoredValue] = useState(() => {
+        try {
+            const item = window.localStorage.getItem(rawKey);
+            return item ? JSON.parse(item) : initialValue;
+        } catch (error) {
+            console.error("Error reading localStorage key: " + rawKey, error);
+            return initialValue;
         }
-    } catch (error) {
-         console.error("Error syncing localStorage key “" + key + "”:", error);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]); 
+    });
 
+    // Atualiza o estado quando a chave muda
+    useEffect(() => {
+        if (rawKey !== key) {
+            setKey(rawKey);
+            try {
+                const item = window.localStorage.getItem(rawKey);
+                setStoredValue(item ? JSON.parse(item) : initialValue);
+            } catch (error) {
+                console.error("Error reading new key value:", error);
+                setStoredValue(initialValue);
+            }
+        }
+    }, [rawKey, key, initialValue]);
 
-  return [storedValue, setValue];
+    const setValue = (value) => {
+        try {
+            const newValue = value instanceof Function ? value(storedValue) : value;
+            setStoredValue(newValue);
+            window.localStorage.setItem(rawKey, JSON.stringify(newValue));
+        } catch (error) {
+            console.error("Error setting value for key: " + rawKey, error);
+        }
+    };
+
+    return [storedValue, setValue];
 }
 
 export default useLocalStorage;

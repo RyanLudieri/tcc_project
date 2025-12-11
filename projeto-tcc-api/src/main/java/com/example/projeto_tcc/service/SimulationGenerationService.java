@@ -51,7 +51,7 @@ public class SimulationGenerationService {
             // 6. Compilação
             executionService.compile(
                     generatedJavaCode,
-                    CLASS_NAME,
+                    CLASS_NAME, // ✅ USANDO O NOME DA CLASSE FIXO
                     processId
             );
 

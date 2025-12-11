@@ -1,23 +1,19 @@
 import { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  arrayMove,
   insertNode,
   removeNode,
   updateNode,
   findNode,
-  getParentId,
   getFlatNodes,
   getDragDepth,
-  getMaxDepth,
-  getMinDepth,
-  getNodeIndex,
-  countChildren,
   getPredecessorIdsForNode,
   transformNodesForBackend as originalTransformNodesForBackend
 } from '@/lib/nodeUtils';
 import { useToast } from "@/components/ui/use-toast";
+// import useLocalStorage from "@/hooks/useLocalStorage.js"; // Removido para simplificar e garantir a lógica interna
 
+// DEFINIÇÕES CONSTANTES
 const ALLOWED_CHILDREN = {
   Process: ["Phase"],
   Phase: ["Iteration", "Milestone", "Activity", "Task"],
@@ -35,286 +31,6 @@ const canInsert = (parentType, childType) => {
   return allowed.includes(childType);
 };
 
-const initialNodesData = [
-  {
-    id: 'root-process',
-    presentationName: 'Meu Processo de Desenvolvimento Ágil',
-    optional: false,
-    type: 'Process',
-    index: null,
-    parentId: null,
-    predecessors: [],
-    description: 'Processo principal para desenvolvimento de software usando metodologia ágil.',
-    modelInfo: '',
-    children: [
-      {
-        id: uuidv4(),
-        optional: false,
-        presentationName: 'Fase de Iniciação',
-        type: 'Phase',
-        index: "1",
-        parentId: 'root-process',
-        predecessors: [],
-        description: 'Definição do escopo e objetivos do projeto.',
-        modelInfo: 'Obrigatório',
-        children: [
-          {
-            id: uuidv4(),
-            optional: false,
-            presentationName: 'Reunião de Kick-off',
-            type: 'Activity',
-            index: "2",
-            parentId: null,
-            predecessors: [],
-            description: 'Alinhamento inicial com stakeholders.',
-            modelInfo: '',
-            children: [
-              {
-                id: uuidv4(),
-                optional: false,
-                presentationName: 'Definir Pauta',
-                type: 'Task',
-                index: "3",
-                parentId: null,
-                predecessors: [],
-                description: 'Preparar os tópicos da reunião.',
-                modelInfo: 'Essencial',
-                children: [
-                  {
-                    id: uuidv4(),
-                    optional: false,
-                    presentationName: 'Apresentação do Projeto',
-                    type: 'Artifact',
-                    index: null,
-                    parentId: null,
-                    predecessors: [],
-                    description: 'Slides com visão geral do projeto.',
-                    modelInfo: 'Output',
-                    children: []
-                  },
-                  {
-                    id: uuidv4(),
-                    optional: false,
-                    presentationName: 'Analista de Requisitos',
-                    type: 'Role',
-                    index: null,
-                    parentId: null,
-                    predecessors: [],
-                    description: 'Responsável por levantar e documentar requisitos.',
-                    modelInfo: 'Primary Performer',
-                    children: []
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: uuidv4(),
-        optional: false,
-        presentationName: 'Fase de Desenvolvimento',
-        type: 'Phase',
-        index: "4",
-        parentId: 'root-process',
-        predecessors: [],
-        description: 'Construção do software em sprints.',
-        modelInfo: 'Iterativo',
-        children: [
-          {
-            id: uuidv4(),
-            optional: false,
-            presentationName: 'Sprint 1',
-            type: 'Iteration',
-            index: "5",
-            parentId: null,
-            predecessors: [],
-            description: 'Primeiro ciclo de desenvolvimento.',
-            modelInfo: '',
-            children: [
-              {
-                id: uuidv4(),
-                optional: false,
-                presentationName: 'Desenvolver Feature X',
-                type: 'Activity',
-                index: "6",
-                parentId: null,
-                predecessors: [],
-                description: 'Implementar a funcionalidade X.',
-                modelInfo: '',
-                children: [
-                  {
-                    id: uuidv4(),
-                    optional: false,
-                    presentationName: 'Codificar Módulo A',
-                    type: 'Task',
-                    index: "7",
-                    parentId: null,
-                    predecessors: [],
-                    description: 'Escrever o código para o módulo A.',
-                    modelInfo: '',
-                    children: [
-                      {
-                        id: uuidv4(),
-                        optional: false,
-                        presentationName: 'Desenvolvedor Backend',
-                        type: 'Role',
-                        index: null,
-                        parentId: null,
-                        predecessors: [],
-                        description: 'Responsável pela lógica do servidor.',
-                        modelInfo: 'Primary Performer',
-                        children: []
-                      },
-                      {
-                        id: uuidv4(),
-                        optional: false,
-                        presentationName: 'Código Fonte Feature X',
-                        type: 'Artifact',
-                        index: null,
-                        parentId: null,
-                        predecessors: [],
-                        description: 'Repositório com o código da funcionalidade X.',
-                        modelInfo: 'Output',
-                        children: []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            id: uuidv4(),
-            optional: false,
-            presentationName: 'Revisão de Código',
-            type: 'Milestone',
-            index: "8",
-            parentId: null,
-            predecessors: [],
-            description: 'Ponto de verificação da qualidade do código.',
-            modelInfo: 'Critico',
-            children: []
-          }
-        ]
-      },
-      {
-        id: uuidv4(),
-        optional: false,
-        presentationName: 'Fase de Testes',
-        type: 'Phase',
-        index: "9",
-        parentId: 'root-process',
-        predecessors: [],
-        description: 'Garantia da qualidade do software.',
-        modelInfo: '',
-        children: [
-          {
-            id: uuidv4(),
-            optional: false,
-            presentationName: 'Testar Feature X',
-            type: 'Activity',
-            index: "10",
-            parentId: null,
-            predecessors: [],
-            description: 'Verificar se a funcionalidade X atende aos requisitos.',
-            modelInfo: '',
-            children: [
-              {
-                id: uuidv4(),
-                optional: false,
-                presentationName: 'Conferir funcionalidade X',
-                type: 'Task',
-                index: "11",
-                parentId: null,
-                predecessors: [],
-                description: 'Escrever o código para o módulo A.',
-                modelInfo: '',
-                children: [
-                  {
-                    id: uuidv4(),
-                    optional: false,
-                    presentationName: 'Relatório de Testes',
-                    type: 'Artifact',
-                    index: null,
-                    parentId: null,
-                    predecessors: [],
-                    description: 'Documento com os resultados dos testes.',
-                    modelInfo: 'Output',
-                    children: []
-                  },
-                  {
-                    id: uuidv4(),
-                    optional: false,
-                    presentationName: 'Engenheiro de QA',
-                    type: 'Role',
-                    index: null,
-                    parentId: null,
-                    predecessors: [],
-                    description: 'Responsável pela execução dos testes.',
-                    modelInfo: 'Primary Performer',
-                    children: []
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            id: uuidv4(),
-            optional: false,
-            presentationName: 'Fase de Implantação',
-            type: 'Phase',
-            index: "12",
-            parentId: 'root-process',
-            predecessors: [],
-            description: 'Colocar o software em produção.',
-            modelInfo: '',
-            children: [
-              {
-                id: uuidv4(),
-                optional: false,
-                presentationName: 'Deploy em Produção',
-                type: 'Activity',
-                index: "13",
-                parentId: null,
-                predecessors: [],
-                description: 'Publicar a nova versão do software.',
-                modelInfo: '',
-                children: [
-                  {
-                    id: uuidv4(),
-                    optional: false,
-                    presentationName: 'Fazer deploy',
-                    type: 'Task',
-                    index: "14",
-                    parentId: null,
-                    predecessors: [],
-                    description: 'Publicar a nova versão do software.',
-                    modelInfo: '',
-                    children: [
-                      {
-                        id: uuidv4(),
-                        optional: false,
-                        presentationName: 'Manual do Usuário',
-                        type: 'Artifact',
-                        index: null,
-                        parentId: null,
-                        predecessors: [],
-                        description: 'Guia para usuários finais.',
-                        modelInfo: 'Output',
-                        children: []
-                      }
-                    ]
-                  },
-                ]
-              },
-            ]
-          }
-        ]
-      }
-    ]
-  }
-];
 const assignParentIds = (nodes, parentId = null) => {
   return nodes.map(node => {
     const newNode = { ...node, parentId: parentId };
@@ -324,23 +40,489 @@ const assignParentIds = (nodes, parentId = null) => {
     return newNode;
   });
 };
+
+// DADOS INICIAIS
+const initialNodesData = [
+  {
+    id: "root-process",
+    presentationName: "DevOps_Process_Simulation",
+    optional: false,
+    type: "Process",
+    index: null,
+    parentId: null,
+    predecessors: [],
+    description: "",
+    modelInfo: "",
+    children: [
+      // PROCESS ELEMENTS (10 tasks)
+      {
+        id: uuidv4(),
+        presentationName: "Implement",
+        type: "Task",
+        index: 1,
+        parentId: "root-process",
+        optional: false,
+        predecessors: [],
+        description: "",
+        modelInfo: "",
+        children: [
+          // methodElements with parentIndex 1
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "MANDATORY_INPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "OUTPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "Team_Developers",
+            type: "Role",
+            optional: false,
+            description: "",
+            modelInfo: "PRIMARY_PERFORMER",
+            children: []
+          }
+        ]
+      },
+      {
+        id: uuidv4(),
+        presentationName: "Review",
+        type: "Task",
+        index: 2,
+        parentId: "root-process",
+        optional: false,
+        predecessors: [1],
+        description: "",
+        modelInfo: "",
+        children: [
+          // parentIndex 2
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "MANDATORY_INPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "OUTPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "Team_Developers",
+            type: "Role",
+            optional: false,
+            description: "",
+            modelInfo: "PRIMARY_PERFORMER",
+            children: []
+          }
+        ]
+      },
+      {
+        id: uuidv4(),
+        presentationName: "Committed",
+        type: "Task",
+        index: 3,
+        parentId: "root-process",
+        optional: false,
+        predecessors: [2],
+        description: "",
+        modelInfo: "",
+        children: [
+          // parentIndex 3
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "MANDATORY_INPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "OUTPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "Team_Developers",
+            type: "Role",
+            optional: false,
+            description: "",
+            modelInfo: "PRIMARY_PERFORMER",
+            children: []
+          }
+        ]
+      },
+      {
+        id: uuidv4(),
+        presentationName: "Static analysis",
+        type: "Task",
+        index: 4,
+        parentId: "root-process",
+        optional: false,
+        predecessors: [3],
+        description: "",
+        modelInfo: "",
+        children: [
+          // parentIndex 4
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "MANDATORY_INPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "OUTPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "Server_CI_CD",
+            type: "Role",
+            optional: false,
+            description: "",
+            modelInfo: "PRIMARY_PERFORMER",
+            children: []
+          }
+        ]
+      },
+      {
+        id: uuidv4(),
+        presentationName: "Unit testing",
+        type: "Task",
+        index: 5,
+        parentId: "root-process",
+        optional: false,
+        predecessors: [4],
+        description: "",
+        modelInfo: "",
+        children: [
+          // parentIndex 5
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "MANDATORY_INPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "OUTPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "Server_CI_CD",
+            type: "Role",
+            optional: false,
+            description: "",
+            modelInfo: "PRIMARY_PERFORMER",
+            children: []
+          }
+        ]
+      },
+      {
+        id: uuidv4(),
+        presentationName: "Build validation",
+        type: "Task",
+        index: 6,
+        parentId: "root-process",
+        optional: false,
+        predecessors: [5],
+        description: "",
+        modelInfo: "",
+        children: [
+          // parentIndex 6
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "MANDATORY_INPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "OUTPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "Server_CI_CD",
+            type: "Role",
+            optional: false,
+            description: "",
+            modelInfo: "PRIMARY_PERFORMER",
+            children: []
+          }
+        ]
+      },
+      {
+        id: uuidv4(),
+        presentationName: "Integration tests",
+        type: "Task",
+        index: 7,
+        parentId: "root-process",
+        optional: false,
+        predecessors: [6],
+        description: "",
+        modelInfo: "",
+        children: [
+          // parentIndex 7
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "MANDATORY_INPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "OUTPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "Server_CI_CD",
+            type: "Role",
+            optional: false,
+            description: "",
+            modelInfo: "PRIMARY_PERFORMER",
+            children: []
+          }
+        ]
+      },
+      {
+        id: uuidv4(),
+        presentationName: "Staging deployment",
+        type: "Task",
+        index: 8,
+        parentId: "root-process",
+        optional: false,
+        predecessors: [7],
+        description: "",
+        modelInfo: "",
+        children: [
+          // parentIndex 8
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "MANDATORY_INPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "OUTPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "Server_Staging",
+            type: "Role",
+            optional: false,
+            description: "",
+            modelInfo: "PRIMARY_PERFORMER",
+            children: []
+          }
+        ]
+      },
+      {
+        id: uuidv4(),
+        presentationName: "Release approval",
+        type: "Task",
+        index: 9,
+        parentId: "root-process",
+        optional: false,
+        predecessors: [8],
+        description: "",
+        modelInfo: "",
+        children: [
+          // parentIndex 9
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "MANDATORY_INPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "OUTPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "Manager",
+            type: "Role",
+            optional: false,
+            description: "",
+            modelInfo: "PRIMARY_PERFORMER",
+            children: []
+          }
+        ]
+      },
+      {
+        id: uuidv4(),
+        presentationName: "Monitor",
+        type: "Task",
+        index: 10,
+        parentId: "root-process",
+        optional: false,
+        predecessors: [9],
+        description: "",
+        modelInfo: "",
+        children: [
+          // parentIndex 10
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "MANDATORY_INPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "User Story",
+            type: "Artifact",
+            optional: false,
+            description: "",
+            modelInfo: "OUTPUT",
+            children: []
+          },
+          {
+            id: uuidv4(),
+            presentationName: "Server_Staging",
+            type: "Role",
+            optional: false,
+            description: "",
+            modelInfo: "PRIMARY_PERFORMER",
+            children: []
+          }
+        ]
+      }
+    ]
+  }
+];
 const initialNodesWithParents = assignParentIds(initialNodesData);
 const flattenedInitialNodes = getFlatNodes(initialNodesWithParents);
 
+
+// FUNÇÃO DE REORDENAÇÃO (Movemos para fora do hook para evitar recriação desnecessária)
+const reorderAndReindexNodes = (newOrderedNodes) => {
+  let counter = 1;
+
+  const assignGlobalIndices = (nodesList, parentId = null) => {
+    // Filtra apenas os filhos diretos do parentId e itera
+    nodesList
+        .filter(n => n.parentId === parentId)
+        .forEach(node => {
+          // Apenas elementos de fluxo (não Artifact ou Role) recebem o índice global
+          if (node.type !== 'Artifact' && node.type !== 'Role') {
+            node.index = String(counter++);
+          } else {
+            node.index = null;
+          }
+          // Recursão para processar os filhos
+          assignGlobalIndices(nodesList, node.id);
+        });
+  };
+
+  const rootProcessNode = newOrderedNodes.find(n => n.type === 'Process');
+  const rootParentId = rootProcessNode ? rootProcessNode.id : null;
+
+  // Começa a indexação a partir do nó raiz (Process)
+  assignGlobalIndices(newOrderedNodes, rootParentId);
+
+  return newOrderedNodes;
+};
+
+
 export const useProcessNodes = (processId) => {
+  // ✅ 1. DEFINIÇÃO DA CHAVE DE ARMAZENAMENTO CORRETA
+  const storageKey = `processNodes_${processId}`;
 
   const { toast } = useToast();
+
+  // ✅ 2. CARREGAMENTO DO ESTADO INICIAL
   const [nodes, setNodes] = useState(() => {
-    const savedNodes = localStorage.getItem(`processNodes_${processId}`);
+    const savedNodes = localStorage.getItem(storageKey); // Usa a chave definida acima
     if (savedNodes) {
       try {
         const parsedNodes = JSON.parse(savedNodes);
+        // Usa os dados salvos se existirem e não estiverem vazios
         return parsedNodes.length > 0 ? parsedNodes : flattenedInitialNodes;
       } catch (error) {
         console.error("Failed to parse nodes from localStorage", error);
+        // Em caso de erro, usa o mock inicial
         return flattenedInitialNodes;
       }
     }
+    // Se não houver nada salvo, usa o mock inicial
     return flattenedInitialNodes;
   });
 
@@ -359,11 +541,12 @@ export const useProcessNodes = (processId) => {
   const [dropTargetInfo, setDropTargetInfo] = useState(null);
   const activeDragItem = activeDragItemId ? findNode(nodes, activeDragItemId) : null;
 
+  // ✅ 3. PERSISTÊNCIA (SALVANDO)
   useEffect(() => {
     try {
-      localStorage.setItem(`processNodes_${processId}`, JSON.stringify(nodes));
+      localStorage.setItem(storageKey, JSON.stringify(nodes)); // Usa a chave definida
     } catch (error)
-{
+    {
       console.error("Failed to save nodes to localStorage", error);
       toast({
         title: "Erro ao Salvar",
@@ -372,7 +555,7 @@ export const useProcessNodes = (processId) => {
         duration: 1000,
       });
     }
-  }, [nodes, processId, toast]);
+  }, [nodes, storageKey, toast]); // storageKey é constante, mas listada para clareza
 
   const handleNodeSelect = useCallback((nodeId) => {
     setSelectedNodeId(nodeId);
@@ -413,15 +596,16 @@ export const useProcessNodes = (processId) => {
 
   const updateNodeDataInternal = useCallback((nodeId, dataToUpdate) => {
     setNodes(prevNodes => {
-        let newNodes = updateNode(prevNodes, nodeId, dataToUpdate);
-        if (dataToUpdate.predecessors !== undefined) {
-            const affectedNode = findNode(newNodes, nodeId);
-            if (affectedNode) {
-                const updatedPredecessors = dataToUpdate.predecessors.map(p => typeof p === 'object' ? p.id : p);
-                newNodes = updateNode(newNodes, nodeId, { predecessors: updatedPredecessors });
-            }
+      let newNodes = updateNode(prevNodes, nodeId, dataToUpdate);
+      if (dataToUpdate.predecessors !== undefined) {
+        const affectedNode = findNode(newNodes, nodeId);
+        if (affectedNode) {
+          // Mapeia para garantir que predecessores sejam apenas IDs (strings ou números)
+          const updatedPredecessors = dataToUpdate.predecessors.map(p => typeof p === 'object' ? p.id : p);
+          newNodes = updateNode(newNodes, nodeId, { predecessors: updatedPredecessors });
         }
-        return newNodes;
+      }
+      return newNodes;
     });
   }, []);
 
@@ -433,7 +617,11 @@ export const useProcessNodes = (processId) => {
       return { success: false, error: "The root 'Process' node cannot be deleted." };
     }
 
-    setNodes(prevNodes => removeNode(prevNodes, nodeId));
+    setNodes(prevNodes => {
+      const removedNodes = removeNode(prevNodes, nodeId);
+      return reorderAndReindexNodes(removedNodes); // Reindexa após remover
+    });
+
     if (selectedNodeId === nodeId) {
       setSelectedNodeId(nodeToDelete.parentId || null);
     }
@@ -443,42 +631,20 @@ export const useProcessNodes = (processId) => {
   const deleteAllNodesInternal = useCallback(() => {
     const processNode = nodes.find(node => node.type === 'Process');
     if (processNode) {
-      const newNodes = [{ ...processNode, children: [], predecessors: [] }];
-      setNodes(getFlatNodes(assignParentIds(newNodes)));
+      // Cria um novo nó Process sem filhos e reindexa
+      const newRootNode = { ...processNode, children: [], predecessors: [] };
+      const newNodes = getFlatNodes(assignParentIds([newRootNode]));
+      setNodes(reorderAndReindexNodes(newNodes));
       setSelectedNodeId(processNode.id);
       setOpenStates({ [processNode.id]: true });
     } else {
-       setNodes([]);
-       setSelectedNodeId(null);
-       setOpenStates({});
+      setNodes([]);
+      setSelectedNodeId(null);
+      setOpenStates({});
     }
   }, [nodes]);
 
-// substitua a função reorderAndReindexNodes existente por esta:
-  const reorderAndReindexNodes = (newOrderedNodes) => {
-    let counter = 1;
-
-    const assignGlobalIndices = (nodesList, parentId = null) => {
-      nodesList
-          .filter(n => n.parentId === parentId)
-          .forEach(node => {
-            if (node.type !== 'Artifact' && node.type !== 'Role') {
-              node.index = String(counter++);
-            } else {
-              node.index = null;
-            }
-            assignGlobalIndices(nodesList, node.id);
-          });
-    };
-
-    const rootProcessNode = newOrderedNodes.find(n => n.type === 'Process');
-    const rootParentId = rootProcessNode ? rootProcessNode.id : null;
-
-    assignGlobalIndices(newOrderedNodes, rootParentId);
-
-    return newOrderedNodes;
-  };
-
+// OBS: A função reorderAndReindexNodes foi movida para fora do hook.
 
   const handleDragStartLogic = useCallback((draggedNodeId) => {
     setActiveDragItemId(draggedNodeId);
@@ -498,38 +664,40 @@ export const useProcessNodes = (processId) => {
 
     let position = 'child';
     if (overRect && activeRect) {
-        const hoverOffsetY = activeRect.top + activeRect.height / 2 - overRect.top;
-        if (hoverOffsetY < overRect.height * 0.25) {
-          position = 'before';
-        } else if (hoverOffsetY > overRect.height * 0.75) {
-          position = 'after';
-        }
-    }
-
-    const isSameParent = activeNode.parentId === overNode.parentId;
-    const isDirectChildAttempt = activeNode.parentId === overNode.id;
-
-    if (position === 'child' && overNode.type === 'Artifact' || overNode.type === 'Role') {
+      const hoverOffsetY = activeRect.top + activeRect.height / 2 - overRect.top;
+      if (hoverOffsetY < overRect.height * 0.25) {
+        position = 'before';
+      } else if (hoverOffsetY > overRect.height * 0.75) {
         position = 'after';
+      }
     }
+
+    // Regras de Drag&Drop
     if (activeNode.type === 'Process') {
-        setDropTargetInfo(null);
-        return;
+      setDropTargetInfo(null);
+      return;
     }
-    if (position === 'child' && (overNode.type === 'Task' || overNode.type === 'Milestone')) {
-        if (activeNode.type !== 'Artifact' && activeNode.type !== 'Role') {
-            position = 'after';
-        }
+    // Não pode ser filho de Artifact ou Role, volta para "after"
+    if (position === 'child' && (overNode.type === 'Artifact' || overNode.type === 'Role')) {
+      position = 'after';
     }
+    // Task/Activity/Milestone não podem ter Task/Activity/Milestone como filhos, apenas Artifact/Role
+    if (position === 'child' && (overNode.type === 'Task' || overNode.type === 'Activity' || overNode.type === 'Milestone')) {
+      if (activeNode.type !== 'Artifact' && activeNode.type !== 'Role') {
+        position = 'after';
+      }
+    }
+
 
     let tentativeParent = null;
 
     if (position === 'child') {
-      tentativeParent = overNode; // will become child of overNode
+      tentativeParent = overNode; // O nó ativo se tornará filho de overNode
     } else if (position === 'before' || position === 'after') {
-      tentativeParent = findNode(nodes, overNode.parentId); // keeps overNode's parent
+      tentativeParent = findNode(nodes, overNode.parentId); // O nó ativo manterá o pai de overNode
     }
 
+    // Validação de inserção
     if (!canInsert(tentativeParent?.type, activeNode.type)) {
       setDropTargetInfo(null);
       return;
@@ -560,12 +728,12 @@ export const useProcessNodes = (processId) => {
       return { success: false, error: "The root Process node cannot be moved." };
     }
 
-    // ✅ NEW: determine new parent and validate with centralized rules
+    // 1. Determina o novo ParentId e faz a validação final
     let newParentId;
     if (currentDropTargetInfo.position === 'child') {
-      newParentId = overNode.id;            // will become a child of overNode
+      newParentId = overNode.id;
     } else {
-      newParentId = overNode.parentId;      // before/after keeps overNode's parent
+      newParentId = overNode.parentId;
     }
     const newParentNode = findNode(nodes, newParentId);
     if (!canInsert(newParentNode?.type, activeNode.type)) {
@@ -575,28 +743,32 @@ export const useProcessNodes = (processId) => {
       };
     }
 
-    // Move and reindex (your current flow)
+    // 2. Realiza a movimentação (atualizando a estrutura plana)
     let newNodes = [...nodes];
     const fromIdx = newNodes.findIndex(n => n.id === activeNode.id);
-    const [movedNode] = newNodes.splice(fromIdx, 1);
+    const [movedNode] = newNodes.splice(fromIdx, 1); // Remove o nó
 
     const overIdx = newNodes.findIndex(n => n.id === overNode.id);
-    let insertionIndex = overIdx;
+    let insertionIndex;
 
     if (currentDropTargetInfo.position === 'before') {
       insertionIndex = overIdx;
     } else if (currentDropTargetInfo.position === 'after') {
       insertionIndex = overIdx + 1;
-    } else { // child
+    } else { // 'child'
+      // Insere o nó movido APÓS todos os filhos existentes do overNode (se overNode for o novo pai)
       const childrenOfOver = newNodes.filter(n => n.parentId === overNode.id);
       insertionIndex = overIdx + 1 + childrenOfOver.length;
     }
 
     movedNode.parentId = newParentId;
-    newNodes.splice(insertionIndex, 0, movedNode);
+    newNodes.splice(insertionIndex, 0, movedNode); // Insere o nó na nova posição
 
+    // 3. Reordena e Reindexa (fundamental para atualizar `index` e `parentId` corretos)
     const reorderedNodes = reorderAndReindexNodes([...newNodes]);
     setNodes(reorderedNodes);
+
+    // 4. Abre o novo pai no Tree View
     if (newParentId) setOpenStates(prev => ({ ...prev, [newParentId]: true }));
 
     return { success: true, message: `"${activeNode.presentationName}" was reorganized.` };
@@ -610,6 +782,7 @@ export const useProcessNodes = (processId) => {
   const selectedNodePredecessors = selectedNodeDetails ? getPredecessorIdsForNode(nodes, selectedNodeId) : [];
 
   const getChildNodes = useCallback((parentId) => {
+    // Busca e retorna apenas os filhos diretos
     return nodes.filter(node => node.parentId === parentId);
   }, [nodes]);
 
@@ -640,6 +813,7 @@ export const useProcessNodes = (processId) => {
     findNode: (nodeId) => findNode(nodes, nodeId),
     getChildNodes,
     getAllowedChildTypes,
-    flattenedNodes: getFlatNodes(assignParentIds(nodes)),
+    // Garante que o estado retornado para a UI esteja sempre com parentIds corretos
+    flattenedNodes: nodes, // O hook já manipula nodes como a lista plana atualizada
   };
 };

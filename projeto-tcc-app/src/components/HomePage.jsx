@@ -11,30 +11,6 @@ const HomePage = () => {
     const navigate = useNavigate();
 
     // ONBOARDING
-    const [run, setRun] = useState(false);
-
-    useEffect(() => {
-        const hasSeen = localStorage.getItem("homeOnboardingSeen");
-        if (!hasSeen) {
-            setRun(true);
-            localStorage.setItem("homeOnboardingSeen", "true");
-        }
-    }, []);
-
-    const steps = [
-        {
-            target: "#btn-new-simulation",
-            content: "Comece criando um novo modelo de processo aqui.",
-        },
-        {
-            target: "#btn-library",
-            content: "Aqui você acessa sua biblioteca de processos salvos.",
-        },
-        {
-            target: "#feature-cards",
-            content: "Esses cartões explicam o fluxo geral da ferramenta.",
-        },
-    ];
 
     const handleStartNewSimulation = () => {
         navigate("/simulations/new/processes/new/edit");
@@ -43,15 +19,6 @@ const HomePage = () => {
     return (
         <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
 
-            {/* ONBOARDING */}
-            <Joyride
-                steps={steps}
-                run={run}
-                continuous
-                showSkipButton
-                scrollToFirstStep
-                styles={{ options: { zIndex: 10000 } }}
-            />
 
             <motion.div
                 className="text-center"
@@ -65,7 +32,7 @@ const HomePage = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.8 }}
                 >
-                    Welcome to <span className="text-primary">Software Process Simulator</span>
+                    Welcome to <span className="text-primary">ProcessSimModeler</span>
                 </motion.h1>
 
                 <motion.p
@@ -133,7 +100,7 @@ const HomePage = () => {
             >
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {[
-                        { title: "Define", description: "Set up your process parameters and constraints" },
+                        { title: "Model", description: "Set up your process parameters and constraints" },
                         { title: "Simulate", description: "Run simulations to see how your process performs" },
                         { title: "Analyze", description: "Get insights and optimize your development workflow" }
                     ].map((item, index) => (

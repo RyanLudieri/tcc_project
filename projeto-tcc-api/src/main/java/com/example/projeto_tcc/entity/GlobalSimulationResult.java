@@ -21,6 +21,9 @@ public class GlobalSimulationResult {
     private Double averageDuration;
     private Double durationStdDev;
 
+    // ✅ NOVO CAMPO: Contagem de Roles (para a tela de resultados)
+    private Integer totalRolesUsed;
+
     @OneToMany(mappedBy = "globalResult", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GlobalQueueStat> queueStats = new ArrayList<>();
 

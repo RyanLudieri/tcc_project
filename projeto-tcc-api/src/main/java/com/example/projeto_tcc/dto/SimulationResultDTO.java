@@ -12,6 +12,7 @@ public class SimulationResultDTO {
 
     private Double averageDuration;
     private Double durationStdDev;
+    private Integer totalRolesUsed;
 
     private List<QueueMetricDTO> queueMetrics;
 

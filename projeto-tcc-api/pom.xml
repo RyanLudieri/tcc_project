@@ -52,6 +52,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>commons-compiler</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.glassfish.jaxb</groupId>
 			<artifactId>jaxb-runtime</artifactId>
 			<version>4.0.5</version> </dependency>
@@ -100,6 +105,10 @@
 			<artifactId>jfreechart</artifactId>
 			<version>1.5.4</version>
 		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
 
     </dependencies>
 

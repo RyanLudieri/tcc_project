@@ -70,7 +70,11 @@ public class SimulationController {
         try {
             List<WorkProductConfig> configList = workProductConfigRepository.findByDeliveryProcessId(processId);
 
-            GlobalSimulationResult result = executionService.executeSimulation(simulationDuration, replications, configList);
+            GlobalSimulationResult result = executionService.executeSimulation(
+                    processId,
+                    simulationDuration,
+                    replications,
+                    configList);
 
             Map<String, Long> response = new HashMap<>();
 
