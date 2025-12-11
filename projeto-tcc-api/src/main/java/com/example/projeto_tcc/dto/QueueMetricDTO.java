@@ -11,4 +11,6 @@ public class QueueMetricDTO {
     private String queueName;
     private Double averageSize;
     private Double stdDev;
+    private String taskName;
+
 }

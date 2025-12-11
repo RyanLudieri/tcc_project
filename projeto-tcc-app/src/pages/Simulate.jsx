@@ -8,9 +8,11 @@ import { API_BASE_URL } from "@/config/api";
 import WorkProductsVariablesTable from "@/components/simulation-experimentation-setup/WorkProductsVariablesTable.jsx";
 
 const Simulate = () => {
+  const [isLoading, setIsLoading] = useState(false); // NOVO: Estado de carregamento
   const { simulationId, processId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [executionId, setExecutionId] = useState(null);
   const [simParams, setSimParams] = useState({
     duration: "",
     replications: ""
@@ -24,6 +26,7 @@ const Simulate = () => {
   }, [processId]);
 
   const handleGenerateSimulation = async () => {
+    setIsLoading(true); // NOVO: Inicia o carregamento
     try {
       toast({
         title: "Executing Simulation",
@@ -51,23 +54,28 @@ const Simulate = () => {
         return;
       }
 
-
-
       const response = await fetch(
           `${API_BASE_URL}/simulations/execute/${processId}?simulationDuration=${duration}&replications=${reps}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({}) // Enviando um corpo JSON vazio, já que os dados estão na URL
+            body: JSON.stringify({})
           }
       );
+
+      const data = await response.json();
+      const executionId = data.executionId;
+      setExecutionId(executionId);
+
+
 
       if (!response.ok) {
         const err = await response.text();
         throw new Error(err || "Failed to execute simulation");
       }
 
-      navigate(`/simulations/${simulationId}/processes/${processId}/results`);
+      navigate(`/simulations/${simulationId}/processes/${processId}/results`,
+          { state: { executionId } });
 
     } catch (error) {
       console.error(error);
@@ -76,9 +84,10 @@ const Simulate = () => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false); // NOVO: Finaliza o carregamento
     }
   };
-
   return (
       <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -110,6 +119,7 @@ const Simulate = () => {
 
           <Button
               onClick={handleGenerateSimulation}
+              disabled={isLoading} // NOVO: Desabilita o botão durante o carregamento
               className="bg-accent text-green-950 font-semibold py-3 px-6 rounded-lg shadow-lg
                           relative overflow-hidden shimmer-btn
                           hover:bg-accent hover:text-green-950
@@ -119,7 +129,7 @@ const Simulate = () => {
                           btn-simulation"
           >
             <Rocket className="mr-2 h-5 w-5" />
-            Simulate
+            {isLoading ? "Simulating..." : "Simulate"} {/* NOVO: Texto dinâmico */}
           </Button>
         </header>
 

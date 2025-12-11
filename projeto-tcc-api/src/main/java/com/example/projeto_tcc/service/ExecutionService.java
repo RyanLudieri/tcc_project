@@ -348,6 +348,8 @@ public class ExecutionService {
             List<WorkProductConfig> configList, SimulationRunContext runContext) {
         if (runContext.getDaysPerReplication().isEmpty()) return null;
 
+
+
         try {
 //            Long currentProcessId = cacheManager.getActiveProcessId();
 //            if (currentProcessId == null) {
@@ -360,6 +362,13 @@ public class ExecutionService {
                     if (cfg.getVariableType() == VariableType.DEPENDENT) {
                         dependentQueues.add(cfg.getQueue_name());
                     }
+                }
+            }
+
+            Map<String, String> queueToTaskName = new HashMap<>();
+            if (configList != null) {
+                for (WorkProductConfig cfg : configList) {
+                    queueToTaskName.put(cfg.getQueue_name(), cfg.getTask_name());
                 }
             }
 
@@ -414,6 +423,7 @@ public class ExecutionService {
 
                 GlobalQueueStat stat = new GlobalQueueStat();
                 stat.setQueueName(qName);
+                stat.setTaskName(queueToTaskName.get(qName));
                 stat.setAverageCount(mean);
                 stat.setStdDevCount(stdDev);
                 stat.setGlobalResult(global);

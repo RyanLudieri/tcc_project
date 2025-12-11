@@ -12,6 +12,7 @@ public class GlobalQueueStat {
     private Long id;
 
     private String queueName;
+    private String taskName;
     private Double averageCount;
     private Double stdDevCount; // O desvio padrão que faltava
 
