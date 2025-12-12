@@ -113,10 +113,14 @@ const WorkProductsVariablesTable = ({ processId, onChangeSimulationParams }) => 
                                         <label className="text-sm font-medium">Duration time</label>
                                         <Input
                                             type="number"
+                                            min={0}
                                             className="w-24 appearance-none"
                                             placeholder="0"
                                             value={duration}
-                                            onChange={(e) => setDuration(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                setDuration(val < 0 ? 0 : val);
+                                            }}
                                         />
                                     </div>
 
@@ -160,10 +164,14 @@ const WorkProductsVariablesTable = ({ processId, onChangeSimulationParams }) => 
                                         <label className="text-sm font-medium">Number of replications</label>
                                         <Input
                                             type="number"
+                                            min={0}
                                             className="w-24 appearance-none"
                                             placeholder="0"
                                             value={replications}
-                                            onChange={(e) => setReplications(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                setReplications(val < 0 ? 0 : val);
+                                            }}
                                         />
                                     </div>
 
