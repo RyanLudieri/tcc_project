@@ -130,17 +130,33 @@ const NodeDetailForm = ({ node, allNodes, onUpdateNode, onAddChildNode }) => {
       </div>
 
       <div>
-        <Label htmlFor="node-modelinfo-detail" className="text-sm font-medium">Model Info (Description)</Label>
-        <Input
-          id="node-modelinfo-detail"
-          value={modelInfo}
-          onChange={(e) => setModelInfo(e.target.value)}
-          onBlur={handleUpdate}
-          className="mt-1 min-h-[80px]"
-          placeholder="Detailed textual description of the node..."
-          as="textarea"
-        />
+        <Label htmlFor="node-modelinfo-detail" className="text-sm font-medium">Model Info</Label>
+        <Select
+            value={modelInfo || "None"} // garante que o valor existe
+            onValueChange={(value) => {
+              setModelInfo(value === "None" ? "" : value);
+              if (node) {
+                onUpdateNode(node.id, { ...node, modelInfo: value === "None" ? "" : value, presentationName, type: nodeType, predecessors });
+              }
+            }}
+        >
+          <SelectTrigger className="w-full mt-1">
+            <SelectValue placeholder="Select model info" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="-">-</SelectItem>
+            <SelectItem value="MANDATORY_INPUT">MANDATORY_INPUT</SelectItem>
+            <SelectItem value="OPTIONAL_INPUT">OPTIONAL_INPUT</SelectItem>
+            <SelectItem value="OUTPUT">OUTPUT</SelectItem>
+            <SelectItem value="PRIMARY_PERFORMER">PRIMARY_PERFORMER</SelectItem>
+            <SelectItem value="SECONDARY_PERFORMER">SECONDARY_PERFORMER</SelectItem>
+          </SelectContent>
+        </Select>
+
       </div>
+
+
+
       <div>
         <Label htmlFor="node-predecessors-detail" className="text-sm font-medium">Predecessors</Label>
         <Select

@@ -114,15 +114,29 @@ const AddNodeDialog = ({
               {/* Model Info */}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="node-modelinfo" className="text-right">Model Info</Label>
-                <Input
+                <Select
                     id="node-modelinfo"
                     value={modelInfo}
-                    onChange={(e) => setModelInfo(e.target.value)}
-                    className="col-span-3 min-h-[80px]"
-                    placeholder="Description..."
-                    as="textarea"
-                />
+                    onValueChange={setModelInfo}
+                >
+                  <SelectTrigger className="col-span-3 mt-1">
+                    <SelectValue
+                        placeholder="Select Model Info"
+                        className="text-muted-foreground" // <--- deixa clarinho igual placeholder do Name
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["-", "MANDATORY_INPUT", "OPTIONAL_INPUT", "OUTPUT", "PRIMARY_PERFORMER", "SECONDARY_PERFORMER"].map(option => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
               </div>
+
+
 
               {/* Predecessores */}
               <div className="grid grid-cols-4 items-center gap-4">
