@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -6,18 +6,15 @@ import { ArrowLeft, Rocket } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { API_BASE_URL } from "@/config/api";
 import WorkProductsVariablesTable from "@/components/simulation-experimentation-setup/WorkProductsVariablesTable.jsx";
+import LoadingOverlay from "@/lib/loadingOverlay.jsx";
 
 const Simulate = () => {
-  const [isLoading, setIsLoading] = useState(false); // NOVO: Estado de carregamento
+  const [isLoading, setIsLoading] = useState(false);
   const { simulationId, processId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [executionId, setExecutionId] = useState(null);
-  const [simParams, setSimParams] = useState({
-    duration: "",
-    replications: ""
-  });
-
+  const [simParams, setSimParams] = useState({ duration: "", replications: "" });
 
   useEffect(() => {
     if (processId && processId !== "new") {
@@ -26,118 +23,76 @@ const Simulate = () => {
   }, [processId]);
 
   const handleGenerateSimulation = async () => {
-    setIsLoading(true); // NOVO: Inicia o carregamento
+    setIsLoading(true);
     try {
-      toast({
-        title: "Executing Simulation",
-        description: "Please wait...",
-      });
+      // toast({ title: "Executing Simulation", description: "Please wait..." });
 
       const duration = Number(simParams.duration);
       const reps = Number(simParams.replications);
 
       if (!duration || duration <= 0) {
-        toast({
-          title: "Invalid duration",
-          description: "Please enter a duration greater than zero.",
-          variant: "destructive"
-        });
+        toast({ title: "Invalid duration", description: "Please enter a duration greater than zero.", variant: "destructive" });
+        setIsLoading(false);
         return;
       }
-
       if (!reps || reps <= 0) {
-        toast({
-          title: "Invalid replications",
-          description: "Please enter at least 1 replication.",
-          variant: "destructive"
-        });
+        toast({ title: "Invalid replications", description: "Please enter at least 1 replication.", variant: "destructive" });
+        setIsLoading(false);
         return;
       }
 
       const response = await fetch(
           `${API_BASE_URL}/simulations/execute/${processId}?simulationDuration=${duration}&replications=${reps}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({})
-          }
+          { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }
       );
 
       const data = await response.json();
       const executionId = data.executionId;
       setExecutionId(executionId);
 
-
-
       if (!response.ok) {
         const err = await response.text();
         throw new Error(err || "Failed to execute simulation");
       }
 
-      navigate(`/simulations/${simulationId}/processes/${processId}/results`,
-          { state: { executionId } });
-
+      navigate(`/simulations/${simulationId}/processes/${processId}/results`, { state: { executionId } });
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
-      setIsLoading(false); // NOVO: Finaliza o carregamento
+      setIsLoading(false);
     }
   };
+
   return (
-      <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex-1 flex flex-col p-6 bg-gray-100 dark:bg-gray-900"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="flex-1 flex flex-col p-6 bg-gray-100 dark:bg-gray-900 relative">
+
+        {/* === TELA DE CARREGAMENTO === */}
+        <LoadingOverlay isLoading={isLoading} />
+
         <header className="mb-6 flex items-center justify-between">
           <div>
-            <Link
-                to={`/simulations/${simulationId}/processes/${processId}/setup`}
-                className="inline-flex items-center text-primary hover:text-primary/80 transition-colors mb-2 group"
-            >
+            <Link to={`/simulations/${simulationId}/processes/${processId}/setup`} className="inline-flex items-center text-primary hover:text-primary/80 transition-colors mb-2 group">
               <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
               Back to Simulation Setup
             </Link>
-
             <h1 className="text-4xl font-bold mt-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-sky-600">
               Simulation Experimentation Setup
             </h1>
-
             <p className="text-muted-foreground">
               Configure experimentation for simulation parameters for process:&nbsp;
-              <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono">
-                {processId}
-              </code>
+              <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono">{processId}</code>
             </p>
           </div>
 
-          <Button
-              onClick={handleGenerateSimulation}
-              disabled={isLoading} // NOVO: Desabilita o botão durante o carregamento
-              className="bg-accent text-green-950 font-semibold py-3 px-6 rounded-lg shadow-lg
-                          relative overflow-hidden shimmer-btn
-                          hover:bg-accent hover:text-green-950
-                          hover:scale-[1.04] active:scale-[0.98]
-                          transition-all duration-300
-                          animated-border
-                          btn-simulation"
-          >
+          <Button onClick={handleGenerateSimulation} disabled={isLoading} className="bg-accent text-green-950 font-semibold py-3 px-6 rounded-lg shadow-lg relative overflow-hidden shimmer-btn hover:bg-accent hover:text-green-950 hover:scale-[1.04] active:scale-[0.98] transition-all duration-300 animated-border btn-simulation">
             <Rocket className="mr-2 h-5 w-5" />
-            {isLoading ? "Simulating..." : "Simulate"} {/* NOVO: Texto dinâmico */}
+            {isLoading ? "Simulating..." : "Simulate"}
           </Button>
         </header>
 
         <div className="bg-card p-6 rounded-lg shadow-inner">
-          <WorkProductsVariablesTable
-              processId={processId}
-              onChangeSimulationParams={setSimParams}
-          />
+          <WorkProductsVariablesTable processId={processId} onChangeSimulationParams={setSimParams} />
         </div>
       </motion.div>
   );
