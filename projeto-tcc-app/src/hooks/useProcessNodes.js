@@ -15,7 +15,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 // DEFINIÇÕES CONSTANTES
 const ALLOWED_CHILDREN = {
-  Process: ["Phase"],
+  Process: ["Phase", "Task"],
   Phase: ["Iteration", "Milestone", "Activity", "Task"],
   Iteration: ["Milestone", "Activity", "Task"],
   Activity: ["Activity", "Task", "Milestone"],
