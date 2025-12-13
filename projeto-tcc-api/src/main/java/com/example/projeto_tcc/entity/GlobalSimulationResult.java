@@ -21,7 +21,6 @@ public class GlobalSimulationResult {
     private Double averageDuration;
     private Double durationStdDev;
 
-    // ✅ NOVO CAMPO: Contagem de Roles (para a tela de resultados)
     private Integer totalRolesUsed;
 
     @OneToMany(mappedBy = "globalResult", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -29,4 +28,11 @@ public class GlobalSimulationResult {
 
     @OneToMany(mappedBy = "globalResult", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReplicationResult> replicationResults = new ArrayList<>();
+
+    @OneToMany(mappedBy = "globalResult", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<GlobalResourceStat> resourceStats = new ArrayList<>();
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String logs;
 }

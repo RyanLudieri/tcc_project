@@ -1,10 +1,22 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import {useParams, Link, useNavigate, useLocation} from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card.jsx';
 import { Label } from "@/components/ui/label.jsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.jsx";
-import { ArrowLeft, BarChart2, LineChart, TrendingUp, AlertTriangle, Save, Layers, Clock, Users, Package, AlertCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  BarChart2,
+  LineChart,
+  TrendingUp,
+  AlertTriangle,
+  Save,
+  Layers,
+  Clock,
+  Users,
+  Package,
+  AlertCircle
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from "@/components/ui/use-toast.js";
 import { useAuth } from "@/contexts/SupabaseAuthContext.jsx";
@@ -18,7 +30,7 @@ import {
   Legend,
   Line,
 } from 'recharts';
-import {formatDuration} from "@/lib/durationUtils.js";
+import { formatDuration } from "@/lib/durationUtils.js";
 
 const ChartWrapper = ({ title, icon, children }) => (
     <Card className="h-[400px] flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
@@ -27,7 +39,11 @@ const ChartWrapper = ({ title, icon, children }) => (
         {React.cloneElement(icon, { className: "h-5 w-5 text-primary" })}
       </CardHeader>
       <CardContent className="flex-1 flex items-center justify-center p-4">
-        {children || <p className="text-muted-foreground text-center">No simulation data available for this visualization yet.</p>}
+        {children || (
+            <p className="text-muted-foreground text-center">
+              No simulation data available for this visualization yet.
+            </p>
+        )}
       </CardContent>
     </Card>
 );
@@ -46,17 +62,27 @@ const SimulationResults = () => {
   // ---------------- FETCH ------------------
   useEffect(() => {
     const fetchSimulation = async () => {
+      // If user refreshed/opened directly and lost location state, avoid infinite loading
+      if (!executionId) {
+        setIsLoading(false);
+        toast({
+          title: "Missing executionId",
+          description: "Go back and generate the simulation again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       try {
         const response = await fetch(`http://localhost:8080/results/${executionId}`);
-
-        if (!response.ok) throw new Error("Erro ao buscar resultados");
+        if (!response.ok) throw new Error("Failed to fetch simulation results.");
 
         const data = await response.json();
         setSimulationData(data);
       } catch (error) {
         toast({
-          title: "Erro ao carregar",
-          description: "Não foi possível obter os resultados da simulação.",
+          title: "Loading error",
+          description: "Could not retrieve simulation results.",
           variant: "destructive",
         });
         console.error(error);
@@ -66,24 +92,30 @@ const SimulationResults = () => {
     };
 
     fetchSimulation();
-  }, [processId, toast]);
+  }, [executionId, toast]);
 
-  // ----------------- PROCESSAMENTO (antes dos returns!!) ------------------
+  // ----------------- PROCESSING ------------------
   const processedData = useMemo(() => {
-    if (!simulationData)
+    if (!simulationData) {
       return {
         summaryStats: [],
         detailedQueueMetrics: [],
         stabilityData: [],
         durationStdDev: 0,
-        totalEntitiesProcessed: 0,
+        totalEntitiesProcessed: null,
+        globalThroughput: null,
         SINK_QUEUE_ID: null,
       };
+    }
 
     const data = simulationData;
     const avgDuration = data.averageDuration;
 
-    const sortedQueueMetrics = data.queueMetrics.slice().sort((a, b) => {
+    // Safety guards
+    const queueMetrics = Array.isArray(data.queueMetrics) ? data.queueMetrics : [];
+    const logs = Array.isArray(data.logs) ? data.logs : [];
+
+    const sortedQueueMetrics = queueMetrics.slice().sort((a, b) => {
       const numA = parseInt(a.queueName.substring(1));
       const numB = parseInt(b.queueName.substring(1));
       return numA - numB;
@@ -92,7 +124,7 @@ const SimulationResults = () => {
     let SINK_QUEUE_ID = null;
 
     for (let i = sortedQueueMetrics.length - 1; i >= 0; i--) {
-      if (sortedQueueMetrics[i].averageSize > 0.001) {
+      if ((sortedQueueMetrics[i]?.averageSize ?? 0) > 0.001) {
         SINK_QUEUE_ID = sortedQueueMetrics[i].queueName;
         break;
       }
@@ -105,59 +137,61 @@ const SimulationResults = () => {
       SINK_QUEUE_ID = lastQueue.queueName;
     }
 
-    let totalEntitiesProcessed = 0;
-    if (SINK_QUEUE_ID) {
-      const sumFinal = data.logs.reduce((sum, log) =>
-              sum + (log.queueFinalCounts[SINK_QUEUE_ID] || 0)
-          , 0);
+    // If there are no logs, we can't compute final-count-based metrics
+    let totalEntitiesProcessed = null;
+
+    if (SINK_QUEUE_ID && logs.length) {
+      const sumFinal = logs.reduce((sum, log) => {
+        const counts = log?.queueFinalCounts || {};
+        return sum + (counts[SINK_QUEUE_ID] || 0);
+      }, 0);
 
       totalEntitiesProcessed = sumFinal / data.totalReplications;
     }
 
     const globalThroughput =
-        totalEntitiesProcessed > 0 && avgDuration > 0
+        totalEntitiesProcessed != null && avgDuration > 0
             ? totalEntitiesProcessed / avgDuration
-            : 0.0;
+            : null;
 
-    const detailedQueueMetrics = data.queueMetrics
-        .map(metric => {
-          const lastLog = data.logs[data.logs.length - 1];
-          return {
-            id: metric.queueName,
-            queueId: metric.queueName,
-            taskName: metric.taskName,
-            averageSize: metric.averageSize,
-            stdDevSize: metric.stdDev,
-            finalCount: lastLog?.queueFinalCounts[metric.queueName] || 0,
-          };
-        })
+    const lastLog = logs.length ? logs[logs.length - 1] : null;
+
+    const detailedQueueMetrics = queueMetrics
+        .map(metric => ({
+          id: metric.queueName,
+          queueId: metric.queueName,
+          taskName: metric.taskName,
+          averageSize: metric.averageSize,
+          stdDevSize: metric.stdDev,
+          finalCount: lastLog?.queueFinalCounts?.[metric.queueName] ?? null, // null if logs are missing
+        }))
         .sort((a, b) => b.averageSize - a.averageSize);
 
-    const stabilityData = data.logs.map(log => ({
-      name: `Replica ${log.replicationNumber}`,
+    const stabilityData = logs.map(log => ({
+      name: `R ${log.replicationNumber}`,
       Duration: log.duration,
       Avg_Duration: avgDuration,
     }));
 
     const summaryStats = [
       {
-        title: "Média de Duração",
-        value: formatDuration(avgDuration),     // <<< AQUI
+        title: "Average Duration",
+        value: formatDuration(avgDuration),
         icon: <Clock />
       },
       {
-        title: "Total de Réplicas",
+        title: "Total Replications",
         value: data.totalReplications,
         icon: <Layers />
       },
       {
-        title: "Throughput Global Médio",
-        value: `${globalThroughput.toFixed(3).replace(".", ",")} / dia`,
+        title: "Average Global Throughput",
+        value: globalThroughput == null ? "—" : `${globalThroughput.toFixed(3).replace(".", ",")} / day`,
         icon: <TrendingUp />
       },
       {
-        title: `Entidades Concluídas (via ${SINK_QUEUE_ID})`,
-        value: totalEntitiesProcessed.toFixed(0),
+        title: `Completed Entities (via ${SINK_QUEUE_ID})`,
+        value: totalEntitiesProcessed == null ? "—" : totalEntitiesProcessed.toFixed(0),
         icon: <Package />
       }
     ];
@@ -168,17 +202,26 @@ const SimulationResults = () => {
       stabilityData,
       durationStdDev: data.durationStdDev,
       totalEntitiesProcessed,
+      globalThroughput,
       SINK_QUEUE_ID,
     };
   }, [simulationData]);
 
-  // ----------------- RETURNS CONDICIONAIS ------------------
+  // ----------------- CONDITIONAL RETURNS ------------------
   if (isLoading) {
-    return <div className="p-8 text-center text-xl text-muted-foreground">Loading simulation results...</div>;
+    return (
+        <div className="p-8 text-center text-xl text-muted-foreground">
+          Loading simulation results...
+        </div>
+    );
   }
 
   if (!simulationData) {
-    return <div className="p-8 text-center text-xl text-muted-foreground">No simulation data found.</div>;
+    return (
+        <div className="p-8 text-center text-xl text-muted-foreground">
+          No simulation data found.
+        </div>
+    );
   }
 
   const {
@@ -214,8 +257,10 @@ const SimulationResults = () => {
               </h1>
 
               <p className="text-lg text-muted-foreground mt-1">
-                Detailed analysis for process ID:
-                <code className="bg-muted px-2 py-1 rounded-md text-foreground/90 font-semibold">{processId}</code>
+                Detailed analysis for process ID:&nbsp;
+                <code className="bg-muted px-2 py-1 rounded-md text-foreground/90 font-semibold">
+                  {processId}
+                </code>
               </p>
             </div>
           </div>
@@ -243,7 +288,9 @@ const SimulationResults = () => {
 
             <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 bg-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-base font-semibold text-card-foreground">Desvio Padrão (Duração)</CardTitle>
+                <CardTitle className="text-base font-semibold text-card-foreground">
+                  Standard Deviation (Duration)
+                </CardTitle>
                 <AlertTriangle className="h-6 w-6 text-red-500" />
               </CardHeader>
               <CardContent>
@@ -259,7 +306,7 @@ const SimulationResults = () => {
         <section className="mb-10">
           <h2 className="text-3xl font-bold mb-6 text-foreground flex items-center">
             <Users className="mr-3 h-8 w-8 text-primary" />
-            Detailed Queue Metrics (E[N] - Avg Size)
+            Detailed Queue Metrics (E[N] - Average Size)
           </h2>
 
           <Card className="shadow-md overflow-hidden bg-card">
@@ -272,8 +319,7 @@ const SimulationResults = () => {
                       <TableHead className="text-center">Task Name</TableHead>
                       <TableHead className="text-center">E[N] - Avg Size</TableHead>
                       <TableHead className="text-center">Std Dev (Size)</TableHead>
-                      <TableHead className="text-center">Final Count (Last R.)</TableHead>
-
+                      <TableHead className="text-center">Final Count (Last Rep.)</TableHead>
                     </TableRow>
                   </TableHeader>
 
@@ -284,7 +330,9 @@ const SimulationResults = () => {
                       return (
                           <TableRow
                               key={q.id}
-                              className={`border-b-border hover:bg-muted/30 ${isBottleneck ? 'bg-red-50/40 dark:bg-red-900/20' : ''}`}
+                              className={`border-b-border hover:bg-muted/30 ${
+                                  isBottleneck ? 'bg-red-50/40 dark:bg-red-900/20' : ''
+                              }`}
                           >
                             <TableCell className={`text-center ${isBottleneck ? 'text-destructive font-bold' : ''}`}>
                               {isBottleneck && (
@@ -306,10 +354,9 @@ const SimulationResults = () => {
                             </TableCell>
 
                             <TableCell className={`text-center ${isBottleneck ? 'text-destructive font-bold' : ''}`}>
-                              {q.finalCount}
+                              {q.finalCount == null ? "—" : q.finalCount}
                             </TableCell>
                           </TableRow>
-
                       );
                     })}
                   </TableBody>
@@ -326,23 +373,32 @@ const SimulationResults = () => {
             Detailed Graph Visualizations
           </h2>
 
-          <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
-            <ChartWrapper title="Simulação Estabilidade (Duração por Réplica)" icon={<Clock />}>
-              <ResponsiveContainer width="100%" height="100%">
-                <ReLineChart data={stabilityData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line dataKey="Duration" stroke="hsl(var(--primary))" strokeWidth={2.5} />
-                  <Line dataKey="Avg_Duration" stroke="hsl(var(--accent))" strokeDasharray="5 5" strokeWidth={2} />
-                </ReLineChart>
-              </ResponsiveContainer>
-            </ChartWrapper>
+          <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
+            {/* Full width on large screens */}
+            <div className="lg:col-span-2">
+              <ChartWrapper title="Stability (Duration per Replication)" icon={<Clock />}>
+                {stabilityData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ReLineChart data={stabilityData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line dataKey="Duration" stroke="hsl(var(--primary))" strokeWidth={2.5} />
+                        <Line dataKey="Avg Duration" stroke="hsl(var(--accent))" strokeDasharray="5 5" strokeWidth={2} />
+                      </ReLineChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <p className="text-muted-foreground text-center">
+                      No replication logs available.
+                    </p>
+                )}
+              </ChartWrapper>
+            </div>
 
-            <ChartWrapper title="Resource Utilization (%)" icon={<Users />} />
-            <ChartWrapper title="Stage Throughput" icon={<TrendingUp />} />
+            {/*<ChartWrapper title="Resource Utilization (%)" icon={<Users />} />*/}
+            {/*<ChartWrapper title="Stage Throughput" icon={<TrendingUp />} />*/}
           </div>
         </section>
       </motion.div>

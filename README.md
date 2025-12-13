@@ -1,20 +1,85 @@
-# 🎓 projeto-tcc: Plataforma Web para Modelagem e Simulação de Processos
+# 🎓 projeto-tcc: Web Platform for Process Modeling & Discrete-Event Simulation
 
-Este é o repositório da API (backend) do meu Trabalho de Conclusão de Curso (TCC).
+This project is a web platform developed for my undergraduate thesis (TCC).  
+It helps users **model software processes**, configure **simulation parameters**, and run **discrete-event simulation (DES)** experiments to obtain performance metrics and visual insights.
 
-Através desta plataforma, o **usuário (cliente)** poderá:
-1.  **Modelar qualquer tipo de processo**, de forma flexível e intuitiva.
-2.  **Definir as medidas e parâmetros necessários para a simulação** desse processo.
-3.  A partir da modelagem e dos parâmetros, a aplicação **gerará um arquivo XACDML** (eXtensible ACtivity Diagram Markup Language) com as medições setadas.
-4.  Este arquivo XACDML será então **convertido e utilizado para executar a simulação** do processo.
+At a high level, the platform follows this workflow:
 
-## 🛠️ Tecnologias Utilizadas
+1. **Process modeling** (create a structured process with phases/activities/tasks/roles)
+2. **Simulation configuration** (define quantitative parameters needed for simulation)
+3. **Model generation & execution**  
+   The process model is mapped to **XACDML** (eXtensible Activity Cycle Diagram Markup Language), then transformed into an executable **Java simulation program** (via **XSLT**).  
+   The simulation is executed and metrics are collected (e.g., duration, throughput, queues/bottlenecks).
 
-* **Backend:**
-    * Java 21
-    * Spring Boot (Web, Data JPA)
-    * PostgreSQL (Banco de Dados)
-    * Lombok
-    * Apache Commons Math3 (para distribuições estatísticas)
-* **Acesso a Dados:** Spring Data JPA
-* **Gerenciador de Dependências:** Maven
+---
+
+## 🧱 Monorepo Structure
+
+- `projeto-tcc-api/` → **Backend API** (Java 21 + Spring Boot) — runs on **port 8080**
+- `projeto-tcc-app/` → **Frontend** (React + Vite) — served with **Nginx** on **port 5173**
+- `docker-compose.yml` → Orchestrates **PostgreSQL + Backend + Frontend**
+- `.env` → Database credentials used by Docker Compose (**you create this locally**)
+
+---
+
+## 🛠️ Technologies Used
+
+### Backend
+- Java 21
+- Spring Boot (Web, Data JPA, Actuator)
+- PostgreSQL
+- Lombok
+- Apache Commons Math3
+- Maven (via Maven Wrapper `./mvnw`)
+
+### Frontend
+- React + Vite
+- TailwindCSS
+- Recharts
+- Framer Motion
+- Lucide React Icons
+
+### Infrastructure
+- Docker + Docker Compose
+- Nginx (serving the production frontend build)
+
+---
+
+## 🚀 Running this project with Docker
+
+1) **Open Docker Desktop** and make sure it’s running.
+
+2) **Open a terminal** and go to the project root (the folder that contains `docker-compose.yml`):
+```bash
+cd ~/tcc_project
+```
+
+3) **Create the `.env` file** (database credentials):
+```bash
+cat > .env <<'EOF'
+POSTGRES_DB=tcc
+POSTGRES_USER=meu_usuario
+POSTGRES_PASSWORD=minha_senha
+EOF
+```
+
+4) **Build the backend JAR** (required before Docker builds the backend image):
+```bash
+cd projeto-tcc-api
+./mvnw -DskipTests package
+cd ..
+```
+
+5) **Start the full application** (PostgreSQL + backend + frontend):
+```bash
+docker compose up -d --build
+```
+
+6) **Open in your browser:**
+- `http://localhost:5173`
+
+7) **To stop everything:**
+```bash
+docker compose down
+```
+

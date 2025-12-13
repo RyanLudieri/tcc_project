@@ -2,7 +2,10 @@ package com.example.projeto_tcc.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Entity
@@ -25,4 +28,9 @@ public class ReplicationResult {
     @ManyToOne
     @JoinColumn(name = "global_result_id")
     private GlobalSimulationResult globalResult;
+
+
+    @OneToMany(mappedBy = "replication", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ResourceUsageEvent> resourceEvents = new ArrayList<>();
+
 }

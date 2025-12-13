@@ -5,16 +5,15 @@ import lombok.Data;
 
 @Entity
 @Data
-public class GlobalQueueStat {
+public class GlobalResourceStat {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String queueName;
-    private String taskName;
-    private Double averageCount;
-    private Double stdDevCount;
+    private String resourceName;
+    private double averageUtilization;
+    private double stdDevUtilization;
 
     @ManyToOne
     @JoinColumn(name = "global_result_id")
