@@ -63,7 +63,6 @@ Thumbs.db
 /output
 
 ### Exceção para biblioteca de simulação ###
-*.jar
 !/libs/simulation-manager-1.0-SNAPSHOT.jar
 
 Archive.zip
