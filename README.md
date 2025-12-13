@@ -63,22 +63,15 @@ POSTGRES_PASSWORD=minha_senha
 EOF
 ```
 
-4) **Build the backend JAR** (required before Docker builds the backend image):
-```bash
-cd projeto-tcc-api
-./mvnw -DskipTests package
-cd ..
-```
-
-5) **Start the full application** (PostgreSQL + backend + frontend):
+4) **Start the full application** (PostgreSQL + backend + frontend):
 ```bash
 docker compose up -d --build
 ```
 
-6) **Open in your browser:**
+5) **Open in your browser:**
 - `http://localhost:5173`
 
-7) **To stop everything:**
+6) **To stop everything:**
 ```bash
 docker compose down
 ```
