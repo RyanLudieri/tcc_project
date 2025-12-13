@@ -253,14 +253,14 @@ const ProcessEditor = () => {
         setIsSaving(false);
       }
 
-      return;
+
 
     } else {
 
       setModalOpen(true);
       setPendingPayload(payload);
 
-      return;
+
     }
 
 

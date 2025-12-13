@@ -13,7 +13,7 @@ public class RoleMappingDTO {
     private String queueType;
     private Integer initialQuantity;
 
-    private List<Long> observerIds; // IDs dos observers relacionados
+    private List<Long> observerIds;
 
     public RoleMappingDTO() {
     }

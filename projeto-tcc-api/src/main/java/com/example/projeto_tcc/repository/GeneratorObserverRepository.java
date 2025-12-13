@@ -1,4 +1,3 @@
-// Crie este novo arquivo: GeneratorObserverRepository.java
 package com.example.projeto_tcc.repository;
 
 import com.example.projeto_tcc.entity.GeneratorObserver;

@@ -90,10 +90,10 @@ public class ExecutionService {
         SimulationRunContext runContext = (processId != null) ? cacheManager.getRunContext(processId) : null;
 
         if (runContext == null || runContext.getDaysPerReplication().isEmpty()) {
-            return "Nenhuma simulação executada ou resultados não encontrados no cache.";
+            return "No simulation executed or results not found in the cache.";
         }
         if (configList == null || configList.isEmpty()) {
-            return "Configuração de variáveis dependentes vazia.";
+            return "Dependent variable configuration is empty.";
         }
 
         String header = buildHeader(runContext);
@@ -106,7 +106,7 @@ public class ExecutionService {
         }
 
         if (mapQueueVariableType.isEmpty()) {
-            return header + "\n\n(Nenhuma variável dependente selecionada para o relatório de resultados globais)";
+            return header + "\n\n(No dependent variable selected for the global results report)";
         }
 
         Set<String> keys = runContext.getResultadoGlobal().keySet();
@@ -117,7 +117,7 @@ public class ExecutionService {
         List<String> sortedRunKeys = new ArrayList<>(keys);
         sortedRunKeys.sort(Comparator.comparing(s -> Integer.parseInt(s.replaceAll("\\D+", ""))));
 
-        HashMap hm = (HashMap) runContext.getResultadoGlobal().get(sortedRunKeys.iterator().next());
+        HashMap hm = runContext.getResultadoGlobal().get(sortedRunKeys.iterator().next());
         List<String> listaNomesFilas = new ArrayList<>(hm.keySet());
 
         int numReplications = sortedRunKeys.size();
@@ -125,7 +125,7 @@ public class ExecutionService {
 
         int i = 0;
         for (String keyExp : sortedRunKeys) {
-            HashMap secondHash = (HashMap) runContext.getResultadoGlobal().get(keyExp);
+            HashMap secondHash = runContext.getResultadoGlobal().get(keyExp);
             for (int j = 0; j < listaNomesFilas.size(); j++) {
                 String qName = listaNomesFilas.get(j);
                 Object obj = secondHash.get(qName);
@@ -145,12 +145,12 @@ public class ExecutionService {
             if (Files.exists(generatedFilePath)) {
                 return new String(Files.readAllBytes(generatedFilePath));
             } else {
-                return "Erro: O arquivo de código não foi gerado corretamente.";
+                return "Error: The code file was not generated correctly.";
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "Erro ao gerar preview do código: " + e.getMessage();
+            return "Error generating code preview: " + e.getMessage();
         }
     }
 
@@ -190,7 +190,7 @@ public class ExecutionService {
 
         Class<?> compiledSimClass = cacheManager.getCompiledClass(processIdToExecute);
         if (compiledSimClass == null)
-            throw new IllegalStateException("Simulação não compilada para o processo ID: " + processIdToExecute);
+            throw new IllegalStateException("Simulation not compiled for process ID: " + processIdToExecute);
 
         if (replications == null || replications < 1) replications = 1;
 
@@ -203,7 +203,6 @@ public class ExecutionService {
             getObsReport = compiledSimClass.getMethod("getObserverReport");
         } catch (NoSuchMethodException ignored) {}
 
-        // Tenta obter o método estruturado para eventos de uso de recursos
         Method getResourceUsageMapMethod = null;
         try {
             // Tentativa: getResourceUsageMap() no SimulationManager
@@ -297,14 +296,12 @@ public class ExecutionService {
             global.setDurationStdDev((arrDays.length > 1) ? sd.evaluate(arrDays) : 0.0);
 
             Map<String, List<Double>> tempQueueValues = new HashMap<>();
-            Map<String, List<Double>> tempResourceUtilization = new HashMap<>(); // NOVO: Para acumular a utilização
 
             for (int i = 1; i <= runContext.getDaysPerReplication().size(); i++) {
                 ReplicationResult rep = new ReplicationResult();
                 rep.setReplicationNumber(i);
                 rep.setDuration(runContext.getDaysPerReplication().get(i - 1));
 
-                // População de Filas (Lógica Existente)
                 HashMap queuesMap = runContext.getResultadoGlobal().get("run #" + i);
                 if (queuesMap != null) {
                     for (Object keyObj : queuesMap.keySet()) {
@@ -323,7 +320,6 @@ public class ExecutionService {
                 global.getReplicationResults().add(rep);
             }
 
-            // CÁLCULO DAS ESTATÍSTICAS GLOBAIS DE FILAS (QUEUE STATS) - MANTIDO
             for (Map.Entry<String, List<Double>> entry : tempQueueValues.entrySet()) {
                 String qName = entry.getKey();
                 List<Double> values = entry.getValue();
@@ -343,7 +339,7 @@ public class ExecutionService {
             return globalRepository.save(global);
 
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao salvar dados: " + e.getMessage(), e);
+            throw new RuntimeException("Error saving data: " + e.getMessage(), e);
         }
     }
 
@@ -376,7 +372,7 @@ public class ExecutionService {
 
                 stats.add(stat);
             } catch (Exception e) {
-                System.err.println("Erro ao parsear estatísticas de recurso (fallback): " + e.getMessage());
+                System.err.println("Error parsing resource statistics (fallback): " + e.getMessage());
             }
         }
         return stats;
@@ -409,10 +405,9 @@ public class ExecutionService {
     }
 
     private void hardResetLibrary(ClassLoader loader) throws Exception {
-        // optional: forcibly reset static variables if needed
     }
 
     public String getDetailedSimulationLog() {
-        return "Simulação completa com logs detalhados gerados.";
+        return "Simulation completed with detailed logs generated.";
     }
 }

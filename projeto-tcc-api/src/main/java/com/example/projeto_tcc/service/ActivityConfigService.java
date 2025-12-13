@@ -1,6 +1,9 @@
 package com.example.projeto_tcc.service;
 
-import com.example.projeto_tcc.dto.*;
+import com.example.projeto_tcc.dto.ActivityConfigDTO;
+import com.example.projeto_tcc.dto.ActivityObserverDTO;
+import com.example.projeto_tcc.dto.DistributionParameterDTO;
+import com.example.projeto_tcc.dto.ObserverActivityDTO;
 import com.example.projeto_tcc.entity.*;
 import com.example.projeto_tcc.enums.*;
 import com.example.projeto_tcc.repository.*;
@@ -10,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -18,7 +20,6 @@ import java.util.List;
 public class ActivityConfigService {
 
     private final ActivityConfigRepository configRepository;
-    private final SampleRepository sampleRepository;
     private final DistributionParameterRepository parameterRepository;
     private final DurationMeasurementRepository measurementRepository;
     private final ObserverRepository observerRepository;
@@ -31,16 +32,13 @@ public class ActivityConfigService {
         config.setActivity(activity);
         activity.setActivityConfig(config);
 
-        // Chama função auxiliar para setar atributos padrões específicos por tipo
         setDefaultAttributesByActivityType(activity, config);
 
-        // 🔹 Define a posição do novo observer
         int position = 1;
         if (config.getObservers() != null && !config.getObservers().isEmpty()) {
             position = config.getObservers().size() + 1;
         }
 
-        // 🔹 Cria e adiciona o Observer padrão
         ActivityObserver observer = new ActivityObserver();
         observer.setPosition(position);
         observer.setQueue_name(activity.getName());
@@ -49,20 +47,17 @@ public class ActivityConfigService {
         observer.setActivityConfig(config);
         config.getObservers().add(observer);
 
-        // 🟨 Verifica se é um tipo que deve receber medições (apenas TaskDescriptor)
         boolean isTask = activity instanceof TaskDescriptor;
         double defaultValue = isTask ? 480.0 : 0.0;
         int sampleSize = isTask ? 30 : 0;
 
 
-        // 🔹 Parâmetros de distribuição
         config.setDistributionType(BestFitDistribution.CONST);
         DistributionParameter param = new DistributionParameter();
         param.setConstant(defaultValue);
         //parameterRepository.save(param);
         config.setDistributionParameter(param);
 
-        // 🔹 Cria Sample (mesmo que vazio)
         Sample sample = new Sample();
         sample.setName("Sample for " + activity.getName());
         sample.setDistribution(BestFitDistribution.CONST);
@@ -71,7 +66,6 @@ public class ActivityConfigService {
         //sampleRepository.save(sample);
         config.setSample(sample);
 
-        // 🔹 Medições (só se houver sample > 0)
         List<DurationMeasurement> measurements = new ArrayList<>();
         if (sampleSize > 0) {
             measurements = MeasurementFactory
@@ -84,7 +78,6 @@ public class ActivityConfigService {
         }
         sample.setMeasurements(measurements);
 
-        // 🔹 Persistir tudo
         //configRepository.save(config);
         //activityRepository.save(activity);
 
@@ -93,7 +86,6 @@ public class ActivityConfigService {
 
     @Transactional
     public void createDefaultConfigsRecursively(Activity activity, DeliveryProcess deliveryProcess) {
-        // Usa o método que já cria o observer
         ActivityConfig config = createDefaultConfig(activity);
         config.setDeliveryProcess(deliveryProcess);
 
@@ -143,7 +135,7 @@ public class ActivityConfigService {
     @Transactional
     public ActivityConfigDTO getActivityConfig(Long activityId) {
         ActivityConfig config = configRepository.findByActivityId(activityId)
-                .orElseThrow(() -> new IllegalArgumentException("Config não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Activity not found"));
 
         DistributionParameter param = config.getDistributionParameter();
         DistributionParameterDTO paramDTO = null;
@@ -196,7 +188,7 @@ public class ActivityConfigService {
     @Transactional
     public ActivityConfigDTO updateActivityConfig(Long activityId, ActivityConfigDTO dto) {
         ActivityConfig config = configRepository.findByActivityId(activityId)
-                .orElseThrow(() -> new IllegalArgumentException("Config não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Activity not found"));
 
         if (dto.getDependencyType() != null) config.setDependencyType(dto.getDependencyType());
         if (dto.getTimeBox() >= 0) config.setTimeBox(dto.getTimeBox());
@@ -225,11 +217,10 @@ public class ActivityConfigService {
         return getActivityConfig(activityId);
     }
 
-    // GET todos os observers de um ActivityConfig
     @Transactional
     public List<ObserverActivityDTO> getObserversByActivityConfig(Long activityConfigId) {
         ActivityConfig config = configRepository.findById(activityConfigId)
-                .orElseThrow(() -> new IllegalArgumentException("ActivityConfig não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Activity not found"));
 
         return config.getObservers().stream()
                 .map(obs -> new ObserverActivityDTO(
@@ -243,11 +234,10 @@ public class ActivityConfigService {
                 .toList();
     }
 
-    // POST: cria novo observer em um ActivityConfig
     @Transactional
     public ObserverActivityDTO addObserver(Long activityConfigId) {
         ActivityConfig config = configRepository.findById(activityConfigId)
-                .orElseThrow(() -> new IllegalArgumentException("ActivityConfig não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Activity not found"));
 
         int position = config.getObservers().size() + 1;
 
@@ -272,11 +262,10 @@ public class ActivityConfigService {
     }
 
 
-    // PATCH: atualizar observer existente
     @Transactional
     public ObserverActivityDTO updateObserver(Long observerId, ObserverActivityDTO dto) {
         ActivityObserver observer = activityObserverRepository.findById(observerId)
-                .orElseThrow(() -> new IllegalArgumentException("Observer não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Observer not found"));
 
         if (dto.queueName() != null) observer.setQueue_name(dto.queueName());
         if (dto.name() != null) observer.setName(dto.name());
@@ -295,17 +284,15 @@ public class ActivityConfigService {
         );
     }
 
-    // DELETE: remover observer
     @Transactional
     public void removeObserver(Long observerId) {
         ActivityObserver observer = activityObserverRepository.findById(observerId)
-                .orElseThrow(() -> new IllegalArgumentException("Observer não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Observer not found"));
 
         observerRepository.delete(observer);
     }
 
 
-    // GET todos os ActivityConfig e seus observers de um DeliveryProcess
     @Transactional
     public List<ActivityConfigDTO> getActivityByDeliveryProcess(Long deliveryProcessId) {
         List<ActivityConfig> configs = configRepository.findByDeliveryProcessId(deliveryProcessId);

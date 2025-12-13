@@ -24,7 +24,7 @@ import java.util.Map;
 public class XsltTransformationService {
 
     /**
-     * Classe interna que atua como nosso "guia" para o DTD.
+     * "Guia" para o DTD.
      * Quando o parser XML procurar por "xacdml.dtd", esta classe irá encontrá-lo
      * dentro da pasta /resources/dtd do nosso projeto.
      */
@@ -37,7 +37,6 @@ public class XsltTransformationService {
                     return new InputSource(dtdStream);
                 }
             }
-            // Para qualquer outro arquivo, deixa o parser usar o comportamento padrão.
             return null;
         }
     }

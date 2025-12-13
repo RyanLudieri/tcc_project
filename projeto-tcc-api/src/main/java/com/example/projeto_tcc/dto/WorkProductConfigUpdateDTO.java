@@ -22,6 +22,6 @@ public class WorkProductConfigUpdateDTO {
     private boolean generate_activity;
     private boolean destroy;
     private VariableType variableType;
-    private Long activityId; // apenas o ID da Activity
-    private List<MethodElementObserverDTO> observers; // lista de DTOs do observer
+    private Long activityId;
+    private List<MethodElementObserverDTO> observers;
 }

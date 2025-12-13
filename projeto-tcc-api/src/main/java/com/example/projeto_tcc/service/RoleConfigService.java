@@ -3,18 +3,19 @@ package com.example.projeto_tcc.service;
 import com.example.projeto_tcc.dto.ObserverUpdateDTO;
 import com.example.projeto_tcc.dto.RoleConfigUpdateDTO;
 import com.example.projeto_tcc.entity.*;
-import com.example.projeto_tcc.entity.Observer;
 import com.example.projeto_tcc.enums.MethodType;
 import com.example.projeto_tcc.enums.ObserverMethodElementType;
 import com.example.projeto_tcc.repository.MethodElementObserverRepository;
-import com.example.projeto_tcc.repository.ObserverRepository;
 import com.example.projeto_tcc.repository.RoleConfigRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,7 +56,6 @@ public class RoleConfigService {
             config.setRoleIds(ids);
             config.setDeliveryProcess(deliveryProcess);
 
-            // 🔹 pega todas as atividades relacionadas
             Set<Activity> relatedActivities = groupedRoles.stream()
                     .map(MethodElement::getParentActivity)
                     .filter(Objects::nonNull)
@@ -79,7 +79,7 @@ public class RoleConfigService {
     @Transactional
     public MethodElementObserver addObserverToRoleConfig(Long roleConfigId, ObserverMethodElementType type) {
         RoleConfig config = configRepository.findById(roleConfigId)
-                .orElseThrow(() -> new IllegalArgumentException("RoleConfig não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("RoleConfig not found"));
 
         int nextPosition = config.getObservers().stream()
                 .mapToInt(Observer::getPosition)
@@ -117,7 +117,7 @@ public class RoleConfigService {
     @Transactional
     public MethodElementObserver updateObserver(Long observerId, ObserverUpdateDTO dto) {
         MethodElementObserver observer = observerRepository.findById(observerId)
-                .orElseThrow(() -> new IllegalArgumentException("Observer não encontrado com id: " + observerId));
+                .orElseThrow(() -> new IllegalArgumentException("Observer not found with id: " + observerId));
 
         if (dto.getType() != null) {
             observer.setType(dto.getType());
@@ -143,7 +143,7 @@ public class RoleConfigService {
     @Transactional
     public RoleConfig updateRoleConfig(Long roleConfigId, RoleConfigUpdateDTO dto) {
         RoleConfig config = configRepository.findById(roleConfigId)
-                .orElseThrow(() -> new IllegalArgumentException("RoleConfig não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("RoleConfig not found"));
 
         if (dto.getQueueName() != null) {
             config.setQueue_name(dto.getQueueName());

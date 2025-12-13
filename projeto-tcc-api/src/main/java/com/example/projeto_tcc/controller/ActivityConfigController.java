@@ -15,43 +15,70 @@ import java.util.List;
 public class ActivityConfigController {
     private final ActivityConfigService configService;
 
-    // GET um ActivityConfig e todos os seus observers
+    /**
+     * GET um ActivityConfig e seus Observers
+     * @param id
+     * @return um ActivityConfig e seus Observers
+     */
     @GetMapping("/{id}")
     public ActivityConfigDTO getConfig(@PathVariable Long id) {
         return configService.getActivityConfig(id);
     }
 
-    // GET todos os ActivityConfig de um DeliveryProcess e seus observers
+    /**
+     * GET todos os ActivityConfig de um DeliveryProcess e seus Observers
+     * @param deliveryProcessId
+     * @return todos os ActivityConfig de um DeliveryProcess e seus Observers
+     */
     @GetMapping("/process/{deliveryProcessId}")
     public List<ActivityConfigDTO> getByDeliveryProcess(@PathVariable Long deliveryProcessId) {
         return configService.getActivityByDeliveryProcess(deliveryProcessId);
     }
 
-    // GET todos os observers de um ActivityConfig
+    /**
+     * GET Observers de um ActivityConfig
+     * @param activityConfigId
+     * @return  todos os Observers de um ActivityConfig
+     */
     @GetMapping("/observers/{activityConfigId}")
     public List<ObserverActivityDTO> getObserversByConfig(@PathVariable Long activityConfigId) {
         return configService.getObserversByActivityConfig(activityConfigId);
     }
 
-    // PATCH atualiza parâmetros de ActivityConfig
+    /**
+     * PATCH de parâmetros de ActivityConfig
+     * @param id
+     * @param dto
+     */
     @PatchMapping("/{id}")
     public ActivityConfigDTO updateConfig(@PathVariable Long id, @RequestBody ActivityConfigDTO dto) {
         return configService.updateActivityConfig(id, dto);
     }
 
-    // POST cria um novo observer em um ActivityConfig
+    /**
+     * POST de Observer em um ActivityConfig
+     * @param activityConfigId
+     * @return Observer criado
+     */
     @PostMapping("/observers/{activityConfigId}")
     public ObserverActivityDTO addObserver(@PathVariable Long activityConfigId) {
         return configService.addObserver(activityConfigId);
     }
 
-    // PATCH atualiza um observer
+    /**
+     * PATCH de um Observer
+     * @param observerId
+     * @param dto (body)
+     */
     @PatchMapping("/observers/{observerId}")
     public ObserverActivityDTO updateObserver(@PathVariable Long observerId, @RequestBody ObserverActivityDTO dto) {
         return configService.updateObserver(observerId, dto);
     }
 
-    // DELETE remove um observer
+    /**
+     * DELETE um Observer
+     * @param observerId
+     */
     @DeleteMapping("/observers/{observerId}")
     public void deleteObserver(@PathVariable Long observerId) {
         configService.removeObserver(observerId);

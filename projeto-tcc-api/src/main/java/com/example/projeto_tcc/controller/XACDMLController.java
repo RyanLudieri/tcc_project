@@ -8,11 +8,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Controller responsável por gerenciar o artefato XACDML.
- * Suas funções são gerar, salvar e consultar o conteúdo XML puro.
- * Ideal para a tela de gerenciamento de XACDML.
- */
 @RestController
 @RequestMapping("/xacdml")
 @RequiredArgsConstructor
@@ -33,7 +28,6 @@ public class XACDMLController {
             @PathVariable Long processId,
             @RequestParam(defaultValue = "GeneratedXACDML") String acdId) {
 
-        // Este método já gera o conteúdo E salva a entidade no banco
         XACDMLFile savedFile = xacdmlService.generateXACDML(processId, acdId);
 
         return ResponseEntity.ok()

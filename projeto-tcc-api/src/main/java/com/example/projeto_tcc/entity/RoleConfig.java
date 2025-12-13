@@ -29,7 +29,7 @@ public class RoleConfig {
     private Integer initial_quantity;
 
     @ElementCollection
-    private List<Long> roleIds; // IDs dos Roles que compartilham esse nome
+    private List<Long> roleIds;
 
     @OneToMany(mappedBy = "roleConfig", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

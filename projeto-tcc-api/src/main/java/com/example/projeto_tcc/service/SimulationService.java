@@ -45,7 +45,7 @@ public class SimulationService {
                     int artifacts = 0;
 
                     if (p instanceof DeliveryProcess) {
-                        DeliveryProcess dp = (DeliveryProcess) p;
+                        DeliveryProcess dp = p;
 
                         // Contagem recursiva de elementos
                         List<ProcessElement> elements = new ArrayList<>(dp.getProcessElements());
@@ -124,7 +124,7 @@ public class SimulationService {
 
     public SimulationResponseDTO getSimulation(Long id) {
         Simulation sim = simulationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Simulação não encontrada"));
+                .orElseThrow(() -> new RuntimeException("Simulation not found"));
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a");
 
@@ -143,7 +143,7 @@ public class SimulationService {
                 int artifacts = 0;
 
                 if (p instanceof DeliveryProcess) {
-                    DeliveryProcess dp = (DeliveryProcess) p;
+                    DeliveryProcess dp = p;
 
                     if (dp.getPhaseConfigs() != null)
                         phases = dp.getPhaseConfigs().size();
@@ -215,7 +215,7 @@ public class SimulationService {
 
     public Simulation linkDeliveryProcess(Long simulationId, DeliveryProcess process) {
         Simulation simulation = simulationRepository.findById(simulationId)
-                .orElseThrow(() -> new RuntimeException("Simulação não encontrada"));
+                .orElseThrow(() -> new RuntimeException("Simulation not found"));
 
         process.setSimulation(simulation);
         simulation.getProcesses().add(process);
@@ -225,7 +225,7 @@ public class SimulationService {
 
     public SimulationResponseDTO updateObjective(Long id, String newObjective) {
         Simulation sim = simulationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Simulação não encontrada"));
+                .orElseThrow(() -> new RuntimeException("Simulation not found"));
 
         sim.setObjective(newObjective);
         simulationRepository.save(sim);

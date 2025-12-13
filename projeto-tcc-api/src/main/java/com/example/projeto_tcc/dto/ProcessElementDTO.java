@@ -23,7 +23,7 @@ public class ProcessElementDTO {
     private List<ProcessElementDTO> children;
 
 
-    private List<Integer> predecessors; // Agora usa índices
+    private List<Integer> predecessors;
 
     private boolean optional;
 }

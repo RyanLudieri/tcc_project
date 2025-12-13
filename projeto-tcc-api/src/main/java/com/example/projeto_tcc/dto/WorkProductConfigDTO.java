@@ -1,7 +1,6 @@
 package com.example.projeto_tcc.dto;
 
 import com.example.projeto_tcc.enums.Queue;
-import com.example.projeto_tcc.enums.VariableType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -21,6 +20,6 @@ public class WorkProductConfigDTO {
     private Queue policy;
     private boolean generate_activity;
     private boolean destroy;
-    private Long activityId; // apenas o ID da Activity
-    private List<MethodElementObserverDTO> observers; // lista de DTOs do observer
+    private Long activityId;
+    private List<MethodElementObserverDTO> observers;
 }

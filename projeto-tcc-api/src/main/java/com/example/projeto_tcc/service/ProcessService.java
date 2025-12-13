@@ -45,7 +45,7 @@ public class ProcessService {
     }
 
     private int currentIndex = 0;
-    private Map<Integer, Activity> indexToActivity = new HashMap<>();
+    private final Map<Integer, Activity> indexToActivity = new HashMap<>();
 
     // ------------------------------------------------------------------------
     // SAVE PROCESS
@@ -83,7 +83,7 @@ public class ProcessService {
                 if (pred != null) {
                     resolvedPredecessors.add(pred);
                 } else {
-                    System.err.println("AVISO: Predecessor do PROCESSO (save) com índice " + predIndex + " não encontrado.");
+                    System.err.println("WARNING: PROCESS predecessor (save) with index " + predIndex + " not found.");
                 }
             }
             deliveryProcess.setPredecessors(resolvedPredecessors);
@@ -91,12 +91,10 @@ public class ProcessService {
 
         elements = repository.saveAll(elements);
 
-        // CRIA CONFIG DEFAULT PARA TODAS AS ACTIVITIES
         for (Activity activity : elements) {
             activityConfigService.createDefaultConfigsRecursively(activity, deliveryProcess);
         }
 
-        // CONFIGS DE FASE, ITERAÇÃO E ATIVIDADE
         for (Activity activity : elements) {
             switch (activity.getType()) {
                 case PHASE -> {
@@ -119,7 +117,6 @@ public class ProcessService {
 
         wbs.setProcessElements(elements);
 
-        // MÉTODO ELEMENTS
         List<MethodElement> methodElements = new ArrayList<>();
         if (dto.getMethodElements() != null) {
             for (MethodElementDTO methodDto : dto.getMethodElements()) {
@@ -140,12 +137,11 @@ public class ProcessService {
     // ------------------------------------------------------------------------
     // UPDATE PROCESS
     // ------------------------------------------------------------------------
-
     @Transactional
     public Process updateProcess(Long processId, ProcessDTO dto) {
         DeliveryProcess existingProcess = (DeliveryProcess) repository.findById(processId)
                 .filter(p -> p instanceof DeliveryProcess)
-                .orElseThrow(() -> new EntityNotFoundException("DeliveryProcess não encontrado com ID: " + processId));
+                .orElseThrow(() -> new EntityNotFoundException("DeliveryProcess not found with ID: " + processId));
 
         existingProcess.setName(dto.getName());
         existingProcess.setOptional(dto.isOptional());
@@ -154,7 +150,6 @@ public class ProcessService {
         roleConfigRepository.deleteByDeliveryProcessId(processId);
         generatorConfigRepository.deleteByDeliveryProcessId(processId);
 
-        // APAGA ANTIGA WBS
         WorkBreakdownStructure oldWbs = existingProcess.getWbs();
         if (oldWbs != null) {
 
@@ -165,7 +160,6 @@ public class ProcessService {
             List<Activity> allOldActivities = new ArrayList<>();
             collectAllActivities(oldRootActivities, allOldActivities);
 
-            // limpa predecessores
             if (!allOldActivities.isEmpty()) {
                 for (Activity act : allOldActivities) {
                     act.setPredecessors(new ArrayList<>());
@@ -173,7 +167,6 @@ public class ProcessService {
                 repository.saveAllAndFlush(allOldActivities);
             }
 
-            // remove configs antigas das activities
             if (!allOldActivities.isEmpty()) {
                 List<Long> oldIds = allOldActivities.stream()
                         .map(Activity::getId)
@@ -215,7 +208,7 @@ public class ProcessService {
             for (Integer predIndex : dto.getPredecessors()) {
                 Activity pred = indexToActivity.get(predIndex);
                 if (pred != null) preds.add(pred);
-                else System.err.println("AVISO: Predecessor (update) índice " + predIndex + " não encontrado.");
+                else System.err.println("WARNING: Predecessor (update) with index " + predIndex + " not found.");
             }
             existingProcess.setPredecessors(preds);
         } else {
@@ -252,12 +245,11 @@ public class ProcessService {
     // ------------------------------------------------------------------------
     // DELETE PROCESS
     // ------------------------------------------------------------------------
-
     @Transactional
     public void deleteProcess(Long processId) {
         DeliveryProcess processToDelete = (DeliveryProcess) repository.findById(processId)
                 .filter(p -> p instanceof DeliveryProcess)
-                .orElseThrow(() -> new EntityNotFoundException("DeliveryProcess não encontrado com ID: " + processId));
+                .orElseThrow(() -> new EntityNotFoundException("DeliveryProcess not found with ID: " + processId));
 
         workProductConfigRepository.deleteByDeliveryProcessId(processId);
         roleConfigRepository.deleteByDeliveryProcessId(processId);
@@ -373,7 +365,7 @@ public class ProcessService {
     @Transactional
     public Activity updateGenericActivity(Long id, ProcessElementDTO dto) {
         Activity activity = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Elemento não encontrado com id: " + id));
+                .orElseThrow(() -> new RuntimeException("Element not found with id: " + id));
 
         if (dto.getName() != null) activity.setName(dto.getName());
         activity.setOptional(dto.isOptional());
@@ -384,7 +376,7 @@ public class ProcessService {
     @Transactional
     public MethodElement updateGenericMethod(Long id, MethodElementDTO dto) {
         MethodElement element = methodElementRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Elemento não encontrado com id: " + id));
+                .orElseThrow(() -> new RuntimeException("Element not found with id: " + id));
 
         if (dto.getName() != null) element.setName(dto.getName());
         if (dto.getModelInfo() != null) element.setModelInfo(dto.getModelInfo());
@@ -399,7 +391,7 @@ public class ProcessService {
         } else if (methodElementRepository.existsById(id)) {
             methodElementRepository.deleteById(id);
         } else {
-            throw new RuntimeException("Elemento com ID " + id + " não encontrado.");
+            throw new RuntimeException("Element with ID " + id + " not found.");
         }
     }
 

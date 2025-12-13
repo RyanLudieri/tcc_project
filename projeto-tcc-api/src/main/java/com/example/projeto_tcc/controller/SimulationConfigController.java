@@ -69,6 +69,11 @@ public class SimulationConfigController {
         return ResponseEntity.ok(generators);
     }
 
+    /**
+     * Get: Lista todos um gerados específico e todos os seus observers
+     * @param generatorId
+     * @return
+     */
     @GetMapping("/generators/{generatorId}")
     public ResponseEntity<GeneratorConfigDTO> getGeneratorById(@PathVariable Long generatorId) {
         try {
@@ -81,6 +86,8 @@ public class SimulationConfigController {
 
     /**
      * GET: Lista todos os observers de um gerador específico.
+     * @param generatorId
+     * @return todos os observers de um gerador específico.
      */
     @GetMapping("/generators/{generatorId}/observers")
     public ResponseEntity<List<GenerateObserverDTO>> getObserversByGenerator(@PathVariable Long generatorId) {
@@ -94,6 +101,9 @@ public class SimulationConfigController {
 
     /**
      * POST: Cria um NOVO observer padrão para um gerador.
+     * @param generatorId
+     * @param request
+     * @return observer criado
      */
     @PostMapping("/generators/{generatorId}/observers")
     public ResponseEntity<GenerateObserverDTO> addGeneratorObserver(
@@ -111,6 +121,8 @@ public class SimulationConfigController {
 
     /**
      * PATCH: Atualiza um observer específico pelo ID dele.
+     * @param dto
+     * @param observerId
      */
     @PatchMapping("/generator-observers/{observerId}")
     public ResponseEntity<GenerateObserverDTO> updateGeneratorObserver(
@@ -126,6 +138,7 @@ public class SimulationConfigController {
 
     /**
      * DELETE: Remove um observer específico pelo ID dele.
+     * @param observerId
      */
     @DeleteMapping("/generator-observers/{observerId}")
     public ResponseEntity<Void> deleteGeneratorObserver(@PathVariable Long observerId) {

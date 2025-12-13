@@ -12,5 +12,5 @@ public class MethodElementObserverDTO {
     private String name;
     private int position;
     private ObserverMethodElementType type;
-    private Long workProductConfigId; // apenas o ID
+    private Long workProductConfigId;
 }

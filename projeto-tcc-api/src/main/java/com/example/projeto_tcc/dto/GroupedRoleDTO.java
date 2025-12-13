@@ -7,15 +7,13 @@ import java.util.List;
 
 @Data
 public class GroupedRoleDTO {
-    private String name;               // nome do grupo (ex: "Developer")
-    private String queueName;          // valor padrão do grupo
-    private String queueType;          // valor padrão do grupo
-    private Integer initialQuantity;   // valor padrão do grupo
+    private String name;
+    private String queueName;
+    private String queueType;
+    private Integer initialQuantity;
 
     @JsonIgnore
-    private List<Long> roleIds;        // lista só com ids das Roles do grupo
-
-    // construtores, getters e setters
+    private List<Long> roleIds;
 
     public GroupedRoleDTO(String name, String queueName, String queueType, Integer initialQuantity, List<Long> roleIds) {
         this.name = name;

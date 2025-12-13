@@ -1,11 +1,9 @@
 package com.example.projeto_tcc.entity;
 
 import com.example.projeto_tcc.enums.MethodType;
-import com.example.projeto_tcc.enums.ProcessType;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+
 
 @Entity
 @Data
@@ -19,6 +17,5 @@ public class MethodElement extends AbstractElement{
 
     @Enumerated(EnumType.STRING)
     private MethodType methodType;
-
 
 }

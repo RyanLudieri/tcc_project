@@ -6,10 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +22,7 @@ public class XACDMLService {
     private final DeliveryProcessRepository deliveryProcessRepository;
 
     /**
-     * Função utilitária para escapar caracteres especiais de XML.
+     * Função para escapar caracteres especiais de XML.
      * Garante que os dados dinâmicos não quebrem a estrutura do arquivo.
      */
     public static String escapeXml(String text) {
@@ -90,7 +86,7 @@ public class XACDMLService {
             sb.append("    </dead>\n");
         }
 
-        // 1. Geração dos Geradores (Generators)
+        // 1. Geração dos Generators
         for (GeneratorConfig generator : process.getGeneratorConfigs()) {
             DistributionParameter dist = generator.getDistribution();
             WorkProductConfig targetWp = generator.getTargetWorkProduct();
@@ -126,7 +122,7 @@ public class XACDMLService {
             sb.append("    </generate>\n");
         }
 
-        // 2. Geração dos Destruidores (Destroyers)
+        // 2. Geração dos Destroyers
         for (WorkProductConfig wp : wps) {
             if (wp.isDestroyer()) {
                 sb.append("    <destroy id=\"Destruidor_Para_").append(escapeXml(wp.getQueue_name())).append("\">\n");
@@ -212,9 +208,6 @@ public class XACDMLService {
         return sb.toString();
     }
 
-    /**
-     * Este método agora simplesmente chama o novo método seguro para gerar o conteúdo.
-     */
     @Transactional
     public XACDMLFile generateXACDML(Long processId, String acdId) {
         String content = generateXACDMLContent(processId, acdId);

@@ -18,8 +18,7 @@ public class SimulationCacheManager {
     private final Map<Long, String> generatedCodeCache = new ConcurrentHashMap<>();
     private final Map<Long, SimulationRunContext> runContextCache = new ConcurrentHashMap<>();
 
-    // ✅ CORREÇÃO: Removido ThreadLocal e substituído por Map thread-safe
-    // Agora cada thread/requisição pode ter seu próprio processo ativo
+    // Cda thread/requisição pode ter seu próprio processo ativo
     private final ThreadLocal<Long> activeProcessIdLocal = ThreadLocal.withInitial(() -> null);
 
     public void setActiveProcess(Long processId) {
@@ -87,7 +86,6 @@ public class SimulationCacheManager {
     // =========================================================================
     // 4. ✅ MÉTODOS NOVOS: Para o Contexto da Execução (SimulationRunContext)
     // =========================================================================
-
     public void putRunContext(Long processId, SimulationRunContext context) {
         System.out.println("🟢 [CacheManager] putRunContext: processId=" + processId);
         runContextCache.put(processId, context);
@@ -120,7 +118,7 @@ public class SimulationCacheManager {
         generatedCodeCache.remove(processId);
         runContextCache.remove(processId);
 
-        // ✅ IMPORTANTE: Força garbage collection do ClassLoader antigo
+        // IMPORTANTE: Força garbage collection do ClassLoader antigo
         // O GC é crucial para liberar a memória do ClassLoader anterior,
         // permitindo que o novo código seja carregado corretamente.
         System.gc();

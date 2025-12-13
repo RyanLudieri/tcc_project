@@ -44,7 +44,6 @@ public class WorkProductConfigController {
     }
 
 
-    // POST - adicionar observer
     @PostMapping("/{workProductConfigId}/observers")
     public ResponseEntity<MethodElementObserver> addObserver(
             @PathVariable Long workProductConfigId,
@@ -55,7 +54,6 @@ public class WorkProductConfigController {
         return ResponseEntity.ok(observer);
     }
 
-    // PATCH - atualizar observer
     @PatchMapping("/observers/{observerId}")
     public ResponseEntity<MethodElementObserver> updateObserver(
             @PathVariable Long observerId,
@@ -63,7 +61,6 @@ public class WorkProductConfigController {
         return ResponseEntity.ok(workProductConfigService.updateObserver(observerId, dto));
     }
 
-    // DELETE - remover observer
     @DeleteMapping("/{id}/observers/{observerId}")
     public ResponseEntity<Void> removeObserver(
             @PathVariable Long id,

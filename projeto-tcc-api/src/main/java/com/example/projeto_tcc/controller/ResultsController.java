@@ -14,6 +14,11 @@ public class ResultsController {
     @Autowired
     private ResultsService resultsService;
 
+    /**
+     * GET resultados de uma Execução
+     * @param executionId
+     * @return logs de uma execução
+     */
     @GetMapping("/{executionId}")
     public ResponseEntity<SimulationResultDTO> getResult(@PathVariable Long executionId) {
 

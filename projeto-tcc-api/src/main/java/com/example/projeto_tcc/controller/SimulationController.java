@@ -50,7 +50,6 @@ public class SimulationController {
             Path generatedFilePath = simulationGenerationService.generateSimulation(processId, uniqueAcdId);
             String javaCode = new String(Files.readAllBytes(generatedFilePath));
 
-            // "Compila" (prepara) a sessão de execução
             executionService.compile(javaCode, "DynamicExperimentationProgramProxy",processId);
 
             return ResponseEntity.ok("Simulação gerada e sessão preparada.");
@@ -109,20 +108,16 @@ public class SimulationController {
     @GetMapping("/get_results")
     public ResponseEntity<String> getResults() {
         try {
-            // 1. Recupera o ID do processo ativo na sessão do service
             Long processId = executionService.getActiveProcessId();
             if (processId == null) {
                 return ResponseEntity.badRequest().body("Nenhum processo ativo ou simulação não compilada.");
             }
 
-            // 2. Busca a configuração para saber quais filas calcular estatísticas globais
             List<WorkProductConfig> configs = workProductConfigRepository.findAllByDeliveryProcessId(processId);
 
-            // 3. Gera as duas partes do relatório
             String detalhado = executionService.getDetailedSimulationLog();
             String global = executionService.getFilteredResults(configs);
 
-            // 4. Concatena e retorna
             String relatorioFinal = detalhado + "\n" + global;
 
             return ResponseEntity.ok(relatorioFinal);
@@ -175,9 +170,6 @@ public class SimulationController {
         SimulationResponseDTO updated = simulationService.updateObjective(id, dto.getObjective());
         return ResponseEntity.ok(updated);
     }
-
-
-
 
 }
 

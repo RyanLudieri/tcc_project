@@ -13,6 +13,6 @@ public class DeliveryProcessService {
 
     public DeliveryProcess getById(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("DeliveryProcess não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Process not found"));
     }
 }

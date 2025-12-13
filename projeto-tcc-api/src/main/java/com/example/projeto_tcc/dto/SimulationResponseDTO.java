@@ -29,9 +29,4 @@ public class SimulationResponseDTO {
     public String getLastModified() { return lastModified; }
 
     public void setId(Long id) { this.id = id; }
-    public void setObjective(String objective) { this.objective = objective; }
-    public void setProcesses(List<ProcessSummaryDTO> process) { this.processes = process; }
-    public void setProcessCount(int processCount) { this.processCount = processCount; }
-    public void setStatus(String status) { this.status = status; }
-    public void setLastModified(String lastModified) { this.lastModified = lastModified; }
 }

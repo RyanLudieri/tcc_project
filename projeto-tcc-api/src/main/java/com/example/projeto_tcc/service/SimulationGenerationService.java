@@ -51,7 +51,7 @@ public class SimulationGenerationService {
             // 6. Compilação
             executionService.compile(
                     generatedJavaCode,
-                    CLASS_NAME, // ✅ USANDO O NOME DA CLASSE FIXO
+                    CLASS_NAME,
                     processId
             );
 
@@ -59,9 +59,9 @@ public class SimulationGenerationService {
             return Paths.get(javaOutputPath);
 
         } catch (Exception e) {
-            System.err.println("Ocorreu um erro crítico durante a geração ou execução da simulação.");
+            System.err.println("A critical error occurred during simulation generation or execution.");
             e.printStackTrace();
-            throw new RuntimeException("Falha ao gerar ou executar o código de simulação.", e);
+            throw new RuntimeException("Failed to generate or execute the simulation code.", e);
         }
     }
 }

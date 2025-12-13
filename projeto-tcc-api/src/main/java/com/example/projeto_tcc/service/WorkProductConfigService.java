@@ -42,7 +42,7 @@ public class WorkProductConfigService {
             traverseAndCreateConfigs(root, deliveryProcess, activeWorkProducts);
         }
 
-        // --- INÍCIO DA LÓGICA DE OUTPUT FINAL UNIFICADA E CORRETA ---
+        // --- INÍCIO DA LÓGICA DE OUTPUT FINAL ---
         if (roots != null && !roots.isEmpty()) {
             // A lógica é baseada no TIPO da última atividade raiz do processo.
             Activity lastRoot = roots.get(roots.size() - 1);
@@ -57,7 +57,7 @@ public class WorkProductConfigService {
                 finalOutputWPs = getAssociatedWorkProductNames(lastRoot, "OUTPUT");
 
             } else {
-                // CASO 2: Se a última raiz for um Contêiner ou Milestone.
+                // CASO 2: Se a última raiz for um Container ou Milestone.
                 // (Resolve os casos da "Iteration A" e "Working software")
                 finalEventName = (lastRoot.getType() == ProcessType.MILESTONE) ? lastRoot.getName() : "END_" + lastRoot.getName();
                 finalOutputWPs = new LinkedHashSet<>(activeWorkProducts);
@@ -284,7 +284,7 @@ public class WorkProductConfigService {
     @Transactional
     public MethodElementObserver updateObserver(Long observerId, ObserverUpdateDTO dto) {
         MethodElementObserver observer = observerRepository.findById(observerId)
-                .orElseThrow(() -> new IllegalArgumentException("Observer não encontrado com id: " + observerId));
+                .orElseThrow(() -> new IllegalArgumentException("Observer not found with id: " + observerId));
 
         if (dto.getType() != null) observer.setType(dto.getType());
         if (dto.getQueueName() != null) observer.setQueue_name(dto.getQueueName());
@@ -295,7 +295,7 @@ public class WorkProductConfigService {
     @Transactional
     public WorkProductConfigUpdateDTO updateWorkProductConfig(Long workProductConfigId, WorkProductConfigUpdateDTO dto) {
         WorkProductConfig config = configRepository.findById(workProductConfigId)
-                .orElseThrow(() -> new IllegalArgumentException("WorkProductConfig não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("WorkProductConfig not found"));
 
         if (dto.getQueue_name() != null) config.setQueue_name(dto.getQueue_name());
         if (dto.getQueue_type() != null) config.setQueue_type(dto.getQueue_type());
@@ -339,9 +339,11 @@ public class WorkProductConfigService {
     @Transactional
     public GeneratorConfigDTO addGeneratorToProcess(Long processId, GeneratorConfigRequestDTO requestDto) {
         DeliveryProcess process = deliveryProcessRepository.findById(processId)
-                .orElseThrow(() -> new EntityNotFoundException("Processo não encontrado com ID: " + processId));
+                .orElseThrow(() -> new EntityNotFoundException("Process not found with ID: " + processId));
         WorkProductConfig targetQueue = configRepository.findById(requestDto.getWorkProductConfigId())
-                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig de destino não encontrado com ID: " + requestDto.getWorkProductConfigId()));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Target WorkProductConfig not found with ID: " + requestDto.getWorkProductConfigId()
+                ));
 
         DistributionParameter dist = new DistributionParameter();
         dist.setConstant(requestDto.getConstant());
@@ -371,7 +373,7 @@ public class WorkProductConfigService {
     @Transactional
     public GeneratorConfigDTO updateGenerator(Long generatorId, GeneratorConfigRequestDTO dto) {
         GeneratorConfig existingGenerator = generatorConfigRepository.findById(generatorId)
-                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado com ID: " + generatorId));
+                .orElseThrow(() -> new EntityNotFoundException("Generator not found with ID: " + generatorId));
 
         existingGenerator.setDistributionType(dto.getDistributionType());
 
@@ -398,7 +400,7 @@ public class WorkProductConfigService {
     @Transactional
     public void removeGenerator(Long generatorId) {
         GeneratorConfig generator = generatorConfigRepository.findById(generatorId)
-                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado com ID: " + generatorId));
+                .orElseThrow(() -> new EntityNotFoundException("Generator not found with ID: " + generatorId));
 
         WorkProductConfig target = generator.getTargetWorkProduct();
         if (target != null) {
@@ -418,7 +420,7 @@ public class WorkProductConfigService {
     @Transactional
     public void setDestroyer(Long workProductConfigId, boolean isDestroyer) {
         WorkProductConfig selectedQueue = configRepository.findById(workProductConfigId)
-                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("WorkProductConfig not found"));
         selectedQueue.setDestroyer(isDestroyer);
         configRepository.save(selectedQueue);
     }
@@ -490,7 +492,7 @@ public class WorkProductConfigService {
     @Transactional
     public GeneratorConfigDTO getGeneratorById(Long generatorId) {
         GeneratorConfig generator = generatorConfigRepository.findById(generatorId)
-                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado com ID: " + generatorId));
+                .orElseThrow(() -> new EntityNotFoundException("Generator not found with ID: " + generatorId));
 
         return toResponseDTO(generator);
     }
@@ -501,7 +503,7 @@ public class WorkProductConfigService {
     @Transactional
     public List<GenerateObserverDTO> getObserversByGenerator(Long generatorId) {
         GeneratorConfig generator = generatorConfigRepository.findById(generatorId)
-                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado: " + generatorId));
+                .orElseThrow(() -> new EntityNotFoundException("Generator not found: " + generatorId));
 
         return generator.getObservers().stream()
                 .map(this::mapObserverToDTO)
@@ -514,14 +516,14 @@ public class WorkProductConfigService {
     @Transactional
     public GenerateObserverDTO addGeneratorObserver(Long generatorId, GenerateObserverRequestDTO request) {
         GeneratorConfig generator = generatorConfigRepository.findById(generatorId)
-                .orElseThrow(() -> new EntityNotFoundException("Gerador não encontrado: " + generatorId));
+                .orElseThrow(() -> new EntityNotFoundException("Generator not found: " + generatorId));
 
         GeneratorObserver observer = new GeneratorObserver();
 
         int position = generator.getObservers().size() + 1;
 
         String queueName = generator.getTargetWorkProduct().getQueue_name();
-        String defaultName = generator.getTargetWorkProduct().getQueue_name() + " generate activity observer " + position;
+        String defaultName = generator.getTargetWorkProduct().getQueue_name() + " generated activity observer " + position;
 
         observer.setGeneratorConfig(generator);
         observer.setPosition(position);
@@ -542,7 +544,7 @@ public class WorkProductConfigService {
     @Transactional
     public GenerateObserverDTO updateGeneratorObserver(Long observerId, GenerateObserverDTO dto) {
         GeneratorObserver observer = generatorObserverRepository.findById(observerId)
-                .orElseThrow(() -> new EntityNotFoundException("Generator Observer não encontrado: " + observerId));
+                .orElseThrow(() -> new EntityNotFoundException("Generator Observer not found: " + observerId));
 
         if (dto.getName() != null) {
             observer.setName(dto.getName());
@@ -564,7 +566,7 @@ public class WorkProductConfigService {
     @Transactional
     public void deleteGeneratorObserver(Long observerId) {
         GeneratorObserver observer = generatorObserverRepository.findById(observerId)
-                .orElseThrow(() -> new EntityNotFoundException("Generate Observer não encontrado: " + observerId));
+                .orElseThrow(() -> new EntityNotFoundException("Generator Observer not found: " + observerId));
 
         generatorObserverRepository.delete(observer);
     }

@@ -1,10 +1,6 @@
-// No pacote dto: Crie ou confirme que você tem este DTO para a REQUISIÇÃO
 package com.example.projeto_tcc.dto;
 
 import lombok.Data;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 public class GeneratorConfigRequestDTO {

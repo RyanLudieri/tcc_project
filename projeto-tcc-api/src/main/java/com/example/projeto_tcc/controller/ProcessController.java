@@ -29,11 +29,21 @@ public class ProcessController {
         this.service = service;
     }
 
+    /**
+     * POST de um Process
+     * @param dto
+     * @return Process criado
+     */
     @PostMapping
     public Activity createProcess(@RequestBody ProcessDTO dto) {
         return service.saveProcess(dto);
     }
 
+    /**
+     * GET um Process
+     * @param id
+     * @return Process estruturado
+     */
     @GetMapping("/{id}")
     public ResponseEntity<ProcessGetDTO> getById(@PathVariable Long id) {
         Optional<Activity> process = repository.findById(id);
@@ -41,24 +51,47 @@ public class ProcessController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /**
+     * PUT de uma Activity
+     * @param id
+     * @param dto
+     * @return
+     */
     @PutMapping("/activity/{id}")
     public ResponseEntity<?> updateActivity(@PathVariable Long id, @RequestBody ProcessElementDTO dto) {
         service.updateGenericActivity(id, dto);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * PUT de um Method
+     * @param id
+     * @param dto
+     * @return
+     */
     @PutMapping("/method/{id}")
     public ResponseEntity<?> updateMethod(@PathVariable Long id, @RequestBody MethodElementDTO dto) {
         service.updateGenericMethod(id, dto);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * DELETE um Element
+     * @param id
+     * @return
+     */
     @DeleteMapping("/element/{id}")
     public ResponseEntity<?> deleteElement(@PathVariable Long id) {
         service.deleteElementById(id);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * PUT um Process
+     * @param processId
+     * @param dto
+     * @return
+     */
     @PutMapping("/{processId}")
     public ResponseEntity<Process> updateProcess(
             @PathVariable Long processId,
@@ -71,10 +104,16 @@ public class ProcessController {
         } catch (Exception e) {
             System.err.println("Erro ao atualizar processo: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // Retorna 500
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
+
+    /**
+     * DELETE um Process
+     * @param id
+     * @return
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProcess(@PathVariable Long id) {
         try {
@@ -83,7 +122,6 @@ public class ProcessController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            // Log do erro para debug
             System.err.println("Erro ao deletar processo ID " + id + ": " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
